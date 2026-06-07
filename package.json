@@ -1,0 +1,31 @@
+{
+  "name": "team-topologies-modeler",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A web-based modeler for the Team Topologies notation (team types & interaction modes).",
+  "license": "MIT",
+  "scripts": {
+    "dev": "pnpm --filter @tt-modeler/web dev",
+    "build": "pnpm run typecheck && pnpm --filter @tt-modeler/web build",
+    "preview": "pnpm --filter @tt-modeler/web preview",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.2",
+    "vitest": "^2.1.8"
+  }
+}

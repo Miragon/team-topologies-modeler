@@ -1,0 +1,15 @@
+{
+  "//": "Convenience aggregate for editors / a whole-repo `tsc --noEmit`. The authoritative, boundary-enforcing check is `pnpm -r typecheck` (per-package).",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": [],
+    "paths": {
+      "@tt-modeler/model": ["packages/model/src/index.ts"],
+      "@tt-modeler/renderer": ["packages/renderer/src/index.ts"],
+      "@/*": ["apps/web/src/*"]
+    }
+  },
+  "include": ["packages/*/src", "apps/web/src"]
+}

@@ -1,0 +1,9 @@
+{
+  "//": "DOM-free core: the lack of the DOM lib enforces that this package never touches the browser.",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": []
+  },
+  "include": ["src"]
+}
