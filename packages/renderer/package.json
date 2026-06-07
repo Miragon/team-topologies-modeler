@@ -1,0 +1,26 @@
+{
+  "name": "@tt-modeler/renderer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Framework-agnostic diagram-js rendering & interaction layer for the Team Topologies notation. DOM-dependent, React-free.",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./assets/team-topologies.css": "./src/assets/team-topologies.css"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tt-modeler/model": "workspace:*",
+    "diagram-js": "15.16.0",
+    "didi": "11.0.0",
+    "tiny-svg": "4.1.4"
+  }
+}
