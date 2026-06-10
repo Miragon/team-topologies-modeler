@@ -9,20 +9,14 @@ import type ElementFactory from "diagram-js/lib/core/ElementFactory";
 import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
 import type EventBus from "diagram-js/lib/core/EventBus";
 import type { Root } from "diagram-js/lib/model/Types";
-import type { TtDocument } from "@tt-modeler/model";
+import type { TtDocument } from "@tt-modeler/schema-model";
 import type TtElementFactory from "../model/TtElementFactory.js";
 import { ROOT_ID, type ImportWarning, type RootBusinessObject } from "./types.js";
 
 type RootWithMeta = Root & { businessObject?: RootBusinessObject };
 
 export default class TtImporter {
-  static $inject = [
-    "canvas",
-    "elementFactory",
-    "ttElementFactory",
-    "eventBus",
-    "elementRegistry",
-  ];
+  static $inject = ["canvas", "elementFactory", "ttElementFactory", "eventBus", "elementRegistry"];
 
   constructor(
     private readonly canvas: Canvas,

@@ -10,14 +10,14 @@ import {
   INTERACTION_MODE_SPECS,
   TEAM_TYPE_SPECS,
   newId,
-} from "@tt-modeler/model";
+} from "@tt-modeler/schema-model";
 import type {
   FlowShape,
   InteractionMode,
   InteractionShape,
   TeamNode,
   TeamType,
-} from "@tt-modeler/model";
+} from "@tt-modeler/schema-model";
 import type { TtFlow, TtInteraction, TtTeam } from "./di-types.js";
 
 export default class TtElementFactory {

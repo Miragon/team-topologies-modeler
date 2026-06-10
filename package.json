@@ -2,30 +2,63 @@
   "name": "team-topologies-modeler",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "description": "A web-based modeler for the Team Topologies notation (team types & interaction modes).",
+  "description": "A web-based modeler and VS Code extension for the Team Topologies notation (team types & interaction modes).",
   "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "workspaces": [
+    "packages/schema-model",
+    "packages/renderer",
+    "apps/webapp",
+    "apps/vscode",
+    "e2e"
+  ],
   "scripts": {
-    "dev": "pnpm --filter @tt-modeler/web dev",
-    "build": "pnpm run typecheck && pnpm --filter @tt-modeler/web build",
-    "preview": "pnpm --filter @tt-modeler/web preview",
-    "typecheck": "pnpm -r typecheck",
-    "lint": "eslint .",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "build": "npm run build -w packages/schema-model -w packages/renderer",
+    "build:webapp": "npm run build -w apps/webapp",
+    "build:vscode": "npm run build -w apps/vscode",
+    "typecheck": "tsc -p tsconfig.json && npm run typecheck -w apps/vscode && npm run typecheck -w e2e",
+    "lint": "eslint . && npm run typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run --project=unit",
+    "test:browser": "vitest run --project=browser",
+    "test:e2e": "npm run test:e2e -w e2e",
+    "dev:webapp": "npm run dev -w apps/webapp",
+    "dev:vscode": "npm run watch -w apps/vscode",
+    "depcruise": "depcruise packages apps --config .dependency-cruiser.cjs",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,jsonc,md,yaml,yml,css,html}": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "@types/node": "^22.10.5",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "eslint": "^9.17.0",
-    "eslint-plugin-react-hooks": "^5.1.0",
-    "eslint-plugin-react-refresh": "^0.4.16",
-    "globals": "^15.14.0",
-    "jsdom": "^25.0.1",
-    "typescript": "^5.7.2",
-    "typescript-eslint": "^8.18.2",
-    "vitest": "^2.1.8"
+    "@eslint/js": "9.17.0",
+    "@types/node": "22.10.5",
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "@vitest/browser": "3.2.4",
+    "dependency-cruiser": "17.4.3",
+    "eslint": "9.17.0",
+    "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-react-hooks": "5.1.0",
+    "eslint-plugin-react-refresh": "0.4.16",
+    "globals": "15.14.0",
+    "husky": "9.1.7",
+    "jsdom": "25.0.1",
+    "lint-staged": "15.2.11",
+    "playwright": "1.49.1",
+    "prettier": "3.4.2",
+    "typescript": "5.7.2",
+    "typescript-eslint": "8.18.2",
+    "vitest": "3.2.4"
   }
 }

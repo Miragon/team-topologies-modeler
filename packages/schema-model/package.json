@@ -1,0 +1,45 @@
+{
+  "name": "@tt-modeler/schema-model",
+  "version": "0.1.0",
+  "description": "The Team Topologies data model with types, the notation specification, runtime validation, migrations and deterministic JSON serialization.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dominikhorn93/team-topologies-modeler.git",
+    "directory": "packages/schema-model"
+  },
+  "homepage": "https://github.com/dominikhorn93/team-topologies-modeler/tree/main/packages/schema-model#readme",
+  "bugs": "https://github.com/dominikhorn93/team-topologies-modeler/issues",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "npm --prefix ../.. run test"
+  },
+  "dependencies": {
+    "nanoid": "5.0.9",
+    "zod": "3.24.1"
+  },
+  "devDependencies": {
+    "tsup": "8.3.5",
+    "typescript": "5.7.2",
+    "vitest": "3.2.4"
+  }
+}

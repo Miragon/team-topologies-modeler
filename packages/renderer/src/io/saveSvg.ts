@@ -9,10 +9,7 @@ import { isTtElement } from "../model/di-types.js";
 
 const MARGIN = 40;
 
-export function saveSVG(
-  canvas: Canvas,
-  elementRegistry: ElementRegistry,
-): { svg: string } {
+export function saveSVG(canvas: Canvas, elementRegistry: ElementRegistry): { svg: string } {
   const container = canvas.getContainer();
   const source = container.querySelector("svg");
   if (!source) throw new Error("No SVG found in the canvas container.");

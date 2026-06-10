@@ -1,15 +1,15 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "target": "ES2022",
     "useDefineForClassFields": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
     "isolatedModules": true,
     "moduleDetection": "force",
+    "resolveJsonModule": true,
     "noEmit": true,
-    "skipLibCheck": true,
 
     "strict": true,
     "noUnusedLocals": true,
@@ -17,10 +17,11 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "baseUrl": ".",
-    "paths": {
-      "@tt-modeler/model": ["packages/model/src/index.ts"],
-      "@tt-modeler/renderer": ["packages/renderer/src/index.ts"]
-    }
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   }
 }

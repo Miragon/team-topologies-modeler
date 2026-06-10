@@ -1,0 +1,128 @@
+{
+  "name": "team-topologies-modeler",
+  "private": true,
+  "version": "0.1.0",
+  "displayName": "Team Topologies Modeler",
+  "description": "View and edit Team Topologies diagrams directly in VS Code, including .tt and .ttm.json files.",
+  "publisher": "team-topologies",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dominikhorn93/team-topologies-modeler.git",
+    "directory": "apps/vscode"
+  },
+  "bugs": "https://github.com/dominikhorn93/team-topologies-modeler/issues",
+  "homepage": "https://github.com/dominikhorn93/team-topologies-modeler/tree/main/apps/vscode#readme",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "team topologies",
+    "team",
+    "topology",
+    "diagram",
+    "architecture"
+  ],
+  "main": "./dist/extension.cjs",
+  "type": "module",
+  "activationEvents": [
+    "onCustomEditor:teamTopologies.editor",
+    "onCustomEditor:teamTopologies.pngEditor"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "team-topologies",
+        "aliases": [
+          "Team Topologies",
+          "team-topologies"
+        ],
+        "extensions": [
+          ".tt"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "teamTopologies.editor",
+        "displayName": "Team Topologies Diagram",
+        "selector": [
+          {
+            "filenamePattern": "*.tt"
+          },
+          {
+            "filenamePattern": "*.ttm.json"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "teamTopologies.pngEditor",
+        "displayName": "Team Topologies Diagram (PNG)",
+        "selector": [
+          {
+            "filenamePattern": "*.tt.png"
+          },
+          {
+            "filenamePattern": "*.ttm.png"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "teamTopologies.newDiagram",
+        "title": "New Empty Diagram",
+        "category": "Team Topologies",
+        "shortTitle": "Team Topologies"
+      },
+      {
+        "command": "teamTopologies.newFromExample",
+        "title": "New Diagram from Example",
+        "category": "Team Topologies"
+      },
+      {
+        "command": "teamTopologies.newPngDiagram",
+        "title": "New Empty Diagram (embedded PNG)",
+        "category": "Team Topologies"
+      }
+    ],
+    "menus": {
+      "file/newFile": [
+        {
+          "command": "teamTopologies.newDiagram",
+          "group": "teamTopologies"
+        },
+        {
+          "command": "teamTopologies.newPngDiagram",
+          "group": "teamTopologies"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch",
+    "typecheck": "tsc -p tsconfig.json",
+    "vscode:prepublish": "node esbuild.config.mjs --production",
+    "package": "vsce package --no-dependencies -o team-topologies-modeler.vsix"
+  },
+  "dependencies": {
+    "@tt-modeler/renderer": "0.1.0",
+    "@tt-modeler/schema-model": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.5",
+    "@types/vscode": "1.96.0",
+    "@vscode/vsce": "3.2.1",
+    "esbuild": "0.24.2",
+    "typescript": "5.7.2"
+  }
+}

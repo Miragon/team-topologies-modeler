@@ -4,7 +4,7 @@
  */
 
 import type CommandStack from "diagram-js/lib/command/CommandStack";
-import type { InteractionMode, TeamType } from "@tt-modeler/model";
+import type { InteractionMode, TeamType } from "@tt-modeler/schema-model";
 import type { TtElement, TtInteraction, TtTeam } from "../model/di-types.js";
 import UpdatePropertiesHandler from "./cmd/UpdatePropertiesHandler.js";
 
@@ -35,7 +35,11 @@ export default class TtModeling {
   }
 
   /** Set or clear per-element colour overrides (`undefined` reverts to default). */
-  setColors(element: TtTeam | TtInteraction, fill: string | undefined, stroke: string | undefined): void {
+  setColors(
+    element: TtTeam | TtInteraction,
+    fill: string | undefined,
+    stroke: string | undefined,
+  ): void {
     this.updateProperties(element, { fill, stroke });
   }
 

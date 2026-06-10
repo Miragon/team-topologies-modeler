@@ -12,7 +12,13 @@
 import type Canvas from "diagram-js/lib/core/Canvas";
 import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
 import type EventBus from "diagram-js/lib/core/EventBus";
-import { isTtElement, isTtFlow, isTtInteraction, isTtTeam, type TtElement } from "../model/di-types.js";
+import {
+  isTtElement,
+  isTtFlow,
+  isTtInteraction,
+  isTtTeam,
+  type TtElement,
+} from "../model/di-types.js";
 
 /** Lower = further back. */
 function tier(el: TtElement): number {

@@ -1,39 +1,28 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# Dependencies
-node_modules
-.pnp
-.pnp.js
-
-# Build output
-dist
-dist-ssr
-*.local
+node_modules/
+dist/
+dist-ssr/
 *.tsbuildinfo
+.vite/
+coverage/
+*.log
+*.local
+.DS_Store
+.idea/
+test-results/
+playwright-report/
+/e2e/.cache/
+.playwright-mcp/
+# Vitest Browser Mode failure artifacts (transient; not visual-regression baselines)
+.vitest-attachments/
+__screenshots__/
 
-# Tooling / runtime
-.claude/
+# Conductor workspace scratch (collaboration files, gitignored by design)
 .context/
 
-# Editor / OS
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Ignore only local Claude settings; project settings.json + rules/ stay tracked
+.claude/settings.local.json
+.claude/logs/
+.claude/skills/
 
-# Test / coverage
-coverage
-
-# Playwright MCP scratch output
-.playwright-mcp/
+# VS Code extension package artifact
+*.vsix
