@@ -1,6 +1,6 @@
 # Team Topologies for VS Code
 
-[![License: MIT](https://img.shields.io/github/license/dominikhorn93/team-topologies-modeler)](https://github.com/dominikhorn93/team-topologies-modeler/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/github/license/miragon/team-topologies-modeler)](https://github.com/miragon/team-topologies-modeler/blob/main/LICENSE)
 
 View and edit [Team Topologies](https://teamtopologies.com/) diagrams directly inside VS Code. The
 extension opens `.tt` / `.ttm.json` files in a graphical editor — the JSON file stays the source of
@@ -38,7 +38,7 @@ To reopen a diagram as raw text, use **View: Reopen Editor With… → Text Edit
 ## Development
 
 Building from source and the dev loop are documented in
-[CONTRIBUTING.md](https://github.com/dominikhorn93/team-topologies-modeler/blob/main/CONTRIBUTING.md).
+[CONTRIBUTING.md](https://github.com/miragon/team-topologies-modeler/blob/main/CONTRIBUTING.md).
 
 ## License
 

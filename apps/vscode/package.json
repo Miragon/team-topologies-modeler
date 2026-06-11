@@ -8,11 +8,11 @@
   "icon": "icon.png",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dominikhorn93/team-topologies-modeler.git",
+    "url": "git+https://github.com/miragon/team-topologies-modeler.git",
     "directory": "apps/vscode"
   },
-  "bugs": "https://github.com/dominikhorn93/team-topologies-modeler/issues",
-  "homepage": "https://github.com/dominikhorn93/team-topologies-modeler/tree/main/apps/vscode#readme",
+  "bugs": "https://github.com/miragon/team-topologies-modeler/issues",
+  "homepage": "https://github.com/miragon/team-topologies-modeler/tree/main/apps/vscode#readme",
   "license": "MIT",
   "engines": {
     "vscode": "^1.96.0"
