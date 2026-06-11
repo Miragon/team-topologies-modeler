@@ -43,9 +43,9 @@
     "tiny-svg": "4.1.4"
   },
   "devDependencies": {
-    "typescript": "5.7.2",
-    "vite": "6.0.5",
-    "vite-plugin-dts": "4.3.0",
-    "vitest": "3.2.4"
+    "typescript": "6.0.3",
+    "vite": "8.0.16",
+    "vite-plugin-dts": "5.0.2",
+    "vitest": "4.1.8"
   }
 }
