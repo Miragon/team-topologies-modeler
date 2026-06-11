@@ -15,8 +15,7 @@ export const FONT = {
    * labels and therefore the SVG export too) — not inherited from a CSS
    * container. Falls back to system sans when the host doesn't provide Inter.
    */
-  family:
-    "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
+  family: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
   label: 13.5,
   small: 11,
 } as const;

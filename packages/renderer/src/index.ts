@@ -2,7 +2,7 @@
  * @tt-modeler/renderer — a framework-agnostic diagram-js modeler for the Team
  * Topologies notation. React-free and DOM-dependent, so it can be embedded
  * as-is in any host (the web app, or later a VS Code webview). Depends only on
- * diagram-js and @tt-modeler/model.
+ * diagram-js and @tt-modeler/schema-model.
  */
 
 import "./assets/team-topologies.css";

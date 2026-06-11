@@ -7,7 +7,7 @@
  *    x-as-a-service = triangle, facilitating = circle) laid over team boundaries;
  *  - flow: a dashed "flow of change" arrow.
  *
- * Colours/shapes come from the single notation source (`@tt-modeler/model`).
+ * Colours/shapes come from the single notation source (`@tt-modeler/schema-model`).
  */
 
 import BaseRenderer from "diagram-js/lib/draw/BaseRenderer";
@@ -19,7 +19,7 @@ import {
   INTERACTION_MODE_SPECS,
   TEAM_TYPE_SPECS,
   dashArray,
-} from "@tt-modeler/model";
+} from "@tt-modeler/schema-model";
 import { FONT, INK, INK_SOFT } from "./styles.js";
 import { TT_RENDER_PRIORITY } from "./styles.js";
 import {
@@ -49,7 +49,11 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
     if (isTtTeam(element)) return this.drawTeam(visuals, element);
     if (isTtInteraction(element)) return this.drawInteraction(visuals, element);
     if (isTtFlow(element)) return this.drawFlow(visuals, element);
-    const rect = svgAttr(svgCreate("rect"), { width: element.width, height: element.height, fill: "#eee" });
+    const rect = svgAttr(svgCreate("rect"), {
+      width: element.width,
+      height: element.height,
+      fill: "#eee",
+    });
     svgAppend(visuals, rect);
     return rect;
   }
@@ -129,7 +133,10 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
     svgAppend(visuals, glyph);
 
     if (el.ttLabel) {
-      this.appendLabel(visuals, el.ttLabel, w, h, { "font-size": FONT.small, "font-weight": "600" });
+      this.appendLabel(visuals, el.ttLabel, w, h, {
+        "font-size": FONT.small,
+        "font-weight": "600",
+      });
     }
     return glyph;
   }
@@ -179,7 +186,8 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
   // --- shared label rendering (wrapped, centred, no halo) ------------------
 
   private appendLabel(visuals: SVGElement, text: string, w: number, h: number, attrs: Attrs): void {
-    const fontSize = typeof attrs["font-size"] === "number" ? (attrs["font-size"] as number) : FONT.label;
+    const fontSize =
+      typeof attrs["font-size"] === "number" ? (attrs["font-size"] as number) : FONT.label;
     const lines = wrapLabel(text, w - 20, fontSize);
     const lineHeight = fontSize * 1.2;
     const startY = h / 2 - ((lines.length - 1) * lineHeight) / 2;

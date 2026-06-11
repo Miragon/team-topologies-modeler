@@ -11,7 +11,7 @@
  */
 
 import type { Shape } from "diagram-js/lib/model/Types";
-import type { InteractionMode, TeamType } from "@tt-modeler/model";
+import type { InteractionMode, TeamType } from "@tt-modeler/schema-model";
 
 export type TtKind = "team" | "interaction" | "flow";
 
@@ -42,7 +42,7 @@ export type TtElement = TtTeam | TtInteraction | TtFlow;
 
 function kindOf(el: unknown): string | undefined {
   return typeof el === "object" && el !== null
-    ? (el as { ttKind?: unknown }).ttKind as string | undefined
+    ? ((el as { ttKind?: unknown }).ttKind as string | undefined)
     : undefined;
 }
 

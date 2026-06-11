@@ -1,15 +1,19 @@
 {
-  "//": "Convenience aggregate for editors / a whole-repo `tsc --noEmit`. The authoritative, boundary-enforcing check is `pnpm -r typecheck` (per-package).",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "//": "Authoritative whole-repo typecheck for the packages + webapp (source paths, no build needed). apps/vscode and e2e are typechecked separately via their own tsconfigs (see the root `typecheck` script).",
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "noEmit": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "types": [],
+    "baseUrl": ".",
     "paths": {
-      "@tt-modeler/model": ["packages/model/src/index.ts"],
+      "@tt-modeler/schema-model": ["packages/schema-model/src/index.ts"],
       "@tt-modeler/renderer": ["packages/renderer/src/index.ts"],
-      "@/*": ["apps/web/src/*"]
+      "@/*": ["apps/webapp/src/*"]
     }
   },
-  "include": ["packages/*/src", "apps/web/src"]
+  "include": ["packages/*/src", "packages/renderer/test", "apps/webapp/src"],
+  "exclude": ["**/dist/**", "**/node_modules/**", "apps/vscode/**", "e2e/**"]
 }

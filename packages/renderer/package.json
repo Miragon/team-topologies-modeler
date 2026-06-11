@@ -1,26 +1,51 @@
 {
   "name": "@tt-modeler/renderer",
   "version": "0.1.0",
-  "private": true,
+  "description": "Render and edit Team Topologies diagrams in the browser, with a framework-agnostic viewer and modeler built on diagram-js.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miragon/team-topologies-modeler.git",
+    "directory": "packages/renderer"
+  },
+  "homepage": "https://github.com/miragon/team-topologies-modeler/tree/main/packages/renderer#readme",
+  "bugs": "https://github.com/miragon/team-topologies-modeler/issues",
   "type": "module",
-  "description": "Framework-agnostic diagram-js rendering & interaction layer for the Team Topologies notation. DOM-dependent, React-free.",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
-  "types": "./src/index.ts",
   "sideEffects": [
     "**/*.css"
   ],
   "exports": {
-    ".": "./src/index.ts",
-    "./assets/team-topologies.css": "./src/assets/team-topologies.css"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./assets/team-topologies.css": "./dist/team-topologies.css",
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json"
+    "build": "vite build",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "npm --prefix ../.. run test",
+    "test:browser": "npm --prefix ../.. run test:browser"
   },
   "dependencies": {
-    "@tt-modeler/model": "workspace:*",
+    "@tt-modeler/schema-model": "0.1.0",
     "diagram-js": "15.16.0",
     "didi": "11.0.0",
     "tiny-svg": "4.1.4"
+  },
+  "devDependencies": {
+    "typescript": "5.7.2",
+    "vite": "6.0.5",
+    "vite-plugin-dts": "4.3.0",
+    "vitest": "3.2.4"
   }
 }
