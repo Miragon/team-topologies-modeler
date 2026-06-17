@@ -20,12 +20,12 @@ is distinguished by shape as well as colour, so diagrams stay readable with colo
 
 ### Team types
 
-| Type                  | Shape                              | Fill / Outline        |
-| --------------------- | ---------------------------------- | --------------------- |
-| Stream-aligned        | horizontal rounded rectangle       | `#FFEDB8` / `#FFD966` |
-| Enabling              | vertical rounded rectangle         | `#DFBDCF` / `#D09CB7` |
-| Complicated Subsystem | octagon                            | `#FFC08B` / `#E88814` |
-| Platform              | square-cornered rectangle (dotted) | `#B7CDF1` / `#6D9EEB` |
+| Type                  | Shape                        | Fill / Outline        |
+| --------------------- | ---------------------------- | --------------------- |
+| Stream-aligned        | horizontal rounded rectangle | `#FFEDB8` / `#FFD966` |
+| Enabling              | vertical rounded rectangle   | `#DFBDCF` / `#D09CB7` |
+| Complicated Subsystem | octagon                      | `#FFC08B` / `#E88814` |
+| Platform              | square-cornered rectangle    | `#B7CDF1` / `#6D9EEB` |
 
 ### Interaction modes
 
