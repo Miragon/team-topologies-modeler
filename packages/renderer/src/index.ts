@@ -20,6 +20,7 @@ export { ttDrawModule, TeamTopologiesRenderer } from "./draw/index.js";
 export { ioModule, TtImporter, TtExporter, saveSVG, ROOT_ID } from "./io/index.js";
 export { ttModelingModule, TtModeling } from "./modeling/index.js";
 export { ttRulesModule, TtRules } from "./rules/index.js";
+export { ttBehaviorsModule, TtFlatModelBehavior } from "./behaviors/index.js";
 export { ttPaletteModule, TtPaletteProvider } from "./palette/index.js";
 export { ttContextPadModule, TtContextPadProvider } from "./context-pad/index.js";
 export { ttLabelEditingModule, TtLabelEditing } from "./label-editing/index.js";

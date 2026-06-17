@@ -9,6 +9,7 @@ import ResizeModule from "diagram-js/lib/features/resize";
 import { NavigatedViewer } from "./NavigatedViewer.js";
 import { ttModelingModule } from "./modeling/index.js";
 import { ttRulesModule } from "./rules/index.js";
+import { ttBehaviorsModule } from "./behaviors/index.js";
 import { ttPaletteModule } from "./palette/index.js";
 import { ttContextPadModule } from "./context-pad/index.js";
 import { ttLabelEditingModule } from "./label-editing/index.js";
@@ -31,6 +32,7 @@ export class Modeler extends NavigatedViewer {
       // Team Topologies editor
       ttModelingModule,
       ttRulesModule,
+      ttBehaviorsModule,
       ttPaletteModule,
       ttContextPadModule,
       ttLabelEditingModule,
