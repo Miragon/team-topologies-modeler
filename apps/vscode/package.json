@@ -119,10 +119,10 @@
     "@tt-modeler/schema-model": "0.1.0"
   },
   "devDependencies": {
-    "@types/node": "22.10.5",
+    "@types/node": "25.9.3",
     "@types/vscode": "1.96.0",
-    "@vscode/vsce": "3.2.1",
-    "esbuild": "0.24.2",
-    "typescript": "5.7.2"
+    "@vscode/vsce": "3.9.2",
+    "esbuild": "0.28.1",
+    "typescript": "6.0.3"
   }
 }

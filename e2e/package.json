@@ -10,7 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@playwright/test": "1.49.1",
-    "typescript": "5.7.2"
+    "@playwright/test": "1.61.0",
+    "typescript": "6.0.3"
   }
 }
