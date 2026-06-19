@@ -29,7 +29,9 @@ fails `npm run lint` and `npm run depcruise`.
 
 - `npm run build` — packages (schema-model, then renderer) · `npm run build:webapp` ·
   `npm run build:vscode`
-- `npm run dev:webapp` · `npm run dev:vscode`
+- `npm run dev:webapp` · `npm run dev:vscode` · `npm run dev:webapp:portless` (per-worktree
+  `https://<worktree>.localhost` URL via [Portless](https://portless.sh); one-time host setup — see
+  [`CONTRIBUTING.md`](CONTRIBUTING.md))
 - `npm test` — Vitest (unit) · `npm run test:browser` — renderer in Chromium · `npm run test:e2e`
 - `npm run typecheck` · `npm run lint` (ESLint + typecheck)
 - `npm run format` — Prettier · `npm run depcruise` — check the module graph

@@ -6,6 +6,7 @@
   "description": "Team Topologies Modeler web application (Vite demo editor).",
   "scripts": {
     "dev": "vite",
+    "dev:portless": "portless \"$(basename \"$(git rev-parse --show-toplevel)\")\" vite",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json"
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "4.3.4",
+    "portless": "0.14.0",
     "vite": "6.0.5"
   }
 }
