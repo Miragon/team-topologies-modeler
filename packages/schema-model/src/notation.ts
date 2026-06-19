@@ -116,7 +116,7 @@ export const TEAM_TYPE_SPECS: Record<TeamType, TeamTypeSpec> = {
     shape: "rect",
     fill: "#B7CDF1",
     stroke: "#6D9EEB",
-    strokeStyle: "dotted",
+    strokeStyle: "solid",
     strokeWidth: 2,
     defaultSize: { width: 380, height: 130 },
     minSize: { width: 200, height: 90 },

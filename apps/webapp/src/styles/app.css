@@ -3,7 +3,8 @@
 
    Layout = a full-bleed canvas (the "plain" renderer) with Excalidraw-style
    floating chrome layered on top: menu (left), palette (centre), Share (right),
-   legend (bottom-left), selection inspector (top-right). No header bar.
+   legend (bottom-left), legal notice (bottom-right), selection inspector (top-right).
+   No header bar.
    ========================================================================== */
 
 :root {
@@ -463,6 +464,7 @@ body {
 
 .tt-legend {
   position: absolute;
+  /* Bottom-left corner, leaving the bottom-right for the legal-notice footer. */
   left: 16px;
   bottom: 16px;
   background: rgba(255, 255, 255, 0.94);
@@ -516,6 +518,30 @@ body {
   height: 1px;
   background: var(--line);
   margin: 10px 0;
+}
+
+/* ---- Legal notice (bottom-right corner, subtle — demo.bpmn.io style) ---- */
+
+.tt-legal {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+}
+
+.tt-legal a {
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.tt-legal a:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 /* ---- Modal -------------------------------------------------------------- */
