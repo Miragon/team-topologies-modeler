@@ -46,7 +46,7 @@
     "@types/node": "22.10.5",
     "@types/react": "18.3.18",
     "@types/react-dom": "18.3.5",
-    "@vitest/browser": "3.2.4",
+    "@vitest/browser": "4.1.9",
     "dependency-cruiser": "17.4.3",
     "eslint": "9.17.0",
     "eslint-config-prettier": "9.1.0",
@@ -60,7 +60,7 @@
     "prettier": "3.4.2",
     "typescript": "5.7.2",
     "typescript-eslint": "8.18.2",
-    "vitest": "3.2.4"
+    "vitest": "4.1.9"
   },
   "overrides": {
     "@types/node": "22.10.5"
