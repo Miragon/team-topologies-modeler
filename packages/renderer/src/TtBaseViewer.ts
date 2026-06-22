@@ -1,6 +1,6 @@
 /**
- * Shared lifecycle & DI bootstrap for every Team Topologies viewer (own code,
- * no bpmn-js dependency). Subclasses only override `_getModules()`. The renderer
+ * Shared lifecycle & DI bootstrap for every Team Topologies viewer. Subclasses
+ * only override `_getModules()`. The renderer
  * is framework-agnostic — mount it into any element (e.g. a VS Code webview).
  */
 

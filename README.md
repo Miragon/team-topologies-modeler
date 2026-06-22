@@ -37,11 +37,20 @@ is distinguished by shape as well as colour, so diagrams stay readable with colo
 
 ## Targets
 
-- **Web app** (`apps/webapp`) — a Vite + React editor with a full-bleed canvas, palette, inspector,
-  PNG/SVG export and a shareable, self-contained URL (LZ-compressed, no backend). Deployed on Netlify.
-- **VS Code extension** (`apps/vscode`) — a custom editor for `.tt` / `.ttm.json` files: the JSON file
-  stays the source of truth (save, Git and diff keep working), and editable embedded-PNG diagrams
-  (`*.tt.png`) let you drop a diagram into a wiki or README and still edit it graphically.
+- **Web app** ([`apps/webapp`](apps/webapp/README.md)) — a Vite + React editor with a full-bleed
+  canvas, palette, inspector, PNG/SVG export and a shareable, self-contained URL (LZ-compressed, no
+  backend). Deployed on Netlify.
+- **VS Code extension** ([`apps/vscode`](apps/vscode/README.md)) — a custom editor for `.tt` /
+  `.ttm.json` files: the JSON file stays the source of truth (save, Git and diff keep working), and
+  editable embedded-PNG diagrams (`*.tt.png`) let you drop a diagram into a wiki or README and still
+  edit it graphically.
+
+Both targets share two published packages:
+
+| Package                                                                    | Purpose                                                                          | DOM |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --- |
+| [`@miragon/team-topologies-schema-model`](packages/schema-model/README.md) | Types, the notation spec, Zod validation, migrations, deterministic JSON         | no  |
+| [`@miragon/team-topologies-renderer`](packages/renderer/README.md)         | diagram-js viewer/modeler, custom rendering, palette, context pad, import/export | yes |
 
 ## Getting started
 
@@ -49,7 +58,7 @@ Requires Node ≥ 22.13 and npm. From the repo root:
 
 ```bash
 npm install
-npm run dev:webapp   # start the webapp dev server (http://localhost:5180)
+npm run dev:webapp   # start the webapp dev server (http://localhost:5181)
 npm run dev:vscode   # watch-build the VS Code extension (then F5 in VS Code)
 npm test             # unit tests (Vitest)
 npm run lint         # eslint + type-check
@@ -83,7 +92,7 @@ Design choices:
   diff-friendly and gives stable share URLs.
 - **Runtime validation** (Zod) on everything imported from files / URLs / localStorage, with a
   forward-migration hook keyed by document `version`.
-- **diagram-js** (the bpmn-io toolkit, MIT) as the editor engine — palette, move, resize, context pad,
+- **diagram-js** (MIT) as the editor engine — palette, move, resize, context pad,
   inline label editing and undo/redo for free.
 
 ## Document format
