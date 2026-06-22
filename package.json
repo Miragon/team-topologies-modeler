@@ -1,6 +1,6 @@
 {
   "name": "team-topologies-modeler",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "A web-based modeler and VS Code extension for the Team Topologies notation (team types & interaction modes).",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@miragon/team-topologies-schema-model",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "The Team Topologies data model with types, the notation specification, runtime validation, migrations and deterministic JSON serialization.",
   "license": "MIT",
   "repository": {
