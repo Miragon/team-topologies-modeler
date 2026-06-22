@@ -19,9 +19,7 @@ jobs:
     if: github.event_name != 'workflow_dispatch' || !inputs.dry_run
     runs-on: ubuntu-latest
     outputs:
-      schema_model: ${{ steps.release_please.outputs['packages/schema-model--release_created'] }}
-      renderer: ${{ steps.release_please.outputs['packages/renderer--release_created'] }}
-      vscode: ${{ steps.release_please.outputs['apps/vscode--release_created'] }}
+      releases_created: ${{ steps.release_please.outputs.releases_created }}
     steps:
       - uses: actions/create-github-app-token@v3
         id: app-token
@@ -35,29 +33,41 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-  publish-npm-schema-model:
+  publish-npm:
+    name: Publish to npm
     needs: release-please
-    if: needs.release-please.outputs.schema_model == 'true'
+    if: needs.release-please.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+    environment: npm
     permissions:
       contents: read
       id-token: write
-    uses: ./.github/workflows/publish-npm-package.yml
-    with:
-      package: schema-model
-
-  publish-npm-renderer:
-    needs: release-please
-    if: needs.release-please.outputs.renderer == 'true'
-    permissions:
-      contents: read
-      id-token: write
-    uses: ./.github/workflows/publish-npm-package.yml
-    with:
-      package: renderer
+    steps:
+      - uses: actions/checkout@v6
+      # Node 24 ships npm >= 11, which supports OIDC trusted publishing (tokenless).
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run build
+      - name: Publish to npm (idempotent, dependency order)
+        run: |
+          set -euo pipefail
+          for dir in packages/schema-model packages/renderer; do
+            name="$(node -p "require('./$dir/package.json').name")"
+            version="$(node -p "require('./$dir/package.json').version")"
+            if npm view "$name@$version" version > /dev/null 2>&1; then
+              echo "skip $name@$version (already on registry)"
+            else
+              echo "publish $name@$version"
+              npm publish -w "$dir" --provenance --access public
+            fi
+          done
 
   publish-vscode:
     needs: release-please
-    if: needs.release-please.outputs.vscode == 'true'
+    if: needs.release-please.outputs.releases_created == 'true'
     runs-on: ubuntu-latest
     environment: vscode-marketplace
     permissions:
@@ -66,7 +76,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
       - run: npm ci
       - run: npm run build:vscode
       - name: Package extension
@@ -85,7 +95,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npm run build
