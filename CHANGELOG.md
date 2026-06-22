@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/Miragon/team-topologies-modeler/compare/v0.3.0...v0.3.1) (2026-06-22)
+
+
+### Bug Fixes
+
+* README badges + repository URL casing for npm provenance (0.3.1) ([#27](https://github.com/Miragon/team-topologies-modeler/issues/27)) ([9a09a36](https://github.com/Miragon/team-topologies-modeler/commit/9a09a36b5308156a8d5dfd9b1a39870e48785790))
+
 ## [0.3.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.2.0...v0.3.0) (2026-06-22)
 
 
