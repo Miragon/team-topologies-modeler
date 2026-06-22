@@ -7,8 +7,13 @@
 import type Canvas from "diagram-js/lib/core/Canvas";
 import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
 import type { Root } from "diagram-js/lib/model/Types";
-import { DOCUMENT_VERSION } from "@tt-modeler/schema-model";
-import type { FlowShape, InteractionShape, TeamNode, TtDocument } from "@tt-modeler/schema-model";
+import { DOCUMENT_VERSION } from "@miragon/team-topologies-schema-model";
+import type {
+  FlowShape,
+  InteractionShape,
+  TeamNode,
+  TtDocument,
+} from "@miragon/team-topologies-schema-model";
 import { isTtFlow, isTtInteraction, isTtTeam } from "../model/di-types.js";
 import { ROOT_ID, type RootBusinessObject } from "./types.js";
 

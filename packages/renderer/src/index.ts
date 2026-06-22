@@ -1,8 +1,8 @@
 /**
- * @tt-modeler/renderer — a framework-agnostic diagram-js modeler for the Team
+ * @miragon/team-topologies-renderer — a framework-agnostic diagram-js modeler for the Team
  * Topologies notation. React-free and DOM-dependent, so it can be embedded
  * as-is in any host (the web app, or later a VS Code webview). Depends only on
- * diagram-js and @tt-modeler/schema-model.
+ * diagram-js and @miragon/team-topologies-schema-model.
  */
 
 import "./assets/team-topologies.css";

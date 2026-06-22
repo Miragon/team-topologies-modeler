@@ -5,7 +5,7 @@
  */
 
 import { createContext, useContext } from "react";
-import type { Modeler, TtElement } from "@tt-modeler/renderer";
+import type { Modeler, TtElement } from "@miragon/team-topologies-renderer";
 
 export type Selected = TtElement | null;
 

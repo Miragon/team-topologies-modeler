@@ -1,7 +1,7 @@
 /**
  * DOM-boundary enforcement at the module-graph level. Complements the ESLint rule: forbids the
  * DOM-free package (schema-model) from depending on diagram-js / DOM libraries or on the
- * DOM-dependent @tt-modeler/renderer.
+ * DOM-dependent @miragon/team-topologies-renderer.
  */
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {

@@ -6,7 +6,7 @@
   # Force base to the repo root (overrides any base possibly set in the Netlify UI), otherwise
   # publish resolves wrong. publish is relative to base.
   base = "/"
-  # The webapp bundles the @tt-modeler/* packages from source via Vite aliases (see vite.config.ts),
+  # The webapp bundles the @miragon/team-topologies-* packages from source via Vite aliases (see vite.config.ts),
   # so it is self-contained -> no prior lib build needed.
   command = "npm run build:webapp"
   publish = "apps/webapp/dist"

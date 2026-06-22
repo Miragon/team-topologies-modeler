@@ -9,16 +9,16 @@ a VS Code extension.
 
 Workspaces are declared in the root `package.json` (`workspaces` array, listed in topological build
 order). **All** versions are pinned to exact values inline in each package's `package.json` (`.npmrc`
-sets `save-exact=true`) — including internal `@tt-modeler/*` deps, which use the exact local version
+sets `save-exact=true`) — including internal `@miragon/team-topologies-*` deps, which use the exact local version
 `0.1.0` (npm still links them to the local workspace). Exact pinning is enforced in CI by the
 `pin-check` job.
 
-| Package                    | Purpose                                                                  | DOM |
-| -------------------------- | ------------------------------------------------------------------------ | --- |
-| `@tt-modeler/schema-model` | Types, the notation spec, Zod validation, migrations, JSON serialization | no  |
-| `@tt-modeler/renderer`     | diagram-js bootstrap, renderer, viewer/modeler, import/export, CSS       | yes |
-| `apps/webapp`              | Vite + React demo editor                                                 | yes |
-| `apps/vscode`              | VS Code extension: custom editor for `.tt`/`.ttm.json`                   | yes |
+| Package                                 | Purpose                                                                  | DOM |
+| --------------------------------------- | ------------------------------------------------------------------------ | --- |
+| `@miragon/team-topologies-schema-model` | Types, the notation spec, Zod validation, migrations, JSON serialization | no  |
+| `@miragon/team-topologies-renderer`     | diagram-js bootstrap, renderer, viewer/modeler, import/export, CSS       | yes |
+| `apps/webapp`                           | Vite + React demo editor                                                 | yes |
+| `apps/vscode`                           | VS Code extension: custom editor for `.tt`/`.ttm.json`                   | yes |
 
 **P1 — DOM boundary:** the DOM-free package (`schema-model`) must **never** import `diagram-js`/DOM
 libraries (`tiny-svg`, `min-dom`) or use the DOM (`window`/`document`). Enforced twice — ESLint

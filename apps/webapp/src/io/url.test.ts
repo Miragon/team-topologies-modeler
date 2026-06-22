@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildShareUrl, decodeDocumentFromHash, encodeDocumentToHash } from "./url";
-import { serializeDocument } from "@tt-modeler/schema-model";
-import { SAMPLE_DOCUMENT } from "@tt-modeler/schema-model";
+import { serializeDocument } from "@miragon/team-topologies-schema-model";
+import { SAMPLE_DOCUMENT } from "@miragon/team-topologies-schema-model";
 
 describe("url sharing", () => {
   it("round-trips a document through the hash payload", () => {

@@ -6,7 +6,7 @@ const PORT = process.env.E2E_PORT ?? "5180";
 const BASE_URL = `http://localhost:${PORT}`;
 
 /**
- * E2E for @tt-modeler/webapp. The webapp dev server resolves @tt-modeler/* via Vite source aliases
+ * E2E for @miragon/team-topologies-webapp. The webapp dev server resolves @miragon/team-topologies-* via Vite source aliases
  * (apps/webapp/vite.config.ts), so no package build is required — the dev server is self-contained.
  * `cwd: '..'` runs the command from the repo root so the npm workspace resolves.
  */

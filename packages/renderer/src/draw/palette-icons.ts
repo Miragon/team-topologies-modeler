@@ -4,8 +4,12 @@
  * mode). Returned as HTML strings for diagram-js palette `html`.
  */
 
-import { INTERACTION_MODE_SPECS, TEAM_TYPE_SPECS, dashArray } from "@tt-modeler/schema-model";
-import type { InteractionMode, TeamType } from "@tt-modeler/schema-model";
+import {
+  INTERACTION_MODE_SPECS,
+  TEAM_TYPE_SPECS,
+  dashArray,
+} from "@miragon/team-topologies-schema-model";
+import type { InteractionMode, TeamType } from "@miragon/team-topologies-schema-model";
 
 function svg(inner: string): string {
   return `<svg class="tt-palette-svg" width="24" height="24" viewBox="0 0 26 26" aria-hidden="true">${inner}</svg>`;

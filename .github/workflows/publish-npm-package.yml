@@ -27,7 +27,7 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npm run build
-      - name: Publish @tt-modeler/${{ inputs.package }}
+      - name: Publish @miragon/team-topologies-${{ inputs.package }}
         run: |
           dir="packages/${{ inputs.package }}"
           name="$(node -p "require('./$dir/package.json').name")"

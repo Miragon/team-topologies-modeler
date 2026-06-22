@@ -6,8 +6,8 @@
     "types": [],
     "baseUrl": ".",
     "paths": {
-      "@tt-modeler/schema-model": ["../../packages/schema-model/src/index.ts"],
-      "@tt-modeler/renderer": ["../../packages/renderer/src/index.ts"],
+      "@miragon/team-topologies-schema-model": ["../../packages/schema-model/src/index.ts"],
+      "@miragon/team-topologies-renderer": ["../../packages/renderer/src/index.ts"],
       "@/*": ["src/*"]
     }
   },

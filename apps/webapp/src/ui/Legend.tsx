@@ -1,6 +1,6 @@
 /** Collapsible legend mapping each shape to its team type / interaction mode. */
 
-import { ALL_INTERACTION_SPECS, ALL_TEAM_SPECS } from "@tt-modeler/schema-model";
+import { ALL_INTERACTION_SPECS, ALL_TEAM_SPECS } from "@miragon/team-topologies-schema-model";
 import { InteractionIcon, TeamIcon } from "./ShapeIcon";
 import { useUiStore } from "./uiStore";
 

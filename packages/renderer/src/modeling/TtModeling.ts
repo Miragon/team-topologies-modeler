@@ -4,7 +4,7 @@
  */
 
 import type CommandStack from "diagram-js/lib/command/CommandStack";
-import type { InteractionMode, TeamType } from "@tt-modeler/schema-model";
+import type { InteractionMode, TeamType } from "@miragon/team-topologies-schema-model";
 import type { TtElement, TtInteraction, TtTeam } from "../model/di-types.js";
 import UpdatePropertiesHandler from "./cmd/UpdatePropertiesHandler.js";
 

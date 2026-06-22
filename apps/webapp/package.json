@@ -1,5 +1,5 @@
 {
-  "name": "@tt-modeler/webapp",
+  "name": "@miragon/team-topologies-webapp",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,8 +12,8 @@
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json"
   },
   "dependencies": {
-    "@tt-modeler/renderer": "0.1.0",
-    "@tt-modeler/schema-model": "0.1.0",
+    "@miragon/team-topologies-renderer": "0.1.0",
+    "@miragon/team-topologies-schema-model": "0.1.0",
     "lz-string": "1.5.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",

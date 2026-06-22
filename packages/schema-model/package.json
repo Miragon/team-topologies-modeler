@@ -1,5 +1,5 @@
 {
-  "name": "@tt-modeler/schema-model",
+  "name": "@miragon/team-topologies-schema-model",
   "version": "0.1.0",
   "description": "The Team Topologies data model with types, the notation specification, runtime validation, migrations and deterministic JSON serialization.",
   "license": "MIT",

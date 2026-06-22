@@ -1,5 +1,5 @@
 {
-  "name": "@tt-modeler/e2e",
+  "name": "@miragon/team-topologies-e2e",
   "version": "0.1.0",
   "private": true,
   "type": "module",

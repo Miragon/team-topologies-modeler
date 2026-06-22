@@ -1,7 +1,11 @@
 /** Tiny SVG glyphs for the team types and interaction modes (palette/legend). */
 
-import { INTERACTION_MODE_SPECS, TEAM_TYPE_SPECS, dashArray } from "@tt-modeler/schema-model";
-import type { InteractionMode, TeamType } from "@tt-modeler/schema-model";
+import {
+  INTERACTION_MODE_SPECS,
+  TEAM_TYPE_SPECS,
+  dashArray,
+} from "@miragon/team-topologies-schema-model";
+import type { InteractionMode, TeamType } from "@miragon/team-topologies-schema-model";
 
 const SIZE = 26;
 

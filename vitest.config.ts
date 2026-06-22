@@ -6,10 +6,10 @@ import { fileURLToPath, URL } from "node:url";
 // while the renderer browser-integration layer runs opt-in in real Chromium via `npm run test:browser`
 // (jsdom can't provide SVGElement.getBBox() / getComputedTextLength(), which the renderer relies on).
 const alias = {
-  "@tt-modeler/renderer": fileURLToPath(
+  "@miragon/team-topologies-renderer": fileURLToPath(
     new URL("./packages/renderer/src/index.ts", import.meta.url),
   ),
-  "@tt-modeler/schema-model": fileURLToPath(
+  "@miragon/team-topologies-schema-model": fileURLToPath(
     new URL("./packages/schema-model/src/index.ts", import.meta.url),
   ),
   "@": fileURLToPath(new URL("./apps/webapp/src", import.meta.url)),

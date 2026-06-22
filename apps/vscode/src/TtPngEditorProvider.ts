@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import { serializeDocument, DOCUMENT_VERSION } from "@tt-modeler/schema-model";
-import type { TtDocument } from "@tt-modeler/schema-model";
+import { serializeDocument, DOCUMENT_VERSION } from "@miragon/team-topologies-schema-model";
+import type { TtDocument } from "@miragon/team-topologies-schema-model";
 import { getWebviewHtml } from "./webviewHtml.js";
 import { exportImageToFile } from "./exportImage.js";
 import { EMBED_KEYWORD, decodeDoc, pngExtractText } from "./png.js";

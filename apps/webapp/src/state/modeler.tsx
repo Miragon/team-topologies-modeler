@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Modeler, isTtElement } from "@tt-modeler/renderer";
+import { Modeler, isTtElement } from "@miragon/team-topologies-renderer";
 import { saveToStorage } from "./persistence";
 import { writeDocumentToLocation } from "@/io/url";
 import { ModelerContext, type ModelerContextValue, type Selected } from "./modelerContext";
