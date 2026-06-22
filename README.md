@@ -1,5 +1,10 @@
 # Team Topologies Modeler
 
+[![License: MIT](https://img.shields.io/github/license/Miragon/team-topologies-modeler)](LICENSE)
+[![CI](https://github.com/Miragon/team-topologies-modeler/actions/workflows/ci.yml/badge.svg)](https://github.com/Miragon/team-topologies-modeler/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@miragon/team-topologies-renderer)](https://www.npmjs.com/package/@miragon/team-topologies-renderer)
+[![VS Marketplace](https://vsmarketplacebadges.dev/version-short/miragon-gmbh.team-topologies-modeler.svg?label=VS%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=miragon-gmbh.team-topologies-modeler)
+
 A fast, offline-friendly modeler for **Team Topologies** diagrams — the four team types and three
 team-interaction modes from the book by Matthew Skelton & Manuel Pais. Ships as a **web app** and a
 **VS Code extension** sharing one diagram-js core.

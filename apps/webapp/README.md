@@ -1,6 +1,6 @@
 # Team Topologies Modeler — Web App
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
+[![License: MIT](https://img.shields.io/github/license/Miragon/team-topologies-modeler)](https://github.com/Miragon/team-topologies-modeler/blob/main/LICENSE)
 
 The browser editor for [Team Topologies](https://teamtopologies.com/) diagrams — a Vite + React app
 built on the shared [`@miragon/team-topologies-renderer`](../../packages/renderer) core. An
