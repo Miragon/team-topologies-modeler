@@ -49,20 +49,41 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
+      # The npm bundled with Node 24 (11.3.x) errors with "Failed to generate Web
+      # Auth URLs / token is invalid" *after* a successful OIDC trusted-publish,
+      # aborting the run even though the package was uploaded. Fixed in npm >= 11.5.1.
+      - run: npm install -g npm@latest
       - run: npm ci
       - run: npm run build
       - name: Publish to npm (idempotent, dependency order)
         run: |
-          set -euo pipefail
+          set -uo pipefail
           for dir in packages/schema-model packages/renderer; do
             name="$(node -p "require('./$dir/package.json').name")"
             version="$(node -p "require('./$dir/package.json').version")"
             if npm view "$name@$version" version > /dev/null 2>&1; then
               echo "skip $name@$version (already on registry)"
-            else
-              echo "publish $name@$version"
-              npm publish -w "$dir" --provenance --access public
+              continue
             fi
+            echo "publish $name@$version"
+            # Don't trust the exit code: the npm OIDC client can fail a post-publish
+            # request after the tarball is already accepted. Verify against the
+            # registry so a spurious error on one package can't block the next.
+            npm publish -w "$dir" --provenance --access public || true
+            published=""
+            for attempt in 1 2 3 4 5 6; do
+              if npm view "$name@$version" version > /dev/null 2>&1; then
+                published=1
+                break
+              fi
+              echo "waiting for $name@$version to appear on the registry (attempt $attempt)"
+              sleep 5
+            done
+            if [ -z "$published" ]; then
+              echo "::error::$name@$version did not land on the registry"
+              exit 1
+            fi
+            echo "confirmed $name@$version on registry"
           done
 
   publish-vscode:
