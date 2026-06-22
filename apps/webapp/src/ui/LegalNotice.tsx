@@ -1,5 +1,5 @@
 /**
- * Subtle legal-notice footer (bottom-left, demo.bpmn.io style). The operator
+ * Subtle legal-notice footer. The operator
  * (Miragon GmbH) hosts the demo, so the deployed app links out to the existing
  * legal pages on miragon.io — no legal text is duplicated/maintained here.
  */
