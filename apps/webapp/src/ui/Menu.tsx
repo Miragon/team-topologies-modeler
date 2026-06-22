@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { SAMPLE_DOCUMENT, emptyDocument } from "@tt-modeler/schema-model";
+import { SAMPLE_DOCUMENT, emptyDocument } from "@miragon/team-topologies-schema-model";
 import { exportJson, importJsonFile } from "@/io/json";
 import { downloadPng, downloadSvg } from "@/io/image";
 import { useModeler } from "@/state/modelerContext";

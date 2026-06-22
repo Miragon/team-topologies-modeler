@@ -11,7 +11,11 @@ import type {
   default as PaletteProvider,
 } from "diagram-js/lib/features/palette/PaletteProvider";
 import type { Element } from "diagram-js/lib/model/Types";
-import { ALL_INTERACTION_SPECS, ALL_TEAM_SPECS, FLOW_SPEC } from "@tt-modeler/schema-model";
+import {
+  ALL_INTERACTION_SPECS,
+  ALL_TEAM_SPECS,
+  FLOW_SPEC,
+} from "@miragon/team-topologies-schema-model";
 import { flowIconSvg, interactionIconSvg, teamIconSvg } from "../draw/palette-icons.js";
 import type TtElementFactory from "../model/TtElementFactory.js";
 

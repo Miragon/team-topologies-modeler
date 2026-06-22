@@ -14,7 +14,7 @@ const EXTERNAL = [
   "object-refs",
   "inherits-browser",
   "path-intersection",
-  "@tt-modeler/schema-model",
+  "@miragon/team-topologies-schema-model",
 ];
 
 export default defineConfig({

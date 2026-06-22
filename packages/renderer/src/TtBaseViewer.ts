@@ -10,7 +10,7 @@ import type Canvas from "diagram-js/lib/core/Canvas";
 import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
 import type EventBus from "diagram-js/lib/core/EventBus";
 import type { Root } from "diagram-js/lib/model/Types";
-import type { TtDocument } from "@tt-modeler/schema-model";
+import type { TtDocument } from "@miragon/team-topologies-schema-model";
 import { saveSVG } from "./io/saveSvg.js";
 import type TtImporter from "./io/TtImporter.js";
 import type TtExporter from "./io/TtExporter.js";

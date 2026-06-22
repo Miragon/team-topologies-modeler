@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef } from "react";
-import { SAMPLE_DOCUMENT } from "@tt-modeler/schema-model";
+import { SAMPLE_DOCUMENT } from "@miragon/team-topologies-schema-model";
 import { useModeler } from "@/state/modelerContext";
 import { loadFromStorage } from "@/state/persistence";
 import { readDocumentFromLocation, writeDocumentToLocation } from "@/io/url";

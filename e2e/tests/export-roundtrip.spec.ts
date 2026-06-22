@@ -2,8 +2,8 @@ import { test, expect, type Page } from "@playwright/test";
 
 /**
  * Typed handle to the app's debug surface (exposed in apps/webapp/src/ui/DiagramCanvas.tsx). We never
- * import the renderer here — only the structural shape we call into. Kept minimal so @tt-modeler/e2e
- * stays free of @tt-modeler/* dependencies.
+ * import the renderer here — only the structural shape we call into. Kept minimal so @miragon/team-topologies-e2e
+ * stays free of @miragon/team-topologies-* dependencies.
  */
 interface TtModeler {
   importDocument(doc: unknown): { warnings: ReadonlyArray<unknown> };

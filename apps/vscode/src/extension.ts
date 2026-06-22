@@ -1,6 +1,10 @@
 import * as vscode from "vscode";
-import { serializeDocument, SAMPLE_DOCUMENT, DOCUMENT_VERSION } from "@tt-modeler/schema-model";
-import type { TtDocument } from "@tt-modeler/schema-model";
+import {
+  serializeDocument,
+  SAMPLE_DOCUMENT,
+  DOCUMENT_VERSION,
+} from "@miragon/team-topologies-schema-model";
+import type { TtDocument } from "@miragon/team-topologies-schema-model";
 import { TtEditorProvider } from "./TtEditorProvider.js";
 import { TtPngEditorProvider } from "./TtPngEditorProvider.js";
 

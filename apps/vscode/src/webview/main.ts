@@ -1,7 +1,7 @@
 // Pulls the renderer CSS (incl. diagram-js.css) into the bundle via the renderer's index.
-import { Modeler } from "@tt-modeler/renderer";
-import { parseDocument, serializeDocument } from "@tt-modeler/schema-model";
-import type { TtDocument } from "@tt-modeler/schema-model";
+import { Modeler } from "@miragon/team-topologies-renderer";
+import { parseDocument, serializeDocument } from "@miragon/team-topologies-schema-model";
+import type { TtDocument } from "@miragon/team-topologies-schema-model";
 import "./style.css";
 import { embedSvg, svgToEmbeddedPng, blobToBase64 } from "./io.js";
 import type { HostToWebview, WebviewToHost } from "../protocol.js";

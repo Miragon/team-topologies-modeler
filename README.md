@@ -62,12 +62,12 @@ An **npm-workspaces monorepo** with a strict boundary between the pure model and
 
 ```
 packages/
-  schema-model/  @tt-modeler/schema-model — DOM-free core: types, notation spec, Zod schema,
+  schema-model/  @miragon/team-topologies-schema-model — DOM-free core: types, notation spec, Zod schema,
                                             deterministic JSON, migrations, factory, the example.
-  renderer/      @tt-modeler/renderer     — diagram-js bootstrap: viewer/modeler, renderer, palette,
+  renderer/      @miragon/team-topologies-renderer     — diagram-js bootstrap: viewer/modeler, renderer, palette,
                                             context-pad, label editing, import/export, CSS.
 apps/
-  webapp/        @tt-modeler/webapp       — Vite + React editor application.
+  webapp/        @miragon/team-topologies-webapp       — Vite + React editor application.
   vscode/        team-topologies-modeler  — VS Code custom editor for .tt / .ttm.json.
 e2e/                                       — Playwright end-to-end tests for the webapp.
 ```

@@ -11,7 +11,7 @@
  */
 
 import type { Shape } from "diagram-js/lib/model/Types";
-import type { InteractionMode, TeamType } from "@tt-modeler/schema-model";
+import type { InteractionMode, TeamType } from "@miragon/team-topologies-schema-model";
 
 export type TtKind = "team" | "interaction" | "flow";
 

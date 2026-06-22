@@ -3,9 +3,9 @@
  * never loses work. Offline-friendly; no network involved.
  */
 
-import { serializeDocument } from "@tt-modeler/schema-model";
-import { parseDocument } from "@tt-modeler/schema-model";
-import type { TtDocument } from "@tt-modeler/schema-model";
+import { serializeDocument } from "@miragon/team-topologies-schema-model";
+import { parseDocument } from "@miragon/team-topologies-schema-model";
+import type { TtDocument } from "@miragon/team-topologies-schema-model";
 import { toast } from "@/ui/toast";
 
 const STORAGE_KEY = "tt-modeler:document:v1";

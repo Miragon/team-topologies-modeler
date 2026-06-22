@@ -7,7 +7,7 @@
  *    x-as-a-service = triangle, facilitating = circle) laid over team boundaries;
  *  - flow: a dashed "flow of change" arrow.
  *
- * Colours/shapes come from the single notation source (`@tt-modeler/schema-model`).
+ * Colours/shapes come from the single notation source (`@miragon/team-topologies-schema-model`).
  */
 
 import BaseRenderer from "diagram-js/lib/draw/BaseRenderer";
@@ -19,7 +19,7 @@ import {
   INTERACTION_MODE_SPECS,
   TEAM_TYPE_SPECS,
   dashArray,
-} from "@tt-modeler/schema-model";
+} from "@miragon/team-topologies-schema-model";
 import { FONT, INK, INK_SOFT } from "./styles.js";
 import { TT_RENDER_PRIORITY } from "./styles.js";
 import {

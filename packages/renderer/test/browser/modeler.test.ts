@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
-import { Modeler, isTtTeam } from "@tt-modeler/renderer";
-import type { TtElement, TtTeam } from "@tt-modeler/renderer";
-import { SAMPLE_DOCUMENT } from "@tt-modeler/schema-model";
+import { Modeler, isTtTeam } from "@miragon/team-topologies-renderer";
+import type { TtElement, TtTeam } from "@miragon/team-topologies-renderer";
+import { SAMPLE_DOCUMENT } from "@miragon/team-topologies-schema-model";
 
 function mountModeler(): { modeler: Modeler; container: HTMLDivElement } {
   const container = document.createElement("div");

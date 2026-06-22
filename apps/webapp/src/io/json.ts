@@ -1,8 +1,8 @@
 /** Import/export of the native, lossless `.ttm.json` document format. */
 
-import { serializeDocument } from "@tt-modeler/schema-model";
-import { parseDocument, type ParseResult } from "@tt-modeler/schema-model";
-import type { TtDocument } from "@tt-modeler/schema-model";
+import { serializeDocument } from "@miragon/team-topologies-schema-model";
+import { parseDocument, type ParseResult } from "@miragon/team-topologies-schema-model";
+import type { TtDocument } from "@miragon/team-topologies-schema-model";
 import { downloadBlob, slugify } from "./download";
 
 export const JSON_EXTENSION = ".ttm.json";

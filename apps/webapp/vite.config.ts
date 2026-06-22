@@ -2,7 +2,7 @@ import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
 
-// The demo webapp bundles the @tt-modeler/* packages straight from SOURCE (like the tsconfig paths).
+// The demo webapp bundles the @miragon/team-topologies-* packages straight from SOURCE (like the tsconfig paths).
 // This keeps the build self-contained: no prior lib build needed (robust for Netlify).
 // Ordering matters: the specific CSS subpath BEFORE the package alias.
 const fromHere = (p: string): string => fileURLToPath(new URL(p, import.meta.url));
@@ -34,15 +34,15 @@ export default defineConfig({
     alias: [
       { find: "@", replacement: fromHere("./src") },
       {
-        find: "@tt-modeler/renderer/assets/team-topologies.css",
+        find: "@miragon/team-topologies-renderer/assets/team-topologies.css",
         replacement: fromHere("../../packages/renderer/src/assets/team-topologies.css"),
       },
       {
-        find: "@tt-modeler/renderer",
+        find: "@miragon/team-topologies-renderer",
         replacement: fromHere("../../packages/renderer/src/index.ts"),
       },
       {
-        find: "@tt-modeler/schema-model",
+        find: "@miragon/team-topologies-schema-model",
         replacement: fromHere("../../packages/schema-model/src/index.ts"),
       },
     ],

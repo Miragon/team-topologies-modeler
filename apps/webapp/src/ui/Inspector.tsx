@@ -11,9 +11,9 @@ import {
   TEAM_TYPE_SPECS,
   type InteractionMode,
   type TeamType,
-} from "@tt-modeler/schema-model";
-import type { TtFlow, TtInteraction, TtModeling, TtTeam } from "@tt-modeler/renderer";
-import { isTtFlow, isTtInteraction, isTtTeam } from "@tt-modeler/renderer";
+} from "@miragon/team-topologies-schema-model";
+import type { TtFlow, TtInteraction, TtModeling, TtTeam } from "@miragon/team-topologies-renderer";
+import { isTtFlow, isTtInteraction, isTtTeam } from "@miragon/team-topologies-renderer";
 import { useModeler } from "@/state/modelerContext";
 import { CommitInput } from "./CommitInput";
 import { InteractionIcon, TeamIcon } from "./ShapeIcon";
