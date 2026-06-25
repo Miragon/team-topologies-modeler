@@ -29,9 +29,11 @@ fails `npm run lint` and `npm run depcruise`.
 
 - `npm run build` — packages (schema-model, then renderer) · `npm run build:webapp` ·
   `npm run build:vscode`
-- `npm run dev:webapp` · `npm run dev:vscode` · `npm run dev:webapp:portless` (per-worktree
-  `https://<worktree>.localhost` URL via [Portless](https://portless.sh); one-time host setup — see
-  [`CONTRIBUTING.md`](CONTRIBUTING.md))
+- `npm run dev:webapp` (alias: `npm run dev`) serves the webapp via [Portless](https://portless.sh)
+  at a stable per-worktree `https://<worktree>.team-topologies-modeler.localhost` URL (Portless-derived
+  from the git worktree; config in [`apps/webapp/portless.json`](apps/webapp/portless.json); needs
+  Node ≥ 24 + a one-time `npx portless service install` — see [`CONTRIBUTING.md`](CONTRIBUTING.md)).
+  `npm run dev:webapp:plain` for plain Vite on `:5181`. · `npm run dev:vscode`
 - `npm test` — Vitest (unit) · `npm run test:browser` — renderer in Chromium · `npm run test:e2e`
 - `npm run typecheck` · `npm run lint` (ESLint + typecheck)
 - `npm run format` — Prettier · `npm run depcruise` — check the module graph

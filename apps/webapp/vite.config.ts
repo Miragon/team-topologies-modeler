@@ -2,15 +2,7 @@ import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
 
-// The demo webapp bundles the @miragon/team-topologies-* packages straight from SOURCE (like the tsconfig paths).
-// This keeps the build self-contained: no prior lib build needed (robust for Netlify).
-// Ordering matters: the specific CSS subpath BEFORE the package alias.
 const fromHere = (p: string): string => fileURLToPath(new URL(p, import.meta.url));
-
-// When started via Portless (`npm run dev:webapp:portless`) the proxy injects PORTLESS_URL — the
-// named https://<worktree>.localhost address. We open the browser there (not Vite's 127.0.0.1 port)
-// and echo it as an extra line under Vite's URLs so it is obvious in the console. Unset for plain
-// `npm run dev:webapp`, which then keeps its current behaviour (Vite on :5181, no auto-open).
 const portlessUrl = process.env.PORTLESS_URL || undefined;
 
 const portlessBanner = (url: string): Plugin => ({
@@ -26,7 +18,6 @@ const portlessBanner = (url: string): Plugin => ({
   },
 });
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), ...(portlessUrl ? [portlessBanner(portlessUrl)] : [])],
   base: "./",
@@ -51,6 +42,7 @@ export default defineConfig({
     port: 5181,
     strictPort: true,
     open: portlessUrl ?? false,
+    allowedHosts: [".localhost"],
   },
   build: {
     target: "es2022",
