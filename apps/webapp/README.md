@@ -32,14 +32,15 @@ From the repo root (Node ≥ 22.13):
 
 ```bash
 npm install
-npm run dev:webapp            # http://localhost:5181
+npm run dev:webapp            # stable per-worktree https://<worktree>.team-topologies-modeler.localhost
 ```
 
-Or, for a stable per-worktree URL via [Portless](https://portless.sh) (`https://<worktree>.localhost`,
-one-time host setup — see [`CONTRIBUTING.md`](../../CONTRIBUTING.md)):
+`npm run dev:webapp` serves the app via [Portless](https://portless.sh) at a stable per-worktree
+`.localhost` URL (needs Node ≥ 24 + a one-time `npx portless service install` — see
+[`CONTRIBUTING.md`](../../CONTRIBUTING.md)). For plain Vite on a fixed port instead:
 
 ```bash
-npm run dev:webapp:portless
+npm run dev:webapp:plain      # http://localhost:5181
 ```
 
 Production build (also what Netlify runs):

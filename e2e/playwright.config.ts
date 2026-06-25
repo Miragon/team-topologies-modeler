@@ -24,7 +24,7 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: `npm run dev -w apps/webapp -- --port ${PORT} --strictPort`,
+    command: `npm run dev:app -w apps/webapp -- --port ${PORT} --strictPort`,
     cwd: "..",
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,

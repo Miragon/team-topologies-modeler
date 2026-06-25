@@ -51,6 +51,9 @@ export default defineConfig({
     port: 5181,
     strictPort: true,
     open: portlessUrl ?? false,
+    // Portless proxies the named host (e.g. https://<branch>.team-topologies-modeler.localhost) to
+    // this Vite server; Vite 6 rejects unknown Host headers, so allow any `.localhost` subdomain.
+    allowedHosts: [".localhost"],
   },
   build: {
     target: "es2022",
