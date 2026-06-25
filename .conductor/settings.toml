@@ -2,9 +2,5 @@
 
 [scripts]
 setup = "npm install"
-# Each workspace is a linked git worktree, so portless serves the webapp at its own
-# https://<workspace>.team-topologies-modeler.localhost — no port threading, no collisions.
-# Prerequisite (one-time per machine, needs sudo so it can't run in the non-TTY Run button):
-#   npx portless service install
 run = "npm run dev"
 run_mode = "concurrent"
