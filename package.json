@@ -44,13 +44,13 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@types/node": "26.0.0",
+    "@types/node": "26.0.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitest/browser": "4.1.9",
     "@vitest/browser-playwright": "4.1.9",
-    "dependency-cruiser": "17.4.3",
-    "eslint": "10.5.0",
+    "dependency-cruiser": "18.0.0",
+    "eslint": "10.6.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.3",
@@ -58,15 +58,15 @@
     "husky": "9.1.7",
     "jsdom": "29.1.1",
     "lint-staged": "17.0.8",
-    "playwright": "1.61.0",
-    "prettier": "3.8.4",
+    "playwright": "1.61.1",
+    "prettier": "3.9.3",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.62.0",
+    "typescript-eslint": "8.62.1",
     "vitest": "4.1.9"
   },
   "overrides": {
-    "@types/node": "26.0.0",
-    "vite": "8.0.16",
+    "@types/node": "26.0.1",
+    "vite": "8.1.0",
     "tsup": {
       "esbuild": "0.25.12"
     }
