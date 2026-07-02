@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import { playwright } from "@vitest/browser-playwright";
 import { fileURLToPath, URL } from "node:url";
 
 // The packages are consumed from SOURCE (mirrors the tsconfig paths / app aliases) so neither
@@ -39,7 +40,7 @@ export default defineConfig({
           include: ["packages/renderer/test/browser/**/*.{test,spec}.ts"],
           browser: {
             enabled: true,
-            provider: "playwright",
+            provider: playwright(),
             headless: true,
             instances: [{ browser: "chromium" }],
           },

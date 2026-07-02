@@ -22,6 +22,7 @@ export default defineConfig({
   plugins: [react(), ...(portlessUrl ? [portlessBanner(portlessUrl)] : [])],
   base: "./",
   resolve: {
+    dedupe: ["react", "react-dom"],
     alias: [
       { find: "@", replacement: fromHere("./src") },
       {
