@@ -13,7 +13,7 @@ import { writeDocumentToLocation } from "@/io/url";
 import { ModelerContext, type ModelerContextValue, type Selected } from "./modelerContext";
 
 export function ModelerProvider({ children }: { children: ReactNode }) {
-  const modelerRef = useRef<Modeler>();
+  const modelerRef = useRef<Modeler>(undefined);
   // Fill the full-bleed `.tt-canvas` host. Without an explicit height the
   // renderer falls back to its standalone 600px default (it's created detached
   // and only attached later via `attachTo`, so it can't infer the host size).
@@ -29,7 +29,7 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
   // Debounced autosave of the current document: to localStorage (so a refresh
   // never loses work) and into the address-bar hash (so the URL is always a
   // shareable/bookmarkable snapshot, no Share click required).
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const persist = () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {

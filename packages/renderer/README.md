@@ -103,7 +103,7 @@ viewer via `additionalModules`:
 | ---------------------- | -------------------------------------------------------------------------------- |
 | `ttModelModule`        | Element factory with notation defaults (`TtElementFactory`).                     |
 | `ttDrawModule`         | Custom SVG rendering of teams, interactions and flow (`TeamTopologiesRenderer`). |
-| `ioModule`             | Document ↔ canvas bridge (`TtImporter`, `TtExporter`, `saveSVG`).               |
+| `ioModule`             | Document ↔ canvas bridge (`TtImporter`, `TtExporter`, `saveSVG`).                |
 | `ttModelingModule`     | High-level mutations — label, team type, interaction mode, colours, description. |
 | `ttRulesModule`        | Editing rules (what can move / resize / be created).                             |
 | `ttBehaviorsModule`    | Keeps the model **flat** — shapes never nest.                                    |

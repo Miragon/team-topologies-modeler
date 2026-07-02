@@ -8,8 +8,9 @@
    ========================================================================== */
 
 :root {
-  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue",
-    Arial, sans-serif;
+  --font-sans:
+    "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial,
+    sans-serif;
 
   --ink: #1f2430;
   --ink-soft: #525a6b;

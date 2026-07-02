@@ -48,6 +48,7 @@
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitest/browser": "4.1.9",
+    "@vitest/browser-playwright": "4.1.9",
     "dependency-cruiser": "17.4.3",
     "eslint": "10.5.0",
     "eslint-config-prettier": "10.1.8",
@@ -65,7 +66,7 @@
   },
   "overrides": {
     "@types/node": "26.0.0",
-    "vite": "6.4.3",
+    "vite": "8.0.16",
     "tsup": {
       "esbuild": "0.25.12"
     }

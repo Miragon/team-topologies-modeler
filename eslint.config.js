@@ -48,8 +48,6 @@ export default tseslint.config(
       sourceType: "module",
     },
     rules: {
-      // TypeScript already reports undefined identifiers; the lexical rule only causes false
-      // positives across the host/browser/node split.
       "no-undef": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -79,7 +77,8 @@ export default tseslint.config(
       "react-refresh": reactRefresh,
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     },
   },
