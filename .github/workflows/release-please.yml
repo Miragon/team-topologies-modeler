@@ -43,7 +43,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6.0.3
+      - uses: actions/checkout@v7.0.0
       # Node 24 ships npm >= 11, which supports OIDC trusted publishing (tokenless).
       - uses: actions/setup-node@v6.4.0
         with:
@@ -87,6 +87,7 @@ jobs:
           done
 
   publish-vscode:
+    name: Publish to VS Code Marketplace
     needs: release-please
     if: needs.release-please.outputs.releases_created == 'true'
     runs-on: ubuntu-latest
@@ -94,7 +95,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6.0.3
+      - uses: actions/checkout@v7.0.0
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: 24
@@ -109,11 +110,35 @@ jobs:
         env:
           VSCE_PAT: ${{ secrets.VSCE_PUBLISH }}
 
+  publish-ovsx:
+    name: Publish to Open VSX Marketplace
+    needs: release-please
+    if: needs.release-please.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+    environment: vscode-marketplace
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.0
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build:vscode
+      - name: Package extension
+        working-directory: apps/vscode
+        run: npx vsce package --no-dependencies -o team-topologies-modeler.vsix
+      - name: Publish to Open VSX Marketplace
+        working-directory: apps/vscode
+        run: npx ovsx --pat "$OVSX_PAT" publish --packagePath team-topologies-modeler.vsix
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PUBLISH }}
+
   dry-run:
     if: github.event_name == 'workflow_dispatch' && inputs.dry_run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.3
+      - uses: actions/checkout@v7.0.0
       - uses: actions/setup-node@v6.4.0
         with:
           node-version: 24
