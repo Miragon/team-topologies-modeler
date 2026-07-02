@@ -66,7 +66,7 @@
   },
   "overrides": {
     "@types/node": "26.0.1",
-    "vite": "8.0.16",
+    "vite": "8.1.0",
     "tsup": {
       "esbuild": "0.25.12"
     }
