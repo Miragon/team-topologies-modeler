@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.3.1...v0.4.0) (2026-07-07)
+
+
+### Features
+
+* **dev:** adopt documented Portless setup for worktree-aware dev URLs ([#31](https://github.com/Miragon/team-topologies-modeler/issues/31)) ([2155439](https://github.com/Miragon/team-topologies-modeler/commit/2155439858dea3af7023cf2cf0156a1b071fdabc))
+* **vscode:** add Get Started walkthrough and align README with Miragon Modeler reference ([#41](https://github.com/Miragon/team-topologies-modeler/issues/41)) ([a4afbad](https://github.com/Miragon/team-topologies-modeler/commit/a4afbad61606a87fa77fedac6448c9a2130e9794))
+
 ## [0.3.1](https://github.com/Miragon/team-topologies-modeler/compare/v0.3.0...v0.3.1) (2026-06-22)
 
 
