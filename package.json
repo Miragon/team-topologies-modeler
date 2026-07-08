@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@types/node": "26.0.1",
+    "@types/node": "26.1.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitest/browser": "4.1.9",
@@ -59,13 +59,13 @@
     "jsdom": "29.1.1",
     "lint-staged": "17.0.8",
     "playwright": "1.61.1",
-    "prettier": "3.9.3",
+    "prettier": "3.9.4",
     "typescript": "6.0.3",
     "typescript-eslint": "8.62.1",
     "vitest": "4.1.9"
   },
   "overrides": {
-    "@types/node": "26.0.1",
+    "@types/node": "26.1.0",
     "vite": "8.1.0",
     "tsup": {
       "esbuild": "0.25.12"
