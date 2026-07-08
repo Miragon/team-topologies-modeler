@@ -2,5 +2,14 @@
 
 [scripts]
 setup = "npm install"
-run = "npm run dev"
 run_mode = "concurrent"
+archive = "npx portless prune"
+
+[scripts.run.webapp]
+command = "npm run dev"
+default = true
+icon = "globe"
+
+[scripts.run.vscode]
+command = "npm run dev:vscode"
+icon = "code"
