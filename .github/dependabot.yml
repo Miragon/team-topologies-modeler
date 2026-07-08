@@ -1,5 +1,6 @@
 version: 2
 updates:
+  # npm — minor + patch grouped, every major opens its own PR for review.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -7,9 +8,14 @@ updates:
     rebase-strategy: "disabled"
     labels:
       - "dependencies"
-    open-pull-requests-limit: 5
+    # majors arrive as individual PRs — leave headroom above the default of 5
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     cooldown:
       default-days: 3
+      semver-major-days: 14
     # @types/vscode must stay <= engines.vscode (^1.96.0) or `vsce package` fails.
     ignore:
       - dependency-name: "@types/vscode"
@@ -17,14 +23,19 @@ updates:
           - "version-update:semver-minor"
           - "version-update:semver-major"
     groups:
-      npm-dependencies:
+      npm-minor-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
-          - "patch"
           - "minor"
-          - "major"
+          - "patch"
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
+  # github-actions — mechanical bumps, SHA-pinned and CI-gated, so group everything.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -33,13 +44,17 @@ updates:
     labels:
       - "dependencies"
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     cooldown:
       default-days: 3
     groups:
       github-actions:
+        applies-to: version-updates
         patterns:
           - "*"
-        update-types:
-          - "patch"
-          - "minor"
-          - "major"
+      github-actions-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
