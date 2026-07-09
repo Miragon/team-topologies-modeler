@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.4.0...v0.5.0) (2026-07-09)
+
+
+### Features
+
+* **webapp:** add empty-state welcome card and start empty ([#47](https://github.com/Miragon/team-topologies-modeler/issues/47)) ([3376b87](https://github.com/Miragon/team-topologies-modeler/commit/3376b87120bc34a3e668d5ee9c8885f720580e66))
+
 ## [0.4.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.3.1...v0.4.0) (2026-07-07)
 
 
