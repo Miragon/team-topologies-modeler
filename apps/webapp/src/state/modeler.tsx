@@ -25,6 +25,7 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
   const [canRedo, setCanRedo] = useState(false);
   const [title, setTitleState] = useState("Untitled team topology");
   const [revision, setRevision] = useState(0);
+  const [isEmpty, setIsEmpty] = useState(false);
 
   // Debounced autosave of the current document: to localStorage (so a refresh
   // never loses work) and into the address-bar hash (so the URL is always a
@@ -46,6 +47,12 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
     };
     const bump = () => setRevision((r) => r + 1);
     const syncTitle = () => setTitleState(modeler.getMeta()?.title ?? "Untitled team topology");
+    // Only ever runs after the first import (event- or initial-sync-driven), so
+    // it never forces the modeler to materialise before DiagramCanvas attaches.
+    const syncEmpty = () => {
+      const doc = modeler.exportDocument();
+      setIsEmpty(doc.nodes.length === 0 && doc.interactions.length === 0 && doc.flows.length === 0);
+    };
 
     const onSelection = (e: unknown) => {
       const sel = (e as { newSelection?: unknown[] }).newSelection?.[0];
@@ -54,12 +61,17 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
     const onCommandStack = () => {
       syncHistory();
       bump();
+      syncEmpty();
       persist();
     };
-    const onElements = () => bump();
+    const onElements = () => {
+      bump();
+      syncEmpty();
+    };
     const onImport = () => {
       syncHistory();
       syncTitle();
+      syncEmpty();
       bump();
       // New / Example / Import-file / shared-link all re-import: keep the
       // autosave + address-bar hash in step with the freshly loaded document.
@@ -71,9 +83,12 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
     modeler.on("elements.changed", onElements);
     modeler.on("import.done", onImport);
 
-    // Initial sync (the first import.done may fire before we subscribed).
+    // Initial sync (the first import.done may fire before we subscribed). This
+    // effect runs after DiagramCanvas has attached + imported, so reading the
+    // document here is safe.
     syncHistory();
     syncTitle();
+    syncEmpty();
 
     return () => {
       modeler.off("selection.changed", onSelection);
@@ -91,9 +106,9 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
   };
 
   const value = useMemo<ModelerContextValue>(
-    () => ({ modeler, selected, canUndo, canRedo, title, revision, setTitle }),
+    () => ({ modeler, selected, canUndo, canRedo, title, revision, isEmpty, setTitle }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [modeler, selected, canUndo, canRedo, title, revision],
+    [modeler, selected, canUndo, canRedo, title, revision, isEmpty],
   );
 
   return <ModelerContext.Provider value={value}>{children}</ModelerContext.Provider>;

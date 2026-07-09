@@ -8,6 +8,7 @@
 
 import { ModelerProvider } from "@/state/modeler";
 import { DiagramCanvas } from "@/ui/DiagramCanvas";
+import { EmptyState } from "@/ui/EmptyState";
 import { Inspector } from "@/ui/Inspector";
 import { Menu } from "@/ui/Menu";
 import { ShareButton } from "@/ui/ShareButton";
@@ -21,6 +22,7 @@ export default function App() {
     <ModelerProvider>
       <div className="tt-app">
         <DiagramCanvas />
+        <EmptyState />
         <div className="tt-chrome tt-chrome--left">
           <Menu />
         </div>
