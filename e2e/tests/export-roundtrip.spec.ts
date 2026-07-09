@@ -29,12 +29,14 @@ test.describe("webapp export round-trip", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await waitForModeler(page);
+    // The app now boots onto an empty canvas fronted by the EmptyState card;
+    // load the bundled example via its "Show example" button so the round-trip
+    // tests operate on real content.
+    await page.locator(".tt-empty__cta").click();
+    await expect(page.locator(".tt-canvas .djs-element").first()).toBeVisible();
   });
 
   test("loads the example topology and exports stable JSON + SVG", async ({ page }) => {
-    // The renderer paints one .djs-element per node/interaction/flow once import.done fires.
-    await expect(page.locator(".tt-canvas .djs-element").first()).toBeVisible();
-
     const doc = await page.evaluate(() => window.__ttModeler.exportDocument());
     expect(doc.nodes.length).toBeGreaterThan(0);
     expect(doc.interactions.length).toBeGreaterThan(0);
