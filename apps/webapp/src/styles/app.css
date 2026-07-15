@@ -8,26 +8,39 @@
    ========================================================================== */
 
 :root {
+  /* Miragon corporate identity. The --cd-* brand tokens come from the renderer's vendored
+     cd-tokens.generated.css (imported transitively via @miragon/team-topologies-renderer). The
+     aliases below are this app's semantic layer over them — one light mode, no dark toggle. */
   --font-sans:
-    "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial,
-    sans-serif;
+    "Geist Variable", "Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --ink: #1f2430;
-  --ink-soft: #525a6b;
-  --ink-faint: #8a92a3;
-  --line: #e3e6ee;
-  --line-strong: #d2d7e3;
-  --bg: #f4f6fb;
-  --surface: #ffffff;
-  --surface-2: #f8fafc;
-  --accent: #4f46e5;
-  --accent-soft: #eef2ff;
-  --danger: #d8456b;
-  --shadow-sm: 0 1px 2px rgba(20, 24, 40, 0.06), 0 1px 3px rgba(20, 24, 40, 0.08);
-  --shadow-md: 0 6px 24px rgba(20, 24, 40, 0.12);
-  --shadow-pop: 0 14px 40px rgba(20, 24, 40, 0.16);
-  --radius: 10px;
-  --radius-sm: 7px;
+  --ink: var(--cd-schwarz);
+  --ink-soft: #5b5b5b;
+  --ink-faint: #8a8a8a;
+  --line: #e6e2e2;
+  --line-strong: #d9d4d4;
+  --bg: var(--cd-grau);
+  --surface: var(--cd-weiss);
+  --surface-2: #f2f0f0;
+  --accent: var(--cd-blau);
+  --accent-strong: var(--cd-blau-link);
+  --accent-soft: rgba(51, 93, 229, 0.12);
+  --link: var(--cd-blau-link);
+  --success: var(--cd-success);
+  --warning: var(--cd-warning);
+  --info: var(--cd-info);
+  --danger: var(--cd-danger);
+  --danger-soft: var(--cd-danger-soft);
+  --shadow-sm: var(--cd-shadow-1);
+  --shadow-md: var(--cd-shadow-2);
+  --shadow-pop: var(--cd-shadow-3);
+  --radius: var(--cd-radius-md);
+  --radius-sm: var(--cd-radius-sm);
+  --radius-lg: var(--cd-radius-lg);
+  color-scheme: light;
 }
 
 * {
@@ -129,14 +142,14 @@ body {
 .tt-iconbtn--primary {
   border-color: var(--accent);
   background: var(--accent);
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.22);
+  color: var(--cd-weiss);
+  box-shadow: 0 2px 10px rgba(51, 93, 229, 0.22);
 }
 
 .tt-iconbtn--primary:hover {
-  border-color: #4338ca;
-  background: #4338ca;
-  color: #fff;
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
+  color: var(--cd-weiss);
 }
 
 /* ---- Menu dropdown ------------------------------------------------------ */
@@ -224,7 +237,7 @@ body {
 
 .tt-menu__kbd {
   margin-left: auto;
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ink-faint);
 }
@@ -301,24 +314,24 @@ body {
 .tt-btn--primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--cd-weiss);
 }
 
 .tt-btn--primary:hover {
-  background: #4338ca;
-  border-color: #4338ca;
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
 }
 
 .tt-btn--danger {
-  background: #fff;
-  border-color: #f0c2cf;
+  background: var(--surface);
+  border-color: rgba(201, 42, 42, 0.32);
   color: var(--danger);
   width: 100%;
   margin-top: 6px;
 }
 
 .tt-btn--danger:hover {
-  background: #fdeef2;
+  background: var(--danger-soft);
   border-color: var(--danger);
 }
 
@@ -559,7 +572,7 @@ body {
 .tt-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(20, 24, 40, 0.42);
+  background: rgba(8, 10, 32, 0.42);
 }
 
 .tt-modal__panel {
@@ -624,7 +637,7 @@ body {
 }
 
 kbd {
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 11.5px;
   background: var(--surface-2);
   border: 1px solid var(--line-strong);
@@ -649,24 +662,37 @@ kbd {
 }
 
 .tt-toast {
-  border: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--line);
+  /* Kind = coloured left border + dot AND the message text (never colour alone — WCAG). */
+  border-left: 3px solid var(--toast-accent, var(--info));
   font: inherit;
   font-size: 13px;
   font-weight: 550;
-  color: #fff;
-  background: var(--ink);
-  border-radius: 999px;
-  padding: 9px 18px;
+  color: var(--ink);
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 9px 16px;
   box-shadow: var(--shadow-md);
   cursor: pointer;
   animation: tt-toast-in 0.18s ease;
 }
 
+.tt-toast__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--toast-accent, var(--info));
+}
+
 .tt-toast--success {
-  background: #1f9d6b;
+  --toast-accent: var(--success);
 }
 .tt-toast--error {
-  background: var(--danger);
+  --toast-accent: var(--danger);
 }
 
 @keyframes tt-toast-in {
@@ -700,30 +726,29 @@ kbd {
   text-align: center;
   gap: 12px;
   max-width: 380px;
-  padding: 32px 36px;
-  background: rgba(255, 255, 255, 0.82);
+  padding: 36px 40px;
+  /* Frosted panel: translucent surface token (not a hardcoded white) so the
+     canvas shows through the blur, matching the sibling Wardley modeler. */
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-pop);
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(8px);
   animation: tt-empty-in 0.2s ease;
 }
 
 .tt-empty__mark {
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 15px;
+  /* Accent-tinted glow lifts the mark off the frosted card (accent == --cd-blau). */
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .tt-empty__title {
-  margin: 4px 0 0;
-  font-size: 20px;
-  font-weight: 650;
+  margin: 8px 0 0;
+  font-size: 22px;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--ink);
 }
@@ -731,18 +756,59 @@ kbd {
 .tt-empty__text {
   margin: 0;
   color: var(--ink-soft);
-  font-size: 13.5px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-.tt-empty__cta {
+.tt-empty__actions {
+  display: flex;
+  gap: 10px;
   margin-top: 4px;
+}
+
+/* The welcome card gets larger, rounder call-to-action buttons than the compact
+   toolbar `.tt-btn` — matched to the start-card scale without touching the shared button. */
+.tt-empty__actions .tt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+}
+
+.tt-empty__actions .tt-btn:active {
+  transform: translateY(0);
+}
+
+.tt-empty__actions .tt-btn--primary {
+  box-shadow: var(--shadow-sm);
+}
+
+.tt-empty__actions .tt-btn--primary:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Ghost: bordered surface button (Wardley parity) — scoped so the borderless
+   global `.tt-btn--ghost` used elsewhere (Inspector) is untouched. */
+.tt-empty__actions .tt-btn--ghost {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.tt-empty__actions .tt-btn--ghost:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .tt-empty__hint {
   margin-top: 2px;
   color: var(--ink-faint);
-  font-size: 11.5px;
+  font-size: 12px;
   letter-spacing: 0.01em;
 }
 

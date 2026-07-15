@@ -5,6 +5,27 @@ types, the three team-interaction modes, and flow-of-change), built on
 [diagram-js](https://github.com/bpmn-io/diagram-js) (MIT). Shared core for two targets: a web app and
 a VS Code extension.
 
+## Design system (mandatory)
+
+All UI/visual work MUST follow the Miragon product design system — this is not optional. Source of
+truth: the **`miragon-brand:modeler-tool-design`** Claude skill in
+[`Miragon/corporate-identity`](https://github.com/Miragon/corporate-identity). It auto-loads when the
+plugin is installed; otherwise read the guide directly:
+<https://raw.githubusercontent.com/Miragon/corporate-identity/main/plugins/miragon-brand/skills/modeler-tool-design/assets/modeler-design-system.md>.
+
+Install the plugin with `/plugin marketplace add Miragon/corporate-identity` +
+`/plugin install miragon-brand@miragon`.
+
+The brand tokens are **vendored** from that skill as
+[`packages/renderer/src/theme/cd-tokens.generated.css`](packages/renderer/src/theme/cd-tokens.generated.css)
+— do **not** fork the hex values; re-copy the file from the skill to update. The pure-TS mirror in
+[`packages/renderer/src/theme/palette.ts`](packages/renderer/src/theme/palette.ts) is the single
+source for canvas colours; a drift test (`packages/renderer/test/theme.sync.test.ts`) fails if the
+two diverge. The four Team Topologies team-type / interaction colours in
+[`packages/schema-model/src/notation.ts`](packages/schema-model/src/notation.ts) are the **official
+notation** (Team-Shape-Templates) and are serialized into documents — they stay as-is; the CI applies
+to everything else (chrome, typography, accent/selection, neutrals, the app icon).
+
 ## Monorepo (npm workspaces)
 
 Workspaces are declared in the root `package.json` (`workspaces` array, listed in topological build
