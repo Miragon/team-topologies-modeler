@@ -17,7 +17,8 @@ export function Toaster() {
           title="Dismiss"
           aria-label={`Dismiss notification: ${t.message}`}
         >
-          {t.message}
+          <span className="tt-toast__dot" aria-hidden />
+          <span>{t.message}</span>
         </button>
       ))}
     </div>

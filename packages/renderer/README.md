@@ -52,8 +52,12 @@ modeler.redo();
 ```
 
 > **The CSS is required.** Import `@miragon/team-topologies-renderer/assets/team-topologies.css`
-> (it also pulls in `diagram-js`'s own stylesheet) — without it the palette, context pad and label
-> editor are unstyled.
+> (it also pulls in `diagram-js`'s own stylesheet and the Miragon `--cd-*` brand tokens) — without it
+> the palette, context pad and label editor are unstyled.
+
+> **Typeface.** The canvas labels are drawn in the Miragon typeface **Geist**. The library does not
+> ship the font; self-host it in the host app (e.g. `@fontsource-variable/geist`) so the on-screen
+> canvas and exported SVG render in Geist. Without it, text falls back to a system sans.
 
 ## API
 
