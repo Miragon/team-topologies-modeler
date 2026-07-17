@@ -60,6 +60,48 @@ test("dropping a shape onto another element does not re-parent it", () => {
   }
 });
 
+// Copy-paste: our domain data lives as flat props on the shape (no moddle), so
+// the copy step must carry them onto diagram-js' descriptor, and paste must mint
+// a fresh model-style id (never a diagram-js `shape_N`, which would collide with
+// re-imported ids).
+test("copy preserves Team Topologies props and paste mints a fresh id", () => {
+  const { modeler, container } = mountModeler();
+  try {
+    modeler.importDocument(SAMPLE_DOCUMENT);
+
+    const registry = modeler.get<{ getAll(): TtElement[] }>("elementRegistry");
+    const copyPaste = modeler.get<{
+      copy(elements: unknown[]): void;
+      createShape(attrs: unknown): TtTeam;
+    }>("copyPaste");
+    const clipboard = modeler.get<{
+      get(): Record<string, Array<Record<string, unknown>>>;
+    }>("clipboard");
+    const team = registry.getAll().find(isTtTeam) as TtTeam;
+
+    copyPaste.copy([team]);
+
+    // (1) the copy hook writes the tt* props onto the clipboard descriptor…
+    const descriptors = Object.values(clipboard.get()).flat();
+    const descriptor = descriptors.find((d) => d.id === team.id) as Record<string, unknown>;
+    expect(descriptor.ttKind).toBe("team");
+    expect(descriptor.teamType).toBe(team.teamType);
+    expect(descriptor.ttLabel).toBe(team.ttLabel);
+
+    // (2) …and createShape rebuilds the shape with a fresh `team_` id, keeping
+    // the props (paste strips `priority`/`parent` before calling createShape).
+    const { priority: _priority, parent: _parent, ...attrs } = descriptor;
+    const pasted = copyPaste.createShape(attrs);
+    expect(pasted.id).not.toBe(team.id);
+    expect(pasted.id.startsWith("team_")).toBe(true);
+    expect(pasted.teamType).toBe(team.teamType);
+    expect(pasted.ttLabel).toBe(team.ttLabel);
+  } finally {
+    modeler.destroy();
+    container.remove();
+  }
+});
+
 test("creating a shape over another element keeps it on the root", () => {
   const { modeler, container } = mountModeler();
   try {

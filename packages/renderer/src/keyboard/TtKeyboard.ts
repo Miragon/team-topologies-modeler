@@ -1,14 +1,15 @@
 /**
- * Keyboard shortcuts: undo / redo / delete-selection. Bound to the document so
- * they work without first clicking (focusing) the canvas — typing inside form
- * fields is left untouched. No container `tabindex`, so the canvas never shows a
- * focus ring.
+ * Keyboard shortcuts: undo / redo / delete-selection / copy / paste. Bound to
+ * the document so they work without first clicking (focusing) the canvas —
+ * typing inside form fields is left untouched. No container `tabindex`, so the
+ * canvas never shows a focus ring.
  */
 
 import type Canvas from "diagram-js/lib/core/Canvas";
 import type CommandStack from "diagram-js/lib/command/CommandStack";
 import type Selection from "diagram-js/lib/features/selection/Selection";
 import type Modeling from "diagram-js/lib/features/modeling/Modeling";
+import type CopyPaste from "diagram-js/lib/features/copy-paste/CopyPaste";
 import type { Element } from "diagram-js/lib/model/Types";
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -23,13 +24,14 @@ function isTypingTarget(target: EventTarget | null): boolean {
 }
 
 export default class TtKeyboard {
-  static $inject = ["canvas", "commandStack", "selection", "modeling"];
+  static $inject = ["canvas", "commandStack", "selection", "modeling", "copyPaste"];
 
   constructor(
     canvas: Canvas,
     commandStack: CommandStack,
     selection: Selection,
     modeling: Modeling,
+    copyPaste: CopyPaste,
   ) {
     const doc = canvas.getContainer().ownerDocument ?? document;
 
@@ -50,6 +52,15 @@ export default class TtKeyboard {
           e.preventDefault();
           modeling.removeElements([...sel]);
         }
+      } else if (cmd && key === "c") {
+        const sel = selection.get() as Element[];
+        if (sel.length) {
+          e.preventDefault();
+          copyPaste.copy(sel);
+        }
+      } else if (cmd && key === "v") {
+        e.preventDefault();
+        copyPaste.paste();
       }
     });
   }
