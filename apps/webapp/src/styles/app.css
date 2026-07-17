@@ -478,9 +478,9 @@ body {
 
 .tt-legend {
   position: absolute;
-  /* Bottom-left corner, leaving the bottom-right for the legal-notice footer. */
+  /* Bottom-left corner, sitting above the legal-notice footer line. */
   left: 16px;
-  bottom: 16px;
+  bottom: 44px;
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -534,15 +534,16 @@ body {
   margin: 10px 0;
 }
 
-/* ---- Legal notice (bottom-right corner, subtle) ---- */
+/* ---- Legal notice (bottom-left corner, subtle) ---- */
 
 .tt-legal {
   position: absolute;
-  right: 16px;
+  left: 16px;
   bottom: 14px;
   z-index: 4;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 6px;
   font-size: 11.5px;
   color: var(--ink-soft);
