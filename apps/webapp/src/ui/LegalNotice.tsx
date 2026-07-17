@@ -5,8 +5,13 @@
  */
 
 export function LegalNotice() {
+  const year = new Date().getFullYear();
   return (
     <footer className="tt-legal" aria-label="Legal">
+      <a href="https://miragon.io/" target="_blank" rel="noopener noreferrer">
+        © {year} Miragon GmbH
+      </a>
+      <span aria-hidden="true">·</span>
       <a href="https://miragon.io/impressum/" target="_blank" rel="noopener noreferrer">
         Impressum
       </a>
