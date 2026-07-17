@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.5.0...v0.6.0) (2026-07-17)
+
+
+### Features
+
+* adopt Miragon corporate identity ([#52](https://github.com/Miragon/team-topologies-modeler/issues/52)) ([900be13](https://github.com/Miragon/team-topologies-modeler/commit/900be13fdba1377789d66f27f7cd260fb3888b49))
+* **renderer:** add copy & paste of elements ([#56](https://github.com/Miragon/team-topologies-modeler/issues/56)) ([b9b13a3](https://github.com/Miragon/team-topologies-modeler/commit/b9b13a3b754c6314f258c086952d18f0004c57bc))
+
 ## [0.5.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.4.0...v0.5.0) (2026-07-09)
 
 
