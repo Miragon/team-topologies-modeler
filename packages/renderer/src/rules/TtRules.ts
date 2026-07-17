@@ -29,5 +29,8 @@ export default class TtRules extends RuleProvider {
     );
     this.addRule("shape.create", () => true);
     this.addRule("shape.resize", () => true);
+    // Copy-paste: diagram-js denies `element.copy` unless a rule allows it
+    // (CommandStack.canExecute returns false when no handler claims the action).
+    this.addRule("element.copy", () => true);
   }
 }

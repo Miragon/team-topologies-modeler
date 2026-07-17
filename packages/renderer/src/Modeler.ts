@@ -14,6 +14,7 @@ import { ttPaletteModule } from "./palette/index.js";
 import { ttContextPadModule } from "./context-pad/index.js";
 import { ttLabelEditingModule } from "./label-editing/index.js";
 import { ttKeyboardModule } from "./keyboard/index.js";
+import { ttCopyPasteModule } from "./copy-paste/index.js";
 import { ttZOrderModule } from "./zorder/index.js";
 
 /**
@@ -37,6 +38,7 @@ export class Modeler extends NavigatedViewer {
       ttContextPadModule,
       ttLabelEditingModule,
       ttKeyboardModule,
+      ttCopyPasteModule,
       ttZOrderModule,
     ];
   }
