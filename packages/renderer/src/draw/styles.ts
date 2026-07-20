@@ -1,6 +1,8 @@
-/** Shared rendering constants (typography, accent, priorities) — Miragon corporate identity.
+/**
+ * Shared rendering constants (typography, accent, priorities) — Miragon corporate identity.
  *  Colours are derived from the single source of truth in `theme/palette.ts` (`MIRAGON`), which
- *  mirrors the vendored `--cd-*` brand tokens. */
+ *  mirrors the vendored `--cd-*` brand tokens.
+ */
 
 import { MIRAGON } from "../theme/index.js";
 

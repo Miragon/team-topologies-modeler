@@ -4,6 +4,7 @@ import tseslint from "typescript-eslint";
 import prettier from "eslint-config-prettier";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import jsdoc from "eslint-plugin-jsdoc";
 import globals from "globals";
 
 /**
@@ -82,6 +83,15 @@ export default tseslint.config(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     },
   },
+  {
+    files: ["**/*.{ts,tsx,js,jsx}"],
+    plugins: { jsdoc },
+    rules: {
+      "jsdoc/check-alignment": "error",
+      "jsdoc/multiline-blocks": "error",
+      "jsdoc/no-multi-asterisks": "error",
+    },
+  },
   // DOM-FREE package: hard boundary.
   {
     files: ["packages/schema-model/**/*.ts"],
@@ -97,7 +107,6 @@ export default tseslint.config(
       ],
     },
   },
-  // Tests may be more lenient.
   {
     files: ["**/*.{test,spec}.{ts,tsx}"],
     languageOptions: {
