@@ -30,8 +30,10 @@ function readRootVars(): Record<string, string> {
   return vars;
 }
 
-/** Compare colours by meaning, not bytes: ignore hex case and internal whitespace (Prettier may
- *  reformat), so only a real value change fails. */
+/**
+ * Compare colours by meaning, not bytes: ignore hex case and internal whitespace (Prettier may
+ *  reformat), so only a real value change fails.
+ */
 function norm(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, "");
 }

@@ -4,6 +4,7 @@ import tseslint from "typescript-eslint";
 import prettier from "eslint-config-prettier";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import jsdoc from "eslint-plugin-jsdoc";
 import globals from "globals";
 
 /**
@@ -80,6 +81,20 @@ export default tseslint.config(
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+    },
+  },
+  // Doc-comment *formatting* only (not documentation coverage): every `/** … */`
+  // block must have aligned asterisks, no text on the opening/closing line, and no
+  // stray asterisks. We deliberately do NOT require JSDoc to exist or validate tags
+  // — Prettier leaves these untouched, so ESLint is the only gate. `//` line
+  // comments are unaffected.
+  {
+    files: ["**/*.{ts,tsx,js,jsx}"],
+    plugins: { jsdoc },
+    rules: {
+      "jsdoc/check-alignment": "error",
+      "jsdoc/multiline-blocks": "error",
+      "jsdoc/no-multi-asterisks": "error",
     },
   },
   // DOM-FREE package: hard boundary.
