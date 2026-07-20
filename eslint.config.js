@@ -83,11 +83,6 @@ export default tseslint.config(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     },
   },
-  // Doc-comment *formatting* only (not documentation coverage): every `/** … */`
-  // block must have aligned asterisks, no text on the opening/closing line, and no
-  // stray asterisks. We deliberately do NOT require JSDoc to exist or validate tags
-  // — Prettier leaves these untouched, so ESLint is the only gate. `//` line
-  // comments are unaffected.
   {
     files: ["**/*.{ts,tsx,js,jsx}"],
     plugins: { jsdoc },
@@ -112,7 +107,6 @@ export default tseslint.config(
       ],
     },
   },
-  // Tests may be more lenient.
   {
     files: ["**/*.{test,spec}.{ts,tsx}"],
     languageOptions: {
