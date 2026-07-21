@@ -9,10 +9,8 @@ A fast, offline-friendly modeler for **Team Topologies** diagrams — the four t
 team-interaction modes from the book by Matthew Skelton & Manuel Pais. Ships as a **web app** and a
 **VS Code extension** sharing one diagram-js core.
 
-It mirrors the structure of [Miragon's Wardley Maps Modeler](https://github.com/Miragon/wardley-maps-modeler):
-the same npm-workspaces monorepo, CI/CD, release automation and "full-bleed canvas + floating chrome"
-editing feel, with a clean DOM-free domain model and lossless, version-controllable files — but built
-around the Team Topologies notation.
+It is built around an npm-workspaces monorepo with CI/CD, release automation and a "full-bleed canvas +
+floating chrome" editing feel, a clean DOM-free domain model and lossless, version-controllable files.
 
 ![The Team Topologies editor](docs/screenshots/editor.png)
 
