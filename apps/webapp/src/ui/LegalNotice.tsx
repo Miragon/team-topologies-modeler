@@ -19,6 +19,14 @@ export function LegalNotice() {
       <a href="https://miragon.io/datenschutz/" target="_blank" rel="noopener noreferrer">
         Datenschutz
       </a>
+      <span aria-hidden="true">·</span>
+      <a
+        href="https://github.com/Miragon/team-topologies-modeler"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        GitHub
+      </a>
     </footer>
   );
 }
