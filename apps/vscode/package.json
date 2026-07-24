@@ -1,7 +1,7 @@
 {
   "name": "team-topologies-modeler",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "displayName": "Team Topologies Modeler",
   "description": "View and edit Team Topologies diagrams directly in VS Code, including .tt and .ttm.json files.",
   "publisher": "miragon-gmbh",
@@ -146,8 +146,8 @@
     "package": "vsce package --no-dependencies -o team-topologies-modeler.vsix"
   },
   "dependencies": {
-    "@miragon/team-topologies-renderer": "0.6.0",
-    "@miragon/team-topologies-schema-model": "0.6.0"
+    "@miragon/team-topologies-renderer": "0.7.0",
+    "@miragon/team-topologies-schema-model": "0.7.0"
   },
   "devDependencies": {
     "@types/node": "26.1.1",

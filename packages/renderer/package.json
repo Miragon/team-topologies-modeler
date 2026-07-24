@@ -1,6 +1,6 @@
 {
   "name": "@miragon/team-topologies-renderer",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Render and edit Team Topologies diagrams in the browser, with a framework-agnostic viewer and modeler built on diagram-js.",
   "license": "MIT",
   "repository": {
@@ -37,7 +37,7 @@
     "test:browser": "npm --prefix ../.. run test:browser"
   },
   "dependencies": {
-    "@miragon/team-topologies-schema-model": "0.6.0",
+    "@miragon/team-topologies-schema-model": "0.7.0",
     "diagram-js": "15.22.0",
     "didi": "11.0.0",
     "tiny-svg": "4.1.4"

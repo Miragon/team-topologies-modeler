@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.6.0...v0.7.0) (2026-07-24)
+
+
+### Features
+
+* **webapp:** left-align legal footer and add dynamic copyright ([#57](https://github.com/Miragon/team-topologies-modeler/issues/57)) ([069620c](https://github.com/Miragon/team-topologies-modeler/commit/069620c3c7589d641ee82f35dea7ba27e8edf238))
+
 ## [0.6.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.5.0...v0.6.0) (2026-07-17)
 
 
