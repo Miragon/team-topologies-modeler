@@ -38,13 +38,13 @@
   },
   "dependencies": {
     "@miragon/team-topologies-schema-model": "0.6.0",
-    "diagram-js": "15.22.0",
+    "diagram-js": "15.23.2",
     "didi": "11.0.0",
     "tiny-svg": "4.1.4"
   },
   "devDependencies": {
     "typescript": "6.0.3",
-    "vite": "8.1.5",
+    "vite": "8.2.0",
     "vite-plugin-dts": "5.0.3",
     "vitest": "4.1.10"
   }

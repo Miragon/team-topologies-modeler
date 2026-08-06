@@ -34,7 +34,7 @@
     "test": "npm --prefix ../.. run test"
   },
   "dependencies": {
-    "nanoid": "6.0.0",
+    "nanoid": "6.0.1",
     "zod": "4.4.3"
   },
   "devDependencies": {
