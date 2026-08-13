@@ -17,13 +17,13 @@
     "@miragon/team-topologies-renderer": "0.6.0",
     "@miragon/team-topologies-schema-model": "0.6.0",
     "lz-string": "1.5.0",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "zustand": "5.0.14"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "6.0.3",
-    "portless": "0.15.4",
-    "vite": "8.1.5"
+    "@vitejs/plugin-react": "6.0.5",
+    "portless": "0.15.5",
+    "vite": "8.2.1"
   }
 }
