@@ -19,7 +19,7 @@
     "lz-string": "1.5.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "zustand": "5.0.14"
+    "zustand": "5.0.15"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "6.0.5",
