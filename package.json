@@ -52,7 +52,7 @@
     "dependency-cruiser": "18.2.0",
     "eslint": "10.8.1",
     "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-jsdoc": "63.3.3",
+    "eslint-plugin-jsdoc": "64.1.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.4",
     "globals": "17.11.0",
