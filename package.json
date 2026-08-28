@@ -1,6 +1,6 @@
 {
   "name": "team-topologies-modeler",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "A web-based modeler and VS Code extension for the Team Topologies notation (team types & interaction modes).",
   "license": "MIT",
@@ -57,7 +57,7 @@
     "eslint-plugin-react-refresh": "0.5.4",
     "globals": "17.11.0",
     "husky": "9.1.7",
-    "jsdom": "30.0.1",
+    "jsdom": "29.1.1",
     "lint-staged": "17.3.0",
     "playwright": "1.62.1",
     "prettier": "3.9.6",
