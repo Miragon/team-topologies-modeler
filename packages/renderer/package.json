@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@miragon/team-topologies-schema-model": "0.6.0",
-    "diagram-js": "15.24.1",
+    "diagram-js": "15.26.0",
     "didi": "11.0.0",
     "tiny-svg": "4.1.4"
   },
