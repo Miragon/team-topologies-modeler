@@ -7,6 +7,8 @@ built on the shared [`@miragon/team-topologies-renderer`](../../packages/rendere
 **Excalidraw-style full-bleed canvas** with floating chrome: no header bar, the tools sit over the
 diagram. **No backend** — everything is local, and a diagram is shared by encoding it into the URL.
 
+**[Live demo](https://team-topologies.modeler.miragon.io)**
+
 ![The Team Topologies editor](../../docs/screenshots/editor.png)
 
 ## Highlights

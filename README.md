@@ -12,6 +12,8 @@ team-interaction modes from the book by Matthew Skelton & Manuel Pais. Ships as 
 It is built around an npm-workspaces monorepo with CI/CD, release automation and a "full-bleed canvas +
 floating chrome" editing feel, a clean DOM-free domain model and lossless, version-controllable files.
 
+**[Try the web app →](https://team-topologies.modeler.miragon.io)**
+
 ![The Team Topologies editor](docs/screenshots/editor.png)
 
 ## Notation
