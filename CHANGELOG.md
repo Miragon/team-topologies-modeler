@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/Miragon/team-topologies-modeler/compare/v0.7.0...v0.7.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **deps:** publish shared runtime libs as ranged peerDependencies ([#88](https://github.com/Miragon/team-topologies-modeler/issues/88)) ([90f1aa5](https://github.com/Miragon/team-topologies-modeler/commit/90f1aa56a74310bf5d63261929e3c9541d75b7eb))
+
 ## [0.7.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.6.0...v0.7.0) (2026-09-18)
 
 
