@@ -4,8 +4,9 @@
  * drops the descriptor id and lets diagram-js auto-assign a `shape_N` id, which
  * is the very collision hazard `TtElementFactory` avoids (its counter is not
  * advanced past ids that arrive via import). So we mint a fresh, scheme-correct
- * `team_/int_/flow_` id instead — the custom `tt*` props are already on the
- * descriptor (added by `TtCopyPasteProps`) and pass straight through.
+ * `team_/int_/flow_/ann_/assoc_` id instead — the custom `tt*` props are already
+ * on the descriptor (added by `TtCopyPasteProps`) and pass straight through.
+ * Annotation connectors are pasted only together with both of their ends.
  */
 
 import CopyPaste from "diagram-js/lib/features/copy-paste/CopyPaste.js";
@@ -19,7 +20,7 @@ import type EventBus from "diagram-js/lib/core/EventBus";
 import type Modeling from "diagram-js/lib/features/modeling/Modeling";
 import type Mouse from "diagram-js/lib/features/mouse/Mouse";
 import type Rules from "diagram-js/lib/features/rules/Rules";
-import type { Shape } from "diagram-js/lib/model/Types";
+import type { Connection, Shape } from "diagram-js/lib/model/Types";
 
 /** Maps a `ttKind` to the id prefix the model package's factory uses. */
 function pasteIdPrefix(ttKind: unknown): string | undefined {
@@ -30,6 +31,10 @@ function pasteIdPrefix(ttKind: unknown): string | undefined {
       return "int";
     case "flow":
       return "flow";
+    case "annotation":
+      return "ann";
+    case "association":
+      return "assoc";
     default:
       return undefined;
   }
@@ -58,6 +63,14 @@ export default class TtCopyPaste extends CopyPaste {
     rules: Rules,
   ) {
     super(canvas, create, clipboard, elementFactory, eventBus, modeling, mouse, rules);
+  }
+
+  override createConnection(attrs: Record<string, unknown>): Connection {
+    const prefix = pasteIdPrefix(attrs.ttKind);
+    if (!prefix) {
+      return super.createConnection(attrs);
+    }
+    return this.elementFactory.createConnection({ ...attrs, id: newId(prefix) }) as Connection;
   }
 
   override createShape(attrs: Record<string, unknown>): Shape {

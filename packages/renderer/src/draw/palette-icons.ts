@@ -10,6 +10,7 @@ import {
   dashArray,
 } from "@miragon/team-topologies-schema-model";
 import type { InteractionMode, TeamType } from "@miragon/team-topologies-schema-model";
+import { INK_SOFT } from "./styles.js";
 
 function svg(inner: string): string {
   return `<svg class="tt-palette-svg" width="24" height="24" viewBox="0 0 26 26" aria-hidden="true">${inner}</svg>`;
@@ -37,6 +38,21 @@ export function flowIconSvg(): string {
   return svg(
     `<g fill="none" stroke="#6b6459" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="3 2">` +
       `<polygon points="3,9 16,9 16,5 23,13 16,21 16,17 3,17"/></g>`,
+  );
+}
+
+export function annotationIconSvg(): string {
+  return svg(
+    `<g fill="none" stroke="${INK_SOFT}" stroke-width="1.5" stroke-linecap="round">` +
+      `<path d="M10 4H5v18h5"/><path d="M13 9h9M13 13h9M13 17h6"/></g>`,
+  );
+}
+
+/** Dashed selection frame with a pointer — the lasso (multi-select) tool. */
+export function lassoIconSvg(): string {
+  return svg(
+    `<rect x="3" y="3" width="16" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2"/>` +
+      `<path d="M14 12l9 3.6-3.8 1.4-1.4 3.8z" fill="currentColor"/>`,
   );
 }
 

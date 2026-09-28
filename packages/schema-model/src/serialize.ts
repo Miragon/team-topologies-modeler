@@ -7,7 +7,15 @@
  */
 
 import { DOCUMENT_VERSION } from "./types";
-import type { FlowShape, InteractionShape, Position, Size, TeamNode, TtDocument } from "./types";
+import type {
+  FlowShape,
+  InteractionShape,
+  Position,
+  Size,
+  TeamNode,
+  TextAnnotation,
+  TtDocument,
+} from "./types";
 
 /** Round to 2 decimals to strip floating-point drift from drag operations. */
 function round(n: number): number {
@@ -60,6 +68,17 @@ function normFlow(f: FlowShape): FlowShape {
   return out;
 }
 
+function normAnnotation(a: TextAnnotation): TextAnnotation {
+  const out: TextAnnotation = {
+    id: a.id,
+    text: a.text,
+    position: normPosition(a.position),
+    size: normSize(a.size),
+  };
+  if (a.attachedTo) out.attachedTo = a.attachedTo;
+  return out;
+}
+
 const byId = (a: { id: string }, b: { id: string }): number =>
   a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 
@@ -71,11 +90,17 @@ export function canonicalize(doc: TtDocument): TtDocument {
     nodes: [...doc.nodes].map(normNode).sort(byId),
     interactions: [...doc.interactions].map(normInteraction).sort(byId),
     flows: [...doc.flows].map(normFlow).sort(byId),
+    annotations: [...doc.annotations].map(normAnnotation).sort(byId),
   };
 }
 
-/** Serialises a document to deterministic, pretty-printed JSON. */
+/**
+ * Serialises a document to deterministic, pretty-printed JSON. An empty
+ * `annotations` list is left out, so re-saving a model that has no annotations
+ * changes nothing but its version stamp.
+ */
 export function serializeDocument(doc: TtDocument, pretty = true): string {
-  const canonical = canonicalize(doc);
-  return JSON.stringify(canonical, null, pretty ? 2 : 0);
+  const { annotations, ...canonical } = canonicalize(doc);
+  const output = annotations.length > 0 ? { ...canonical, annotations } : canonical;
+  return JSON.stringify(output, null, pretty ? 2 : 0);
 }

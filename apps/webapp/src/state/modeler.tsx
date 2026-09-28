@@ -51,12 +51,19 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
     // it never forces the modeler to materialise before DiagramCanvas attaches.
     const syncEmpty = () => {
       const doc = modeler.exportDocument();
-      setIsEmpty(doc.nodes.length === 0 && doc.interactions.length === 0 && doc.flows.length === 0);
+      setIsEmpty(
+        doc.nodes.length === 0 &&
+          doc.interactions.length === 0 &&
+          doc.flows.length === 0 &&
+          doc.annotations.length === 0,
+      );
     };
 
+    // The inspector edits one element; a multi-selection has nothing single to show.
     const onSelection = (e: unknown) => {
-      const sel = (e as { newSelection?: unknown[] }).newSelection?.[0];
-      setSelected(isTtElement(sel) ? (sel as Selected) : null);
+      const selection = (e as { newSelection?: unknown[] }).newSelection ?? [];
+      const only = selection.length === 1 ? selection[0] : undefined;
+      setSelected(isTtElement(only) ? only : null);
     };
     const onCommandStack = () => {
       syncHistory();

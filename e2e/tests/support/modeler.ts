@@ -12,9 +12,20 @@ import { expect, type Page } from "@playwright/test";
 /** The subset of the exported document the specs assert against. */
 export interface TtDoc {
   title: string;
-  nodes: ReadonlyArray<{ id: string; label: string; type: string }>;
-  interactions: ReadonlyArray<{ id: string; mode: string }>;
+  nodes: ReadonlyArray<{
+    id: string;
+    label: string;
+    type: string;
+    position: { x: number; y: number };
+  }>;
+  interactions: ReadonlyArray<{ id: string; mode: string; position: { x: number; y: number } }>;
   flows: ReadonlyArray<{ id: string; label?: string }>;
+  annotations: ReadonlyArray<{
+    id: string;
+    text: string;
+    position: { x: number; y: number };
+    attachedTo?: string;
+  }>;
 }
 
 /** Palette entry ids (`data-action`) as registered by TtPaletteProvider. */
@@ -26,7 +37,8 @@ export type PaletteAction =
   | "mode.collaboration"
   | "mode.x-as-a-service"
   | "mode.facilitating"
-  | "flow";
+  | "flow"
+  | "annotation";
 
 /** A point on the canvas, expressed as a fraction (0..1) of its bounding box. */
 export interface CanvasFraction {
@@ -63,10 +75,37 @@ export function exportDocument(page: Page): Promise<TtDoc> {
   );
 }
 
-/** Total number of modelled elements (teams + interactions + flows). */
+/** Total number of modelled elements (teams + interactions + flows + annotations). */
 export async function elementCount(page: Page): Promise<number> {
   const doc = await exportDocument(page);
-  return doc.nodes.length + doc.interactions.length + doc.flows.length;
+  return doc.nodes.length + doc.interactions.length + doc.flows.length + doc.annotations.length;
+}
+
+/** Ids of the currently selected canvas elements. */
+export function selectedIds(page: Page): Promise<string[]> {
+  return page
+    .locator(".tt-canvas .djs-element.selected")
+    .evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("data-element-id") ?? "").sort(),
+    );
+}
+
+/** Screen centre of a canvas element. */
+export async function centreOf(page: Page, elementId: string): Promise<{ x: number; y: number }> {
+  const box = (await page.locator(`[data-element-id="${elementId}"]`).boundingBox())!;
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+/** Drag with the primary button in small steps, so diagram-js registers a drag gesture. */
+export async function drag(
+  page: Page,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): Promise<void> {
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 8 });
+  await page.mouse.up();
 }
 
 /** Export the current document, feed it back through import, and re-export. */
@@ -108,14 +147,14 @@ export async function createFromPalette(
   await expect.poll(() => elementCount(page)).toBe(before + 1);
 }
 
-/** Double-click an element and commit a new inline label via the overlay input. */
+/** Double-click an element and commit a new label via the in-place editor. */
 export async function renameElement(page: Page, elementId: string, label: string): Promise<void> {
   await page.locator(`[data-element-id="${elementId}"]`).dblclick();
-  const input = page.locator("input.tt-label-input");
-  await expect(input).toBeVisible();
-  await input.fill(label);
+  const editor = page.locator("textarea.tt-label-editor");
+  await expect(editor).toBeVisible();
+  await editor.fill(label);
   await page.keyboard.press("Enter");
-  await expect(input).toHaveCount(0);
+  await expect(editor).toHaveCount(0);
 }
 
 /**

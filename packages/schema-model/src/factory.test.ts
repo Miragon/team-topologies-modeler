@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { createFlowShape, createInteractionShape, createTeamNode, emptyDocument } from "./factory";
-import { INTERACTION_MODE_SPECS, TEAM_TYPE_SPECS } from "./notation";
+import {
+  createFlowShape,
+  createInteractionShape,
+  createTeamNode,
+  createTextAnnotation,
+  emptyDocument,
+} from "./factory";
+import { ANNOTATION_SPEC, INTERACTION_MODE_SPECS, TEAM_TYPE_SPECS } from "./notation";
+import { DOCUMENT_VERSION } from "./types";
 
 describe("factory", () => {
   it("creates a team node with notation defaults", () => {
@@ -33,14 +40,27 @@ describe("factory", () => {
     expect(f.size.width).toBeGreaterThan(0);
   });
 
+  it("creates a text annotation", () => {
+    const free = createTextAnnotation({ x: 1, y: 2 });
+    expect(free.id).toMatch(/^ann_/);
+    expect(free.text).toBe("");
+    expect(free.size).toEqual(ANNOTATION_SPEC.defaultSize);
+    expect(free.attachedTo).toBeUndefined();
+
+    const attached = createTextAnnotation({ x: 0, y: 0 }, { text: "Why", attachedTo: "team_x" });
+    expect(attached.text).toBe("Why");
+    expect(attached.attachedTo).toBe("team_x");
+  });
+
   it("creates an empty document", () => {
     const doc = emptyDocument("My map");
     expect(doc).toMatchObject({
-      version: 2,
+      version: DOCUMENT_VERSION,
       title: "My map",
       nodes: [],
       interactions: [],
       flows: [],
+      annotations: [],
     });
   });
 });

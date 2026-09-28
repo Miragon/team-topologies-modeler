@@ -4,16 +4,34 @@
  */
 
 import type CommandStack from "diagram-js/lib/command/CommandStack";
+import type Canvas from "diagram-js/lib/core/Canvas";
+import type Modeling from "diagram-js/lib/features/modeling/Modeling";
+import type { Element, Root } from "diagram-js/lib/model/Types";
 import type { InteractionMode, TeamType } from "@miragon/team-topologies-schema-model";
-import type { TtElement, TtInteraction, TtTeam } from "../model/di-types.js";
+import {
+  isTtAssociation,
+  type TtAnnotation,
+  type TtElement,
+  type TtInteraction,
+  type TtTeam,
+} from "../model/di-types.js";
+import type TtElementFactory from "../model/TtElementFactory.js";
 import UpdatePropertiesHandler from "./cmd/UpdatePropertiesHandler.js";
 
 const UPDATE_PROPERTIES = "element.updateProperties";
 
-export default class TtModeling {
-  static $inject = ["commandStack"];
+/** Gap between an element and an annotation appended to it. */
+const ANNOTATION_GAP = 40;
 
-  constructor(private readonly commandStack: CommandStack) {
+export default class TtModeling {
+  static $inject = ["commandStack", "modeling", "ttElementFactory", "canvas"];
+
+  constructor(
+    private readonly commandStack: CommandStack,
+    private readonly modeling: Modeling,
+    private readonly factory: TtElementFactory,
+    private readonly canvas: Canvas,
+  ) {
     commandStack.registerHandler(UPDATE_PROPERTIES, UpdatePropertiesHandler);
   }
 
@@ -45,5 +63,27 @@ export default class TtModeling {
 
   setDescription(team: TtTeam, description: string | undefined): void {
     this.updateProperties(team, { description });
+  }
+
+  /** Places a new annotation to the upper right of `element`, attached to it, as one undo step. */
+  appendAnnotation(element: TtElement): TtAnnotation {
+    const annotation = this.factory.createNewAnnotation();
+    const position = {
+      x: element.x + element.width + ANNOTATION_GAP + annotation.width / 2,
+      y: element.y - ANNOTATION_GAP / 4,
+    };
+    return this.modeling.appendShape(
+      element as Element,
+      annotation as Element,
+      position,
+      this.canvas.getRootElement() as Root,
+      { connection: this.factory.createNewAssociation(), connectionTarget: element },
+    ) as unknown as TtAnnotation;
+  }
+
+  /** Removes the annotation's connector; the annotation itself stays. */
+  detachAnnotation(annotation: TtAnnotation): void {
+    const associations = [...annotation.incoming, ...annotation.outgoing].filter(isTtAssociation);
+    if (associations.length > 0) this.modeling.removeElements(associations);
   }
 }

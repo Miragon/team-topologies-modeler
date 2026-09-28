@@ -8,7 +8,7 @@
  */
 
 import type EventBus from "diagram-js/lib/core/EventBus";
-import { isTtElement } from "../model/di-types.js";
+import { isTtAssociation, isTtElement } from "../model/di-types.js";
 
 /** Flat props that define a Team Topologies shape, beyond geometry. */
 const TT_PROPS = [
@@ -29,7 +29,7 @@ export default class TtCopyPasteProps {
       "copyPaste.copyElement",
       (event: { descriptor: Record<string, unknown>; element: unknown }) => {
         const { descriptor, element } = event;
-        if (!isTtElement(element)) return;
+        if (!isTtElement(element) && !isTtAssociation(element)) return;
         const source = element as Record<string, unknown>;
         for (const prop of TT_PROPS) {
           if (source[prop] !== undefined) descriptor[prop] = source[prop];

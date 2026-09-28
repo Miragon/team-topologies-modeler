@@ -1,11 +1,12 @@
 import type { ModuleDeclaration } from "didi";
 import PaletteModule from "diagram-js/lib/features/palette";
 import CreateModule from "diagram-js/lib/features/create";
+import LassoToolModule from "diagram-js/lib/features/lasso-tool";
 import TtPaletteProvider from "./TtPaletteProvider.js";
 
-/** Tool palette (drag-to-create teams, pick interaction mode). */
+/** Tool palette (lasso, drag-to-create teams, interactions, flows and annotations). */
 export const ttPaletteModule: ModuleDeclaration = {
-  __depends__: [PaletteModule, CreateModule],
+  __depends__: [PaletteModule, CreateModule, LassoToolModule],
   __init__: ["ttPaletteProvider"],
   ttPaletteProvider: ["type", TtPaletteProvider],
 };

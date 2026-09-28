@@ -18,9 +18,13 @@ export type { TtViewerOptions, EventCallback } from "./TtBaseViewer.js";
 export { ttModelModule, TtElementFactory } from "./model/index.js";
 export { ttDrawModule, TeamTopologiesRenderer } from "./draw/index.js";
 export { ioModule, TtImporter, TtExporter, saveSVG, ROOT_ID } from "./io/index.js";
-export { ttModelingModule, TtModeling } from "./modeling/index.js";
+export { ttModelingModule, TtModeling, TtLayouter } from "./modeling/index.js";
 export { ttRulesModule, TtRules } from "./rules/index.js";
-export { ttBehaviorsModule, TtFlatModelBehavior } from "./behaviors/index.js";
+export {
+  ttBehaviorsModule,
+  TtFlatModelBehavior,
+  TtAssociationBehavior,
+} from "./behaviors/index.js";
 export { ttPaletteModule, TtPaletteProvider } from "./palette/index.js";
 export { ttContextPadModule, TtContextPadProvider } from "./context-pad/index.js";
 export { ttLabelEditingModule, TtLabelEditing } from "./label-editing/index.js";
@@ -28,9 +32,28 @@ export { ttKeyboardModule, TtKeyboard } from "./keyboard/index.js";
 export { ttZOrderModule, TtZOrder } from "./zorder/index.js";
 
 // Runtime types & guards
-export { isTtElement, isTtTeam, isTtInteraction, isTtFlow } from "./model/di-types.js";
-export type { TtElement, TtTeam, TtInteraction, TtFlow } from "./model/di-types.js";
+export {
+  isTtElement,
+  isTtTeam,
+  isTtInteraction,
+  isTtFlow,
+  isTtAnnotation,
+  isTtAssociation,
+} from "./model/di-types.js";
+export type {
+  TtElement,
+  TtTeam,
+  TtInteraction,
+  TtFlow,
+  TtAnnotation,
+  TtAssociation,
+} from "./model/di-types.js";
 export type { ImportWarning, RootBusinessObject } from "./io/index.js";
 
 // Palette glyphs — reusable for host chrome (e.g. the legend).
-export { teamIconSvg, interactionIconSvg, flowIconSvg } from "./draw/palette-icons.js";
+export {
+  teamIconSvg,
+  interactionIconSvg,
+  flowIconSvg,
+  annotationIconSvg,
+} from "./draw/palette-icons.js";

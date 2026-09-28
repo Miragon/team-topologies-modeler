@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseDocument } from "./schema";
 import { SAMPLE_DOCUMENT } from "./sample";
+import { DOCUMENT_VERSION } from "./types";
 
 describe("parseDocument", () => {
   it("accepts the sample document", () => {
@@ -8,8 +9,9 @@ describe("parseDocument", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.document.nodes).toHaveLength(5);
-      expect(result.document.interactions).toHaveLength(5);
+      expect(result.document.interactions).toHaveLength(4);
       expect(result.document.flows).toHaveLength(1);
+      expect(result.document.annotations).toHaveLength(1);
     }
   });
 
@@ -17,9 +19,10 @@ describe("parseDocument", () => {
     const result = parseDocument({ nodes: [], interactions: [] });
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.document.version).toBe(2);
+      expect(result.document.version).toBe(DOCUMENT_VERSION);
       expect(typeof result.document.title).toBe("string");
       expect(result.document.flows).toEqual([]);
+      expect(result.document.annotations).toEqual([]);
     }
   });
 
@@ -42,7 +45,7 @@ describe("parseDocument", () => {
     });
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.document.version).toBe(2);
+      expect(result.document.version).toBe(DOCUMENT_VERSION);
       expect(result.document.interactions).toHaveLength(0);
       expect("showFlowOfChange" in result.document).toBe(false);
     }
@@ -65,6 +68,63 @@ describe("parseDocument", () => {
     });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.document.interactions).toHaveLength(1);
+  });
+
+  it("migrates a v2 document by adding an empty annotations list", () => {
+    const result = parseDocument({
+      version: 2,
+      title: "x",
+      nodes: [],
+      interactions: [],
+      flows: [],
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.document.version).toBe(DOCUMENT_VERSION);
+      expect(result.document.annotations).toEqual([]);
+    }
+  });
+
+  it("accepts free-standing and attached annotations", () => {
+    const result = parseDocument({
+      version: 3,
+      title: "x",
+      nodes: [],
+      interactions: [],
+      flows: [],
+      annotations: [
+        {
+          id: "a1",
+          text: "Line one\nLine two",
+          position: { x: 0, y: 0 },
+          size: { width: 200, height: 64 },
+        },
+        {
+          id: "a2",
+          text: "Splits in Q3",
+          position: { x: 0, y: 100 },
+          size: { width: 200, height: 64 },
+          attachedTo: "team_x",
+        },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.document.annotations[0].text).toBe("Line one\nLine two");
+      expect(result.document.annotations[1].attachedTo).toBe("team_x");
+    }
+  });
+
+  it("rejects an annotation without text", () => {
+    const result = parseDocument({
+      version: 3,
+      title: "x",
+      nodes: [],
+      interactions: [],
+      flows: [],
+      annotations: [{ id: "a1", position: { x: 0, y: 0 }, size: { width: 200, height: 64 } }],
+    });
+    expect(result.ok).toBe(false);
   });
 
   it("rejects an invalid team type", () => {

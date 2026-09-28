@@ -1,22 +1,13 @@
 import * as vscode from "vscode";
 import {
+  emptyDocument,
   serializeDocument,
   SAMPLE_DOCUMENT,
-  DOCUMENT_VERSION,
 } from "@miragon/team-topologies-schema-model";
-import type { TtDocument } from "@miragon/team-topologies-schema-model";
 import { TtEditorProvider } from "./TtEditorProvider.js";
 import { TtPngEditorProvider } from "./TtPngEditorProvider.js";
 
-const EMPTY_DOCUMENT: TtDocument = {
-  version: DOCUMENT_VERSION,
-  title: "New team topology",
-  nodes: [],
-  interactions: [],
-  flows: [],
-};
-
-const EMPTY_MAP = serializeDocument(EMPTY_DOCUMENT, true) + "\n";
+const EMPTY_MAP = serializeDocument(emptyDocument("New team topology"), true) + "\n";
 
 /** The bundled example diagram (identical to the demo webapp), as a starting point. */
 const EXAMPLE_MAP = serializeDocument(SAMPLE_DOCUMENT, true) + "\n";

@@ -1,6 +1,7 @@
 import type { ModuleDeclaration } from "didi";
 import type CommandStack from "diagram-js/lib/command/CommandStack";
 
+import LassoToolModule from "diagram-js/lib/features/lasso-tool";
 import ModelingModule from "diagram-js/lib/features/modeling";
 import MoveModule from "diagram-js/lib/features/move";
 import OutlineModule from "diagram-js/lib/features/outline";
@@ -18,8 +19,9 @@ import { ttCopyPasteModule } from "./copy-paste/index.js";
 import { ttZOrderModule } from "./zorder/index.js";
 
 /**
- * Full Team Topologies editor: palette/create, move, resize, connect with
- * rules, context pad, inline label editing, undo/redo.
+ * Full Team Topologies editor: palette/create, multi-selection (lasso, select
+ * all) and group move, resize, annotations with connectors, context pad,
+ * in-place label editing, undo/redo.
  */
 export class Modeler extends NavigatedViewer {
   protected override _getModules(): ModuleDeclaration[] {
@@ -27,6 +29,7 @@ export class Modeler extends NavigatedViewer {
       ...super._getModules(),
       // diagram-js stock
       ModelingModule,
+      LassoToolModule,
       MoveModule,
       OutlineModule,
       ResizeModule,

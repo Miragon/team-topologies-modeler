@@ -17,7 +17,7 @@ export interface ModelerContextValue {
   title: string;
   /** Bumped on every model change so consumers re-read live element props. */
   revision: number;
-  /** True when the canvas holds no nodes, interactions or flows. */
+  /** True when the canvas holds no nodes, interactions, flows or annotations. */
   isEmpty: boolean;
   setTitle: (title: string) => void;
 }

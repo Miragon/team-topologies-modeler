@@ -53,12 +53,21 @@ export const flowSchema = z.object({
   size: sizeSchema,
 });
 
+export const annotationSchema = z.object({
+  id: z.string().min(1),
+  text: z.string(),
+  position: positionSchema,
+  size: sizeSchema,
+  attachedTo: z.string().min(1).optional(),
+});
+
 export const documentSchema = z.object({
   version: z.literal(DOCUMENT_VERSION),
   title: z.string(),
   nodes: z.array(teamNodeSchema),
   interactions: z.array(interactionSchema),
   flows: z.array(flowSchema),
+  annotations: z.array(annotationSchema),
 });
 
 export type ParseResult = { ok: true; document: TtDocument } | { ok: false; error: string };
@@ -85,8 +94,9 @@ export function parseDocument(input: unknown): ParseResult {
 /**
  * Forward-migrates older document shapes to the current version. v1 modelled
  * interactions as edges (source/target, no geometry) and carried a
- * `showFlowOfChange` flag; v2 makes interactions placed shapes and adds `flows`.
- * Legacy edge-interactions can't be placed meaningfully, so they're dropped.
+ * `showFlowOfChange` flag; v2 makes interactions placed shapes and adds `flows`;
+ * v3 adds `annotations`. Legacy edge-interactions can't be placed meaningfully,
+ * so they're dropped.
  */
 function migrate(input: unknown): unknown {
   if (input == null || typeof input !== "object") return input;
@@ -103,5 +113,6 @@ function migrate(input: unknown): unknown {
       )
     : [];
   if (!Array.isArray(next.flows)) next.flows = [];
+  if (!Array.isArray(next.annotations)) next.annotations = [];
   return next;
 }
