@@ -1,20 +1,11 @@
 import * as vscode from "vscode";
-import { serializeDocument, DOCUMENT_VERSION } from "@miragon/team-topologies-schema-model";
-import type { TtDocument } from "@miragon/team-topologies-schema-model";
+import { emptyDocument, serializeDocument } from "@miragon/team-topologies-schema-model";
 import { getWebviewHtml } from "./webviewHtml.js";
 import { exportImageToFile } from "./exportImage.js";
 import { EMBED_KEYWORD, decodeDoc, pngExtractText } from "./png.js";
 import type { HostToWebview, WebviewToHost } from "./protocol.js";
 
-const EMPTY_DOCUMENT: TtDocument = {
-  version: DOCUMENT_VERSION,
-  title: "New team topology",
-  nodes: [],
-  interactions: [],
-  flows: [],
-};
-
-const EMPTY_MAP = serializeDocument(EMPTY_DOCUMENT, true) + "\n";
+const EMPTY_MAP = serializeDocument(emptyDocument("New team topology"), true) + "\n";
 
 /**
  * How long to wait for the webview's rasterized PNG before the save aborts. Generously sized:

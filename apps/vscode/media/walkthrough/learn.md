@@ -17,9 +17,10 @@ Team Topologies models an organisation as **teams** and the **interactions** bet
 
 **Working in the editor**
 
-- Drag a team type from the palette onto the canvas, then click its label to rename it.
+- Drag a team type from the palette onto the canvas, then double-click it to rename it in place.
 - Drag an interaction mode from the palette and drop it over the teams it connects.
-- Select an element to get its context pad, which renames or deletes it.
+- Select an element to get its context pad, which renames it, adds an annotation, or deletes it.
+- Shift+drag on the canvas (or press `Ctrl/Cmd+A`) to select several elements and move them together.
 
 Your changes are saved straight back into the `.tt` file, so diagrams version nicely in Git.
 

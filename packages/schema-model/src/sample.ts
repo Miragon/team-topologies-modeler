@@ -1,93 +1,86 @@
 /**
  * A small but complete example diagram exercising all four team types, all three
- * interaction modes (as placed shapes overlaying the team boundaries) and a
- * flow-of-change element. Ids are fixed so the fixture serialises stably.
+ * interaction modes (as placed shapes overlaying the team boundaries), a
+ * flow-of-change element and an attached annotation. Ids are fixed so the
+ * fixture serialises stably.
  */
 
 import { DOCUMENT_VERSION } from "./types";
 import type { TtDocument } from "./types";
-import { INTERACTION_MODE_SPECS, TEAM_TYPE_SPECS } from "./notation";
+import { ANNOTATION_SPEC, INTERACTION_MODE_SPECS, TEAM_TYPE_SPECS } from "./notation";
 
 const s = TEAM_TYPE_SPECS;
 const i = INTERACTION_MODE_SPECS;
 
 export const SAMPLE_DOCUMENT: TtDocument = {
   version: DOCUMENT_VERSION,
-  title: "Online retail — team topology",
+  title: "Online shop — team topology",
   nodes: [
     {
-      id: "team_enabling",
+      id: "team_test_automation",
       type: "enabling",
-      label: "Agile Enablement",
-      description: "Coaches teams on testing and continuous delivery practices.",
+      label: "Test Automation",
+      description: "Coaches stream-aligned teams in test automation, then steps back.",
       position: { x: 60, y: 150 },
       size: { ...s.enabling.defaultSize },
     },
     {
-      id: "team_checkout",
+      id: "team_discovery",
       type: "stream-aligned",
-      label: "Checkout Stream",
-      description: "Owns the end-to-end checkout & payments journey.",
-      position: { x: 320, y: 110 },
+      label: "Product Discovery",
+      description: "Owns search, browsing and product pages end-to-end.",
+      position: { x: 240, y: 202 },
       size: { ...s["stream-aligned"].defaultSize },
     },
     {
-      id: "team_mobile",
+      id: "team_checkout",
       type: "stream-aligned",
-      label: "Mobile Experience",
-      description: "Owns the native mobile shopping experience.",
-      position: { x: 700, y: 110 },
+      label: "Checkout & Payments",
+      description: "Owns the checkout and payment journey end-to-end.",
+      position: { x: 560, y: 202 },
       size: { ...s["stream-aligned"].defaultSize },
     },
     {
       id: "team_fraud",
       type: "complicated-subsystem",
-      label: "Risk & Fraud Engine",
-      description: "Specialist ML team owning real-time fraud scoring.",
-      position: { x: 740, y: 320 },
+      label: "Fraud Detection",
+      description: "Specialists for the real-time fraud scoring model.",
+      position: { x: 870, y: 175 },
       size: { ...s["complicated-subsystem"].defaultSize },
     },
     {
       id: "team_platform",
       type: "platform",
-      label: "Internal Developer Platform",
-      description: "Self-service CI/CD, observability and runtime for all streams.",
-      position: { x: 300, y: 540 },
-      size: { ...s.platform.defaultSize },
+      label: "Cloud Platform",
+      description: "Self-service CI/CD, runtime and observability for all teams.",
+      position: { x: 240, y: 352 },
+      size: { width: 560, height: 110 },
     },
   ],
   interactions: [
     {
-      id: "int_enable_checkout",
+      id: "int_testing_discovery",
       mode: "facilitating",
-      label: "test automation",
-      position: { x: 212, y: 158 },
+      position: { x: 168, y: 208 },
       size: { ...i.facilitating.defaultSize },
     },
     {
       id: "int_checkout_fraud",
       mode: "collaboration",
-      label: "fraud rules discovery",
-      position: { x: 566, y: 232 },
+      label: "fraud rules",
+      position: { x: 779, y: 214 },
       size: { ...i.collaboration.defaultSize },
+    },
+    {
+      id: "int_platform_discovery",
+      mode: "x-as-a-service",
+      position: { x: 316, y: 286 },
+      size: { ...i["x-as-a-service"].defaultSize },
     },
     {
       id: "int_platform_checkout",
       mode: "x-as-a-service",
-      position: { x: 384, y: 396 },
-      size: { ...i["x-as-a-service"].defaultSize },
-    },
-    {
-      id: "int_platform_mobile",
-      mode: "x-as-a-service",
-      position: { x: 612, y: 396 },
-      size: { ...i["x-as-a-service"].defaultSize },
-    },
-    {
-      id: "int_fraud_mobile",
-      mode: "x-as-a-service",
-      label: "risk scoring API",
-      position: { x: 800, y: 238 },
+      position: { x: 636, y: 286 },
       size: { ...i["x-as-a-service"].defaultSize },
     },
   ],
@@ -95,8 +88,17 @@ export const SAMPLE_DOCUMENT: TtDocument = {
     {
       id: "flow_main",
       label: "Flow of change",
-      position: { x: 60, y: 712 },
-      size: { width: 880, height: 60 },
+      position: { x: 60, y: 60 },
+      size: { width: 980, height: 56 },
+    },
+  ],
+  annotations: [
+    {
+      id: "ann_fraud_handover",
+      text: "Collaboration until the fraud rules are stable (Q3), then X-as-a-Service",
+      position: { x: 830, y: 350 },
+      size: { ...ANNOTATION_SPEC.defaultSize },
+      attachedTo: "int_checkout_fraud",
     },
   ],
 };

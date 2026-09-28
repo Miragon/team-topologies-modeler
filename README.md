@@ -107,14 +107,14 @@ boundary between the teams they relate to (spatial overlap), so there is no sour
 
 ```jsonc
 {
-  "version": 2,
-  "title": "Online retail — team topology",
+  "version": 3,
+  "title": "Online shop — team topology",
   "nodes": [
     {
       "id": "team_checkout",
       "type": "stream-aligned",
-      "label": "Checkout Stream",
-      "position": { "x": 320, "y": 110 },
+      "label": "Checkout & Payments",
+      "position": { "x": 560, "y": 202 },
       "size": { "width": 240, "height": 96 },
     },
   ],
@@ -122,13 +122,25 @@ boundary between the teams they relate to (spatial overlap), so there is no sour
     {
       "id": "int_platform_checkout",
       "mode": "x-as-a-service",
-      "position": { "x": 384, "y": 396 },
-      "size": { "width": 96, "height": 96 },
+      "position": { "x": 636, "y": 286 },
+      "size": { "width": 88, "height": 78 },
     },
   ],
   "flows": [],
+  "annotations": [
+    {
+      "id": "ann_checkout_split",
+      "text": "Splits into two stream-aligned teams in Q3",
+      "position": { "x": 560, "y": 110 },
+      "size": { "width": 200, "height": 64 },
+      "attachedTo": "team_checkout",
+    },
+  ],
 }
 ```
+
+Text annotations are optional notes beside the diagram; `attachedTo` ties one to a team, interaction
+or flow (drawn as a dashed connector). An empty `annotations` list is left out of the file.
 
 ## Contributing
 

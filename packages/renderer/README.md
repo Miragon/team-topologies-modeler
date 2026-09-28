@@ -9,7 +9,8 @@ and full editor for [Team Topologies](https://teamtopologies.com/) diagrams, bui
 
 It renders the canonical document from
 [`@miragon/team-topologies-schema-model`](../schema-model) and gives you palette, move, resize,
-connect-by-overlap, context pad, inline label editing and undo/redo — with no UI framework required.
+connect-by-overlap, multi-selection (lasso, select all) with group move, text annotations, context
+pad, in-place label editing and undo/redo — with no UI framework required.
 Mount it into any `<div>`; the web app (React) and the VS Code extension both wrap this exact package.
 
 ## Install
@@ -25,6 +26,19 @@ npm install @miragon/team-topologies-renderer @miragon/team-topologies-schema-mo
 | `Viewer`          | Read-only rendering, no interaction (thumbnails, static embeds).               |
 | `NavigatedViewer` | Read-only + zoom (scroll), pan (drag) and selection.                           |
 | `Modeler`         | The full editor: palette, move, resize, context pad, label editing, undo/redo. |
+
+## Editing gestures (`Modeler`)
+
+| Gesture                            | Effect                                                                  |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| Double-click an element            | Edit its label in place (Enter commits, Shift+Enter breaks, Esc aborts) |
+| `Ctrl/Cmd+A`                       | Select every element                                                    |
+| Shift+drag on the canvas           | Lasso-select (also the first palette tool)                              |
+| Shift+click                        | Add an element to / remove it from the selection                        |
+| Drag a selected element            | Move the whole selection as one undo step                               |
+| Arrow keys (Shift: ×10)            | Nudge the selection                                                     |
+| `Ctrl/Cmd+C` / `V`, Delete         | Copy, paste, delete the selection                                       |
+| `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z/Y` | Undo / redo                                                             |
 
 All three share a common base (`TtBaseViewer`) with the same import/export and lifecycle API.
 
@@ -91,10 +105,12 @@ new Modeler({
 
 ### Helpers & types
 
-- **Type guards:** `isTtElement`, `isTtTeam`, `isTtInteraction`, `isTtFlow`.
-- **Runtime element types:** `TtTeam`, `TtInteraction`, `TtFlow`, `TtElement`.
-- **Palette icon generators:** `teamIconSvg(type)`, `interactionIconSvg(mode)`, `flowIconSvg()` —
-  WYSIWYG SVG glyphs matching what the canvas draws.
+- **Type guards:** `isTtElement`, `isTtTeam`, `isTtInteraction`, `isTtFlow`, `isTtAnnotation`,
+  `isTtAssociation`.
+- **Runtime element types:** `TtTeam`, `TtInteraction`, `TtFlow`, `TtAnnotation`, `TtElement`, and
+  `TtAssociation` (the connector from an annotation to the element it is attached to).
+- **Palette icon generators:** `teamIconSvg(type)`, `interactionIconSvg(mode)`, `flowIconSvg()`,
+  `annotationIconSvg()` — WYSIWYG SVG glyphs matching what the canvas draws.
 - **Other:** `TtViewerOptions`, `ImportWarning`, `RootBusinessObject`, `ROOT_ID`, `saveSVG`.
 
 ## How it's built
@@ -103,19 +119,19 @@ The package is a set of [didi](https://github.com/nikku/didi) modules layered on
 exported (e.g. `ttDrawModule`, `ttPaletteModule`, `ttModelingModule`) so you can compose your own
 viewer via `additionalModules`:
 
-| Module                 | Responsibility                                                                   |
-| ---------------------- | -------------------------------------------------------------------------------- |
-| `ttModelModule`        | Element factory with notation defaults (`TtElementFactory`).                     |
-| `ttDrawModule`         | Custom SVG rendering of teams, interactions and flow (`TeamTopologiesRenderer`). |
-| `ioModule`             | Document ↔ canvas bridge (`TtImporter`, `TtExporter`, `saveSVG`).                |
-| `ttModelingModule`     | High-level mutations — label, team type, interaction mode, colours, description. |
-| `ttRulesModule`        | Editing rules (what can move / resize / be created).                             |
-| `ttBehaviorsModule`    | Keeps the model **flat** — shapes never nest.                                    |
-| `ttPaletteModule`      | The drag-to-create tool palette.                                                 |
-| `ttContextPadModule`   | Per-element actions (rename, delete).                                            |
-| `ttLabelEditingModule` | Double-click inline label editing.                                               |
-| `ttKeyboardModule`     | Undo / redo / delete shortcuts.                                                  |
-| `ttZOrderModule`       | Fixed stacking order (flow behind, teams, interactions on top).                  |
+| Module                 | Responsibility                                                                         |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| `ttModelModule`        | Element factory with notation defaults (`TtElementFactory`).                           |
+| `ttDrawModule`         | SVG rendering of teams, interactions, flow and annotations (`TeamTopologiesRenderer`). |
+| `ioModule`             | Document ↔ canvas bridge (`TtImporter`, `TtExporter`, `saveSVG`).                      |
+| `ttModelingModule`     | High-level mutations — label, type, mode, colours, description, annotations.           |
+| `ttRulesModule`        | Editing rules (what can move / resize / be created / be attached).                     |
+| `ttBehaviorsModule`    | Keeps the model **flat** and annotation connectors cropped, one per annotation.        |
+| `ttPaletteModule`      | The lasso tool and the drag-to-create palette.                                         |
+| `ttContextPadModule`   | Per-element actions (rename, add/attach annotation, delete; delete a multi-selection). |
+| `ttLabelEditingModule` | Double-click in-place label editing.                                                   |
+| `ttKeyboardModule`     | Undo / redo / select all / delete / copy / paste / nudge shortcuts.                    |
+| `ttZOrderModule`       | Fixed stacking order (flow behind, teams, interactions, annotations on top).           |
 
 ### Rendering
 
@@ -123,8 +139,9 @@ A custom `TeamTopologiesRenderer` (priority `1500`, beating diagram-js's default
 from the spec in [`@miragon/team-topologies-schema-model`](../schema-model): the four team outlines
 (octagon, vertical/horizontal rounded rectangles, square rectangle) drawn solid; the three
 interaction glyphs (parallelogram, triangle, circle) drawn dashed and translucent; the flow-of-change
-as a dashed left-to-right band. Labels are word-wrapped and centred. Per-element `fill`/`stroke`
-overrides win over the spec defaults.
+as a dashed left-to-right band; an annotation as a BPMN-style open bracket with left-aligned text,
+tied to its element by a dashed connector. Labels are word-wrapped (explicit line breaks are kept)
+and centred. Per-element `fill`/`stroke` overrides win over the spec defaults.
 
 ## Import / export
 

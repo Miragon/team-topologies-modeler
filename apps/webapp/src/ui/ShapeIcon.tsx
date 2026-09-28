@@ -1,4 +1,4 @@
-/** Tiny SVG glyphs for the team types and interaction modes (palette/legend). */
+/** Tiny SVG glyphs for the team types, interaction modes and annotations (palette/legend). */
 
 import {
   INTERACTION_MODE_SPECS,
@@ -50,6 +50,17 @@ export function InteractionIcon({ mode, size = SIZE }: { mode: InteractionMode; 
       ) : (
         <polygon points="9,6 23,6 17,20 3,20" {...common} />
       )}
+    </svg>
+  );
+}
+
+export function AnnotationIcon({ size = SIZE }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 26 26" aria-hidden>
+      <g fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
+        <path d="M10 4H5v18h5" />
+        <path d="M13 9h9M13 13h9M13 17h6" />
+      </g>
     </svg>
   );
 }

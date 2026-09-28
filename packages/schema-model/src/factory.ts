@@ -4,7 +4,7 @@
  */
 
 import { nanoid } from "nanoid";
-import { FLOW_SPEC, INTERACTION_MODE_SPECS, TEAM_TYPE_SPECS } from "./notation";
+import { ANNOTATION_SPEC, FLOW_SPEC, INTERACTION_MODE_SPECS, TEAM_TYPE_SPECS } from "./notation";
 import type {
   FlowShape,
   InteractionMode,
@@ -12,6 +12,7 @@ import type {
   Position,
   TeamNode,
   TeamType,
+  TextAnnotation,
   TtDocument,
 } from "./types";
 import { DOCUMENT_VERSION } from "./types";
@@ -70,6 +71,20 @@ export function createFlowShape(
   };
 }
 
+/** Creates a text annotation, optionally attached to a team, interaction or flow. */
+export function createTextAnnotation(
+  position: Position,
+  overrides: Partial<Omit<TextAnnotation, "id" | "position">> = {},
+): TextAnnotation {
+  return {
+    id: newId("ann"),
+    text: overrides.text ?? "",
+    position,
+    size: overrides.size ?? { ...ANNOTATION_SPEC.defaultSize },
+    attachedTo: overrides.attachedTo,
+  };
+}
+
 /** An empty document with sensible defaults. */
 export function emptyDocument(title = "Untitled team topology"): TtDocument {
   return {
@@ -78,5 +93,6 @@ export function emptyDocument(title = "Untitled team topology"): TtDocument {
     nodes: [],
     interactions: [],
     flows: [],
+    annotations: [],
   };
 }

@@ -46,9 +46,11 @@ A diagram shows teams and how they interact.
   live (two-way sync), and VS Code tracks dirty state as you go. To reopen a diagram as raw text, use
   **View: Reopen Editor With…**, then pick **Text Editor**.
 - **Full modeler:** the tool palette places the four team types, the three interaction-mode glyphs
-  (dropped over the teams they relate to), and the flow-of-change arrow; the context pad on a selected
-  element renames or deletes it. Move, resize, and inline label editing all work, with undo/redo via
-  `Ctrl/Cmd+Z` and `Ctrl/Cmd+Shift+Z`.
+  (dropped over the teams they relate to), the flow-of-change arrow and text annotations; the context
+  pad on a selected element renames it, adds an attached annotation, or deletes it. Double-click any
+  element to edit its label in place. Select several elements with `Ctrl/Cmd+A`, a Shift+drag lasso
+  or Shift+click, then move, copy or delete them together. Undo/redo via `Ctrl/Cmd+Z` and
+  `Ctrl/Cmd+Shift+Z`.
 - **Collapsed menu** (top-right, Excalidraw-style): fit-to-view · export SVG/PNG.
 - **Editable embedded-PNG diagrams (`*.tt.png` / `*.ttm.png`).** Exported PNGs store the diagram
   inside a `tEXt` chunk, so the file stays a normal image you can drop into a wiki, README, or chat —

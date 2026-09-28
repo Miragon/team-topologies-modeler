@@ -17,9 +17,14 @@ diagram. **No backend** — everything is local, and a diagram is shared by enco
   and a **Share** button top-right; a property **Inspector** appears top-right on selection; a **Legend**
   bottom-left.
 - **Edit by direct manipulation.** Drag from the palette to create, move, resize (resize a team to
-  express cognitive load), inline-edit labels, undo/redo — all from the diagram-js core.
+  express cognitive load), edit labels in place, undo/redo — all from the diagram-js core.
+- **Multi-selection.** `Ctrl/Cmd+A`, a Shift+drag lasso or Shift+click select several elements; drag,
+  nudge (arrow keys), copy or delete them together, each as one undo step.
+- **Annotations.** Free-text notes (rationale, open questions, planned changes) from the palette, or
+  attached to an element via its context pad.
 - **Inspector.** For the selected element: change team type / interaction mode, edit name and
-  description, pick custom fill & outline colours (with a reset), or delete.
+  description, pick custom fill & outline colours (with a reset), edit or detach an annotation, or
+  delete.
 - **Share via URL, no server.** **Share** copies a self-contained link — the whole diagram is
   LZ-compressed into the URL hash (`#d=…`). Opening that link restores the diagram.
 - **Autosave.** Every edit is debounced to `localStorage` and mirrored into the address bar, so a

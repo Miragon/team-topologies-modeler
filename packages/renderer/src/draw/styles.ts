@@ -28,6 +28,7 @@ export const FONT = {
     "'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
   label: 13.5,
   small: 11,
+  annotation: 12,
 } as const;
 
 /** Paper colour used for the label halo so text stays legible over lines. */

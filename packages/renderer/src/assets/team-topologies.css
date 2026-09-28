@@ -16,6 +16,12 @@
   --tt-accent-soft: rgba(51, 93, 229, 0.12);
   --tt-line: #e6e2e2;
   --tt-ink: var(--cd-schwarz);
+  /* diagram-js chrome (multi-selection frame, lasso, active palette tool) in the brand accent. */
+  --element-selected-outline-stroke-color: var(--tt-accent);
+  --element-selected-outline-secondary-stroke-color: rgba(51, 93, 229, 0.5);
+  --lasso-fill-color: var(--tt-accent-soft);
+  --lasso-stroke-color: var(--tt-accent);
+  --palette-entry-selected-color: var(--tt-accent);
   position: relative;
   width: 100%;
   height: 100%;
@@ -54,6 +60,17 @@
 .tt-djs-container .djs-outline {
   stroke: var(--tt-accent);
   stroke-dasharray: 3 3;
+}
+
+/* The bounding frame drawn around a multi-selection. */
+.tt-djs-container .djs-selection-outline {
+  stroke-width: 1.5px;
+  stroke-dasharray: 5 4;
+}
+
+.tt-djs-container .djs-lasso-overlay {
+  stroke-width: 1.5px;
+  stroke-dasharray: 5 4;
 }
 
 /* Resize handles (every team is resizable) in the accent. */
@@ -135,7 +152,8 @@
   display: block;
   pointer-events: none;
 }
-.tt-mode-entry.is-active {
+.tt-mode-entry.is-active,
+.djs-palette .entry.highlighted-entry {
   background: var(--tt-accent-soft);
   box-shadow: inset 0 0 0 1.5px var(--tt-accent);
 }
@@ -164,18 +182,26 @@
   color: var(--tt-accent);
 }
 
-/* --- Inline label editor -------------------------------------------------- */
-.tt-djs-container .tt-label-input {
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
-  text-align: center;
-  padding: 3px 6px;
-  border: 1.5px solid var(--tt-accent);
-  border-radius: var(--cd-radius-sm);
-  background: var(--cd-weiss);
-  color: var(--tt-ink);
-  outline: none;
-  box-shadow: 0 4px 14px rgba(51, 93, 229, 0.2);
+/* --- In-place label editor ------------------------------------------------ */
+/* Typography, size and position are set inline from the element's label layout, so the editor
+   sits exactly on the rendered label; it has no box of its own. */
+.tt-djs-container .tt-label-editor {
+  position: absolute;
   z-index: 100;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  caret-color: var(--tt-accent);
+}
+
+/* Hide the rendered label while its editor is open, so the text only shows once. */
+.tt-djs-container .djs-element.tt-label-editing .djs-visual > text {
+  visibility: hidden;
 }

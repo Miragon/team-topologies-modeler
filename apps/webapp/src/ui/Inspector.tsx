@@ -1,7 +1,8 @@
 /**
  * Floating inspector (top-right of the canvas). Appears only while exactly one
- * element is selected — a team, an interaction glyph or the flow arrow — editing
- * it through the modeler's modeling services (every change is undoable).
+ * element is selected — a team, an interaction glyph, the flow arrow or an
+ * annotation — editing it through the modeler's modeling services (every change
+ * is undoable).
  */
 
 import {
@@ -12,11 +13,25 @@ import {
   type InteractionMode,
   type TeamType,
 } from "@miragon/team-topologies-schema-model";
-import type { TtFlow, TtInteraction, TtModeling, TtTeam } from "@miragon/team-topologies-renderer";
-import { isTtFlow, isTtInteraction, isTtTeam } from "@miragon/team-topologies-renderer";
+import type {
+  TtAnnotation,
+  TtElement,
+  TtFlow,
+  TtInteraction,
+  TtModeling,
+  TtTeam,
+} from "@miragon/team-topologies-renderer";
+import {
+  isTtAnnotation,
+  isTtAssociation,
+  isTtElement,
+  isTtFlow,
+  isTtInteraction,
+  isTtTeam,
+} from "@miragon/team-topologies-renderer";
 import { useModeler } from "@/state/modelerContext";
 import { CommitInput } from "./CommitInput";
-import { InteractionIcon, TeamIcon } from "./ShapeIcon";
+import { AnnotationIcon, InteractionIcon, TeamIcon } from "./ShapeIcon";
 
 interface Modeling {
   removeElements(elements: unknown[]): void;
@@ -224,6 +239,72 @@ function FlowInspector({ flow }: { flow: TtFlow }) {
   );
 }
 
+/** The element an annotation's connector points at, if it is attached. */
+function attachedElement(annotation: TtAnnotation): TtElement | undefined {
+  const association = [...annotation.outgoing, ...annotation.incoming].find(isTtAssociation);
+  if (!association) return undefined;
+  const other = association.source === annotation ? association.target : association.source;
+  return isTtElement(other) ? other : undefined;
+}
+
+function describe(element: TtElement): string {
+  if (isTtTeam(element))
+    return element.ttLabel || `${TEAM_TYPE_SPECS[element.teamType].label} team`;
+  if (isTtInteraction(element))
+    return element.ttLabel || INTERACTION_MODE_SPECS[element.mode].label;
+  return element.ttLabel || "Flow of change";
+}
+
+function AnnotationInspector({ annotation }: { annotation: TtAnnotation }) {
+  const { ttModeling, modeling } = useServices();
+  const target = attachedElement(annotation);
+
+  return (
+    <div className="tt-inspector__content" key={annotation.id}>
+      <header className="tt-inspector__header">
+        <AnnotationIcon />
+        <span>Annotation</span>
+      </header>
+
+      <label className="tt-field">
+        <span className="tt-field__label">Text</span>
+        <CommitInput
+          value={annotation.ttLabel ?? ""}
+          multiline
+          placeholder="Rationale, open question, planned change…"
+          ariaLabel="Annotation text"
+          onCommit={(text) => ttModeling.updateLabel(annotation, text.trim())}
+        />
+      </label>
+
+      {target ? (
+        <div className="tt-field tt-field--row">
+          <p className="tt-inspector__meta">Attached to “{describe(target)}”.</p>
+          <button
+            type="button"
+            className="tt-btn tt-btn--ghost tt-btn--sm"
+            onClick={() => ttModeling.detachAnnotation(annotation)}
+          >
+            Detach
+          </button>
+        </div>
+      ) : (
+        <p className="tt-inspector__meta">
+          Free-standing. Use the link action next to it to attach it to a team, interaction or flow.
+        </p>
+      )}
+
+      <button
+        type="button"
+        className="tt-btn tt-btn--danger"
+        onClick={() => modeling.removeElements([annotation])}
+      >
+        Delete annotation
+      </button>
+    </div>
+  );
+}
+
 export function Inspector() {
   // `revision` is read so the inspector re-renders when the selected element mutates.
   const { selected, revision } = useModeler();
@@ -236,6 +317,8 @@ export function Inspector() {
     body = <InteractionInspector interaction={selected} />;
   } else if (isTtFlow(selected)) {
     body = <FlowInspector flow={selected} />;
+  } else if (isTtAnnotation(selected)) {
+    body = <AnnotationInspector annotation={selected} />;
   } else {
     return null;
   }

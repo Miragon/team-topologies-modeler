@@ -1,7 +1,8 @@
 /**
  * Rebuilds a canonical `TtDocument` from the diagram-js runtime model. Position
  * and size truth are the live `x/y/width/height`; editable fields (label, type,
- * mode, colours) are read from the runtime properties.
+ * mode, colours) are read from the runtime properties. An annotation's
+ * `attachedTo` comes from its association connection.
  */
 
 import type Canvas from "diagram-js/lib/core/Canvas";
@@ -12,9 +13,17 @@ import type {
   FlowShape,
   InteractionShape,
   TeamNode,
+  TextAnnotation,
   TtDocument,
 } from "@miragon/team-topologies-schema-model";
-import { isTtFlow, isTtInteraction, isTtTeam } from "../model/di-types.js";
+import {
+  isTtAnnotation,
+  isTtAssociation,
+  isTtFlow,
+  isTtInteraction,
+  isTtTeam,
+  type TtAnnotation,
+} from "../model/di-types.js";
 import { ROOT_ID, type RootBusinessObject } from "./types.js";
 
 export default class TtExporter {
@@ -39,6 +48,7 @@ export default class TtExporter {
     const nodes: TeamNode[] = [];
     const interactions: InteractionShape[] = [];
     const flows: FlowShape[] = [];
+    const annotations: TextAnnotation[] = [];
 
     for (const el of this.elementRegistry.getAll()) {
       if (el.id === ROOT_ID) continue;
@@ -74,6 +84,15 @@ export default class TtExporter {
           size,
           ...(el.ttLabel ? { label: el.ttLabel } : {}),
         });
+      } else if (isTtAnnotation(el)) {
+        const attachedTo = attachedElementId(el);
+        annotations.push({
+          id: el.id,
+          text: el.ttLabel ?? "",
+          position,
+          size,
+          ...(attachedTo ? { attachedTo } : {}),
+        });
       }
     }
 
@@ -83,6 +102,15 @@ export default class TtExporter {
       nodes,
       interactions,
       flows,
+      annotations,
     };
   }
+}
+
+function attachedElementId(annotation: TtAnnotation): string | undefined {
+  const connections = [...annotation.outgoing, ...annotation.incoming];
+  const association = connections.find(isTtAssociation);
+  if (!association) return undefined;
+  const other = association.source === annotation ? association.target : association.source;
+  return other?.id;
 }

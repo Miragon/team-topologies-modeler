@@ -82,8 +82,22 @@ export interface FlowShape {
   size: Size;
 }
 
+/**
+ * A free-text note beside the diagram (like a BPMN text annotation). It either
+ * stands alone or is attached to exactly one team, interaction or flow, which
+ * its dashed connector points at.
+ */
+export interface TextAnnotation {
+  id: string;
+  text: string;
+  position: Position;
+  size: Size;
+  /** Id of the team, interaction or flow this annotation is attached to. */
+  attachedTo?: string;
+}
+
 /** Current document schema version. Bump + add a migration when shape changes. */
-export const DOCUMENT_VERSION = 2 as const;
+export const DOCUMENT_VERSION = 3 as const;
 
 /**
  * A complete Team Topologies diagram. This is what gets serialised to JSON,
@@ -95,4 +109,5 @@ export interface TtDocument {
   nodes: TeamNode[];
   interactions: InteractionShape[];
   flows: FlowShape[];
+  annotations: TextAnnotation[];
 }

@@ -185,6 +185,22 @@ export const FLOW_SPEC: FlowSpec = {
   minSize: { width: 160, height: 36 },
 };
 
+/**
+ * A text annotation — not part of the Team Topologies notation, so it carries
+ * no colours here; the renderer draws it in the neutral brand ink.
+ */
+export interface AnnotationSpec {
+  label: string;
+  defaultSize: Size;
+  minSize: Size;
+}
+
+export const ANNOTATION_SPEC: AnnotationSpec = {
+  label: "Annotation",
+  defaultSize: { width: 200, height: 64 },
+  minSize: { width: 60, height: 30 },
+};
+
 /** Maps a stroke style to an SVG/CSS dash array (empty string = solid). */
 export function dashArray(style: StrokeStyle, strokeWidth = 2): string {
   switch (style) {

@@ -25,7 +25,7 @@ npm install @miragon/team-topologies-schema-model
 - **The notation spec** — the four team types and three interaction modes, with their official
   shapes, colours and stroke styles as plain data you can read and render against.
 - **The document model** — a small, stable shape (`TtDocument`) with `version`, `title`, `nodes`,
-  `interactions` and `flows`.
+  `interactions`, `flows` and `annotations`.
 - **Runtime validation** — Zod schemas + `parseDocument()` for everything that comes from a file, a
   URL or `localStorage`.
 - **Forward migrations** — `parseDocument()` migrates older documents up to the current version
@@ -42,14 +42,14 @@ relate to (spatial overlap, the Team Topologies convention) — there is no sour
 
 ```jsonc
 {
-  "version": 2,
-  "title": "Online retail — team topology",
+  "version": 3,
+  "title": "Online shop — team topology",
   "nodes": [
     {
       "id": "team_checkout",
       "type": "stream-aligned",
-      "label": "Checkout Stream",
-      "position": { "x": 320, "y": 110 },
+      "label": "Checkout & Payments",
+      "position": { "x": 560, "y": 202 },
       "size": { "width": 240, "height": 96 },
     },
   ],
@@ -57,21 +57,31 @@ relate to (spatial overlap, the Team Topologies convention) — there is no sour
     {
       "id": "int_platform_checkout",
       "mode": "x-as-a-service",
-      "position": { "x": 384, "y": 396 },
-      "size": { "width": 96, "height": 96 },
+      "position": { "x": 636, "y": 286 },
+      "size": { "width": 88, "height": 78 },
     },
   ],
   "flows": [],
+  "annotations": [
+    {
+      "id": "ann_checkout_split",
+      "text": "Splits into two stream-aligned teams in Q3",
+      "position": { "x": 560, "y": 110 },
+      "size": { "width": 200, "height": 64 },
+      "attachedTo": "team_checkout",
+    },
+  ],
 }
 ```
 
-| Field          | Type                 | Notes                                                                                |
-| -------------- | -------------------- | ------------------------------------------------------------------------------------ |
-| `version`      | `2`                  | `DOCUMENT_VERSION`; older versions are migrated up on parse.                         |
-| `title`        | `string`             | Diagram name.                                                                        |
-| `nodes`        | `TeamNode[]`         | A team: `type`, `label`, `position`, `size`, optional `description`/`fill`/`stroke`. |
-| `interactions` | `InteractionShape[]` | A placed interaction: `mode`, `position`, `size`, optional `label`/`fill`/`stroke`.  |
-| `flows`        | `FlowShape[]`        | A flow-of-change band: `position`, `size`, optional `label`.                         |
+| Field          | Type                 | Notes                                                                                                                              |
+| -------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `version`      | `3`                  | `DOCUMENT_VERSION`; older versions are migrated up on parse.                                                                       |
+| `title`        | `string`             | Diagram name.                                                                                                                      |
+| `nodes`        | `TeamNode[]`         | A team: `type`, `label`, `position`, `size`, optional `description`/`fill`/`stroke`.                                               |
+| `interactions` | `InteractionShape[]` | A placed interaction: `mode`, `position`, `size`, optional `label`/`fill`/`stroke`.                                                |
+| `flows`        | `FlowShape[]`        | A flow-of-change band: `position`, `size`, optional `label`.                                                                       |
+| `annotations`  | `TextAnnotation[]`   | A free-text note: `text`, `position`, `size`, optional `attachedTo` (a team/interaction/flow id). Left out of the JSON when empty. |
 
 ## Notation
 
@@ -98,7 +108,9 @@ printing. Team shapes are **solid** (long-lived); interaction shapes are **dashe
 | `x-as-a-service` | X-as-a-Service | triangle (points provider → consumer) | `#B4B4B4` / `#999696` |
 | `facilitating`   | Facilitating   | circle                                | `#C9DFBE` / `#78996B` |
 
-The **flow of change** is described separately by `FLOW_SPEC` (a left-to-right dashed band).
+The **flow of change** is described separately by `FLOW_SPEC` (a left-to-right dashed band), and
+text annotations by `ANNOTATION_SPEC` (default and minimum size — they are not part of the official
+notation, so they carry no notation colours).
 
 ## Usage
 
@@ -113,9 +125,9 @@ import {
 } from "@miragon/team-topologies-schema-model";
 
 // Build a document with the factories (notation defaults applied automatically)
-const doc = emptyDocument("Online retail");
-doc.nodes.push(createTeamNode("stream-aligned", { x: 320, y: 110 }));
-doc.interactions.push(createInteractionShape("x-as-a-service", { x: 384, y: 396 }));
+const doc = emptyDocument("Online shop");
+doc.nodes.push(createTeamNode("stream-aligned", { x: 560, y: 202 }));
+doc.interactions.push(createInteractionShape("x-as-a-service", { x: 636, y: 286 }));
 
 // Serialize deterministically (sorted, rounded, version-stamped) — diff- and URL-stable
 const json = serializeDocument(doc);
@@ -134,17 +146,17 @@ console.log(SAMPLE_DOCUMENT.title);
 
 ### API surface
 
-| Export                                                                                            | Purpose                                                              |
-| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `TtDocument`, `TeamNode`, `InteractionShape`, `FlowShape`, `Position`, `Size`                     | The document model types.                                            |
-| `TeamType`, `InteractionMode`, `TEAM_TYPES`, `INTERACTION_MODES`                                  | The notation's discriminator unions + their value lists.             |
-| `TEAM_TYPE_SPECS`, `INTERACTION_MODE_SPECS`, `FLOW_SPEC`, `dashArray()`                           | The visual notation spec (shapes, colours, strokes) as data.         |
-| `documentSchema`, `teamNodeSchema`, `interactionSchema`, `flowSchema`                             | Zod schemas for each shape.                                          |
-| `parseDocument()`, `ParseResult`                                                                  | Validate **and migrate** unknown input into a `TtDocument`.          |
-| `serializeDocument()`, `canonicalize()`                                                           | Deterministic JSON serialization (sorted, rounded, fixed key order). |
-| `emptyDocument()`, `createTeamNode()`, `createInteractionShape()`, `createFlowShape()`, `newId()` | Factories with notation defaults + id generation.                    |
-| `SAMPLE_DOCUMENT`                                                                                 | A complete example topology.                                         |
-| `DOCUMENT_VERSION`                                                                                | The current document version (`2`).                                  |
+| Export                                                                                                                      | Purpose                                                              |
+| --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `TtDocument`, `TeamNode`, `InteractionShape`, `FlowShape`, `TextAnnotation`, `Position`, `Size`                             | The document model types.                                            |
+| `TeamType`, `InteractionMode`, `TEAM_TYPES`, `INTERACTION_MODES`                                                            | The notation's discriminator unions + their value lists.             |
+| `TEAM_TYPE_SPECS`, `INTERACTION_MODE_SPECS`, `FLOW_SPEC`, `ANNOTATION_SPEC`, `dashArray()`                                  | The visual notation spec (shapes, colours, strokes) as data.         |
+| `documentSchema`, `teamNodeSchema`, `interactionSchema`, `flowSchema`, `annotationSchema`                                   | Zod schemas for each shape.                                          |
+| `parseDocument()`, `ParseResult`                                                                                            | Validate **and migrate** unknown input into a `TtDocument`.          |
+| `serializeDocument()`, `canonicalize()`                                                                                     | Deterministic JSON serialization (sorted, rounded, fixed key order). |
+| `emptyDocument()`, `createTeamNode()`, `createInteractionShape()`, `createFlowShape()`, `createTextAnnotation()`, `newId()` | Factories with notation defaults + id generation.                    |
+| `SAMPLE_DOCUMENT`                                                                                                           | A complete example topology.                                         |
+| `DOCUMENT_VERSION`                                                                                                          | The current document version (`3`).                                  |
 
 ## Determinism & migrations
 
@@ -154,7 +166,9 @@ console.log(SAMPLE_DOCUMENT.title);
   what makes Git diffs small and share URLs stable.
 - **Migrations** — `parseDocument()` upgrades older documents before validating (keyed by `version`).
   The `1 → 2` step drops the legacy `showFlowOfChange` flag and the old edge-based interactions,
-  keeping only interactions that carry geometry (the placed-shape model).
+  keeping only interactions that carry geometry (the placed-shape model). The `2 → 3` step adds an
+  empty `annotations` list — and because an empty list is not written back, re-saving a v2 file
+  changes nothing but its `version`.
 
 ## Development
 

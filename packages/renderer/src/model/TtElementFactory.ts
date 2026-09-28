@@ -1,11 +1,14 @@
 /**
- * Creates diagram-js runtime shapes carrying Team Topologies markers, from
+ * Creates diagram-js runtime elements carrying Team Topologies markers, from
  * canonical document elements (import) or from scratch (palette drag-to-create).
- * Everything is a shape — teams, interaction glyphs and the flow arrow.
+ * Teams, interaction glyphs, the flow arrow and annotations are shapes; the
+ * annotation connector is the only connection.
  */
 
 import type ElementFactory from "diagram-js/lib/core/ElementFactory";
+import { getMid } from "diagram-js/lib/layout/LayoutUtil";
 import {
+  ANNOTATION_SPEC,
   FLOW_SPEC,
   INTERACTION_MODE_SPECS,
   TEAM_TYPE_SPECS,
@@ -17,8 +20,16 @@ import type {
   InteractionShape,
   TeamNode,
   TeamType,
+  TextAnnotation,
 } from "@miragon/team-topologies-schema-model";
-import type { TtFlow, TtInteraction, TtTeam } from "./di-types.js";
+import type {
+  TtAnnotation,
+  TtAssociation,
+  TtElement,
+  TtFlow,
+  TtInteraction,
+  TtTeam,
+} from "./di-types.js";
 
 export default class TtElementFactory {
   static $inject = ["elementFactory"];
@@ -70,6 +81,33 @@ export default class TtElementFactory {
     } as Partial<TtFlow>) as unknown as TtFlow;
   }
 
+  createAnnotation(annotation: TextAnnotation): TtAnnotation {
+    return this.elementFactory.createShape({
+      id: annotation.id,
+      x: annotation.position.x,
+      y: annotation.position.y,
+      width: annotation.size.width,
+      height: annotation.size.height,
+      ttKind: "annotation",
+      ...(annotation.text ? { ttLabel: annotation.text } : {}),
+    } as Partial<TtAnnotation>) as unknown as TtAnnotation;
+  }
+
+  /**
+   * The connector of an imported, attached annotation. Its id is derived from
+   * the annotation (connectors aren't stored in the document), so re-importing
+   * the same document yields the same id.
+   */
+  createAssociation(annotation: TtAnnotation, target: TtElement): TtAssociation {
+    return this.elementFactory.createConnection({
+      id: `assoc_${annotation.id}`,
+      ttKind: "association",
+      source: annotation,
+      target,
+      waypoints: [getMid(annotation), getMid(target)],
+    } as Partial<TtAssociation>) as unknown as TtAssociation;
+  }
+
   // --- fresh, not-yet-placed shapes (palette / context-pad create) -------
   //
   // These set an explicit model-style id (`team_…`/`int_…`/`flow_…`, matching
@@ -110,5 +148,23 @@ export default class TtElementFactory {
       ttKind: "flow",
       ttLabel: FLOW_SPEC.label,
     } as Partial<TtFlow>) as unknown as TtFlow;
+  }
+
+  createNewAnnotation(text?: string): TtAnnotation {
+    return this.elementFactory.createShape({
+      id: newId("ann"),
+      width: ANNOTATION_SPEC.defaultSize.width,
+      height: ANNOTATION_SPEC.defaultSize.height,
+      ttKind: "annotation",
+      ...(text ? { ttLabel: text } : {}),
+    } as Partial<TtAnnotation>) as unknown as TtAnnotation;
+  }
+
+  /** A not-yet-connected association; modeling sets its ends and waypoints. */
+  createNewAssociation(): TtAssociation {
+    return this.elementFactory.createConnection({
+      id: newId("assoc"),
+      ttKind: "association",
+    } as Partial<TtAssociation>) as unknown as TtAssociation;
   }
 }

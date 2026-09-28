@@ -4,8 +4,13 @@ import { useEffect, useRef } from "react";
 import { useUiStore } from "./uiStore";
 
 const SHORTCUTS: Array<[string, string]> = [
-  ["Double-click team", "Rename"],
-  ["Drag between teams", "Create interaction (selected mode)"],
+  ["Double-click element", "Edit its name or text"],
+  ["⇧ Enter (while editing)", "New line"],
+  ["⌘/Ctrl + A", "Select all"],
+  ["⇧ + drag on the canvas", "Lasso-select several elements"],
+  ["⇧ + click", "Add to or remove from the selection"],
+  ["Arrow keys (⇧ for bigger steps)", "Nudge the selection"],
+  ["⌘/Ctrl + C, ⌘/Ctrl + V", "Copy and paste the selection"],
   ["⌘/Ctrl + Z", "Undo"],
   ["⇧⌘/Ctrl + Z, ⌘/Ctrl + Y", "Redo"],
   ["Delete / Backspace", "Remove selection"],
@@ -82,7 +87,9 @@ export function HelpDialog() {
             Model your organisation as <strong>four team types</strong> connected by{" "}
             <strong>three interaction modes</strong>. Team shapes are solid (long-lived);
             interactions are dashed and translucent (short-lived). Place teams left-to-right along
-            the flow of change, and size a team to hint at its cognitive load.
+            the flow of change, and size a team to hint at its cognitive load. Use{" "}
+            <strong>annotations</strong> for the context around a team: rationale, open questions,
+            planned changes.
           </p>
 
           <h3>Shortcuts</h3>

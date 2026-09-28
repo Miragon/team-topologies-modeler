@@ -1,11 +1,12 @@
 /**
- * SVG rendering of the Team Topologies notation (BaseRenderer subclass).
- * Everything is a placed shape:
+ * SVG rendering of the Team Topologies notation (BaseRenderer subclass):
  *  - teams: SOLID resizable boxes (label wrapped inside), distinguished by shape
  *    as well as colour;
  *  - interactions: DASHED, 50%-transparent glyphs (collaboration = parallelogram,
  *    x-as-a-service = triangle, facilitating = circle) laid over team boundaries;
- *  - flow: a dashed "flow of change" arrow.
+ *  - flow: a dashed "flow of change" arrow;
+ *  - annotations: a BPMN-style open bracket with free text, and the dashed
+ *    association connecting an annotation to the element it is attached to.
  *
  * Colours/shapes come from the single notation source (`@miragon/team-topologies-schema-model`).
  */
@@ -13,20 +14,30 @@
 import BaseRenderer from "diagram-js/lib/draw/BaseRenderer";
 import { append as svgAppend, create as svgCreate, attr as svgAttr } from "tiny-svg";
 import type EventBus from "diagram-js/lib/core/EventBus";
-import type { ElementLike, ShapeLike } from "diagram-js/lib/model/Types";
+import type { ConnectionLike, ElementLike, ShapeLike } from "diagram-js/lib/model/Types";
 import {
   FLOW_SPEC,
   INTERACTION_MODE_SPECS,
   TEAM_TYPE_SPECS,
   dashArray,
 } from "@miragon/team-topologies-schema-model";
-import { FONT, INK, INK_SOFT } from "./styles.js";
+import { FONT, INK_SOFT } from "./styles.js";
 import { TT_RENDER_PRIORITY } from "./styles.js";
 import {
+  LINE_HEIGHT,
+  flowHeadWidth,
+  labelLayout,
+  wrapLabel,
+  type LabelLayout,
+} from "./label-layout.js";
+import {
+  isTtAnnotation,
+  isTtAssociation,
   isTtElement,
   isTtFlow,
   isTtInteraction,
   isTtTeam,
+  type TtAnnotation,
   type TtFlow,
   type TtInteraction,
   type TtTeam,
@@ -42,13 +53,14 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
   }
 
   override canRender(element: ElementLike): boolean {
-    return isTtElement(element);
+    return isTtElement(element) || isTtAssociation(element);
   }
 
   override drawShape(visuals: SVGElement, element: ShapeLike): SVGElement {
     if (isTtTeam(element)) return this.drawTeam(visuals, element);
     if (isTtInteraction(element)) return this.drawInteraction(visuals, element);
     if (isTtFlow(element)) return this.drawFlow(visuals, element);
+    if (isTtAnnotation(element)) return this.drawAnnotation(visuals, element);
     const rect = svgAttr(svgCreate("rect"), {
       width: element.width,
       height: element.height,
@@ -58,9 +70,26 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
     return rect;
   }
 
+  override drawConnection(visuals: SVGElement, connection: ConnectionLike): SVGElement {
+    const line = svgAttr(svgCreate("path"), {
+      d: waypointsPath(connection.waypoints),
+      fill: "none",
+      stroke: INK_SOFT,
+      "stroke-width": 1.5,
+      "stroke-dasharray": "4 4",
+      "stroke-linecap": "round",
+    });
+    svgAppend(visuals, line);
+    return line;
+  }
+
   override getShapePath(shape: ShapeLike): string {
     const { x, y, width, height } = shape;
     return `M${x},${y}l${width},0l0,${height}l${-width},0z`;
+  }
+
+  override getConnectionPath(connection: ConnectionLike): string {
+    return waypointsPath(connection.waypoints);
   }
 
   // --- teams ---------------------------------------------------------------
@@ -79,7 +108,7 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
       "stroke-linejoin": "round",
     });
     svgAppend(visuals, outline);
-    this.appendLabel(visuals, team.ttLabel ?? "", w, h, { "font-weight": "640" });
+    this.appendLabel(visuals, team.ttLabel ?? "", labelLayout(team));
     return outline;
   }
 
@@ -131,13 +160,7 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
       glyph = svgAttr(svgCreate("polygon"), { points: pts, ...common });
     }
     svgAppend(visuals, glyph);
-
-    if (el.ttLabel) {
-      this.appendLabel(visuals, el.ttLabel, w, h, {
-        "font-size": FONT.small,
-        "font-weight": "600",
-      });
-    }
+    this.appendLabel(visuals, el.ttLabel ?? "", labelLayout(el));
     return glyph;
   }
 
@@ -148,7 +171,7 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
     const h = Math.max(el.height, 1);
     const sw = FLOW_SPEC.strokeWidth;
     const i = sw / 2;
-    const head = Math.min(w * 0.16, h * 1.1);
+    const head = flowHeadWidth(w, h);
     const shaft = h * 0.5;
     const top = (h - shaft) / 2;
     const bot = top + shaft;
@@ -172,35 +195,53 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
       "stroke-linejoin": "round",
     });
     svgAppend(visuals, arrow);
-    if (el.ttLabel) {
-      this.appendLabel(visuals, el.ttLabel, w - head, h, {
-        "font-size": FONT.small,
-        "font-weight": "650",
-        "letter-spacing": "0.06em",
-        fill: INK_SOFT,
-      });
-    }
+    this.appendLabel(visuals, el.ttLabel ?? "", labelLayout(el));
     return arrow;
   }
 
-  // --- shared label rendering (wrapped, centred, no halo) ------------------
+  // --- annotations ---------------------------------------------------------
 
-  private appendLabel(visuals: SVGElement, text: string, w: number, h: number, attrs: Attrs): void {
-    const fontSize =
-      typeof attrs["font-size"] === "number" ? (attrs["font-size"] as number) : FONT.label;
-    const lines = wrapLabel(text, w - 20, fontSize);
-    const lineHeight = fontSize * 1.2;
-    const startY = h / 2 - ((lines.length - 1) * lineHeight) / 2;
+  private drawAnnotation(visuals: SVGElement, el: TtAnnotation): SVGElement {
+    const w = Math.max(el.width, 1);
+    const h = Math.max(el.height, 1);
+    const sw = 1.5;
+    const i = sw / 2;
+    const arm = Math.min(14, w / 2);
+    const bracket = svgAttr(svgCreate("path"), {
+      d: `M${arm},${i} L${i},${i} L${i},${h - i} L${arm},${h - i}`,
+      fill: "none",
+      stroke: INK_SOFT,
+      "stroke-width": sw,
+      "stroke-linejoin": "round",
+    });
+    svgAppend(visuals, bracket);
+    this.appendLabel(visuals, el.ttLabel ?? "", labelLayout(el));
+    return bracket;
+  }
+
+  // --- shared label rendering (wrapped, no halo) ---------------------------
+
+  private appendLabel(visuals: SVGElement, text: string, layout: LabelLayout): void {
+    const { box, fontSize } = layout;
+    const lines = wrapLabel(text, box.width, fontSize);
+    const lineHeight = fontSize * LINE_HEIGHT;
+    const centred = layout.align === "center";
+    const x = centred ? box.x + box.width / 2 : box.x;
+    const startY = centred
+      ? box.y + box.height / 2 - ((lines.length - 1) * lineHeight) / 2
+      : box.y + lineHeight / 2;
     lines.forEach((ln, idx) => {
+      if (!ln) return;
       const t = svgAttr(svgCreate("text"), {
-        x: w / 2,
+        x,
         y: startY + idx * lineHeight,
         "font-family": FONT.family,
         "font-size": fontSize,
-        fill: INK,
-        "text-anchor": "middle",
+        fill: layout.fill,
+        "text-anchor": centred ? "middle" : "start",
         "dominant-baseline": "central",
-        ...attrs,
+        "font-weight": layout.fontWeight,
+        ...(layout.letterSpacing ? { "letter-spacing": layout.letterSpacing } : {}),
       });
       t.textContent = ln;
       svgAppend(visuals, t);
@@ -225,22 +266,6 @@ function octagon(i: number, w: number, h: number, c: number): string {
     .join(" ");
 }
 
-/** Greedy word-wrap into lines that roughly fit `maxWidth` at the font size. */
-function wrapLabel(text: string, maxWidth: number, fontSize: number): string[] {
-  const maxChars = Math.max(4, Math.floor(maxWidth / (fontSize * 0.58)));
-  const words = text.split(/\s+/).filter(Boolean);
-  if (words.length === 0) return [];
-  const lines: string[] = [];
-  let cur = "";
-  for (const word of words) {
-    const candidate = cur ? `${cur} ${word}` : word;
-    if (candidate.length > maxChars && cur) {
-      lines.push(cur);
-      cur = word;
-    } else {
-      cur = candidate;
-    }
-  }
-  if (cur) lines.push(cur);
-  return lines;
+function waypointsPath(waypoints: ReadonlyArray<{ x: number; y: number }>): string {
+  return waypoints.map((point, idx) => `${idx === 0 ? "M" : "L"}${point.x},${point.y}`).join(" ");
 }
