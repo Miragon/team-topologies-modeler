@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.8.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.7.1...v0.8.0) (2026-09-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* DOCUMENT_VERSION is 3 and TtDocument has a required `annotations` array (v1/v2 documents migrate on parse; an empty list is not serialised, so re-saving a v2 file only changes its version). isTtElement() now matches shapes only; annotation connectors are TtAssociation.
+
+### Features
+
+* multi-selection, text annotations and in-place label editing ([#94](https://github.com/Miragon/team-topologies-modeler/issues/94)) ([533e49a](https://github.com/Miragon/team-topologies-modeler/commit/533e49a113dcea50315b98def48afaf28364b880))
+
 ## [0.7.1](https://github.com/Miragon/team-topologies-modeler/compare/v0.7.0...v0.7.1) (2026-09-22)
 
 
