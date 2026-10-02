@@ -148,13 +148,13 @@
   "dependencies": {
     "@miragon/team-topologies-renderer": "0.8.0",
     "@miragon/team-topologies-schema-model": "0.8.0",
-    "diagram-js": "15.26.0",
+    "diagram-js": "15.27.1",
     "didi": "11.0.0",
     "tiny-svg": "4.1.4",
     "zod": "4.6.5"
   },
   "devDependencies": {
-    "@types/node": "26.6.2",
+    "@types/node": "26.6.3",
     "@types/vscode": "1.96.0",
     "@vscode/vsce": "4.0.0",
     "esbuild": "0.28.2",
