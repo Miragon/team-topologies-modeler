@@ -34,7 +34,7 @@ export function EmptyState() {
       <div className="tt-empty__card">
         <img
           className="tt-empty__mark"
-          src={`${import.meta.env.BASE_URL}favicon.svg`}
+          src={`${import.meta.env.BASE_URL}miragon-icon.svg`}
           width={60}
           height={60}
           alt=""
