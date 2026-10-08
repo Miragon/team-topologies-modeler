@@ -1,6 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" role="img">
   <title>Miragon Modeler für Team Topologies</title>
-  <rect width="24" height="24" rx="5.25" fill="#335DE5"/>
   <rect x="17" y="4" width="5" height="7" rx="1" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   <rect x="2" y="16" width="20" height="4" rx="1" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   <rect x="2" y="4" width="12" height="6" rx="3" fill="#00E676"/>
