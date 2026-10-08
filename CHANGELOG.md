@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.8.0...v0.9.0) (2026-10-08)
+
+
+### Features
+
+* use the Team Topologies modeler icon for app, favicon and .tt files ([#101](https://github.com/Miragon/team-topologies-modeler/issues/101)) ([6aa6016](https://github.com/Miragon/team-topologies-modeler/commit/6aa60163982e0db0e877c2f504e3e3df8a16261e))
+
 ## [0.8.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.7.1...v0.8.0) (2026-09-28)
 
 
