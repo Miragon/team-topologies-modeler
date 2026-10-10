@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.1](https://github.com/Miragon/team-topologies-modeler/compare/v0.10.0...v0.10.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* **vscode:** one JSON language for *.tt and *.ttm.json ([#107](https://github.com/Miragon/team-topologies-modeler/issues/107)) ([14331f1](https://github.com/Miragon/team-topologies-modeler/commit/14331f122e01a9af81bb5b03e5deabc7e86cea00))
+
 ## [0.10.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.9.0...v0.10.0) (2026-10-10)
 
 
