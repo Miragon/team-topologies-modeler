@@ -43,24 +43,10 @@
           "team-topologies"
         ],
         "extensions": [
-          ".tt"
-        ],
-        "configuration": "./language-configuration.json",
-        "icon": {
-          "light": "./media/icons/team-topologies-light.svg",
-          "dark": "./media/icons/team-topologies-dark.svg"
-        }
-      },
-      {
-        "id": "team-topologies-json",
-        "aliases": [
-          "Team Topologies (JSON)",
-          "team-topologies-json"
-        ],
-        "extensions": [
+          ".tt",
           ".ttm.json"
         ],
-        "configuration": "./language-configuration-json.json",
+        "configuration": "./language-configuration.json",
         "icon": {
           "light": "./media/icons/team-topologies-light.svg",
           "dark": "./media/icons/team-topologies-dark.svg"
@@ -69,9 +55,9 @@
     ],
     "grammars": [
       {
-        "language": "team-topologies-json",
-        "scopeName": "source.team-topologies-json",
-        "path": "./syntaxes/team-topologies-json.tmLanguage.json"
+        "language": "team-topologies",
+        "scopeName": "source.team-topologies",
+        "path": "./syntaxes/team-topologies.tmLanguage.json"
       }
     ],
     "customEditors": [
