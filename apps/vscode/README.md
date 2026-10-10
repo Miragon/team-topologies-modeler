@@ -58,7 +58,7 @@ A diagram shows teams and how they interact.
   (embedded PNG)** (also under **File > New File…**), pick a location, and press `Ctrl/Cmd+S` once to
   render the first PNG.
 - **File icon.** `.tt` and `.ttm.json` files carry the Team Topologies icon in the Explorer and on
-  editor tabs, in light and dark themes; `.ttm.json` keeps JSON syntax highlighting in the text editor.
+  editor tabs, in light and dark themes, and both get JSON syntax highlighting in the text editor.
 - **Offline-capable** — no CDN, no network.
 
 ## Development
