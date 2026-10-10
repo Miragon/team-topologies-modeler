@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.9.0...v0.10.0) (2026-10-10)
+
+
+### Features
+
+* **vscode:** file icon for *.ttm.json ([#105](https://github.com/Miragon/team-topologies-modeler/issues/105)) ([e63b177](https://github.com/Miragon/team-topologies-modeler/commit/e63b1770f756d8b8e38db9ea3b56fd5cc6be83dc))
+
 ## [0.9.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.8.0...v0.9.0) (2026-10-08)
 
 
