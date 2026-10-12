@@ -77,6 +77,15 @@ Everything is managed via **Conventional Commits** — primarily `feat`, `fix`, 
 - Pin **all** dependencies to exact versions — no version ranges (`^`/`~`/`>=`/`*`), internal
   workspace deps included (use `0.1.0`). See
   [`.claude/rules/package-json-fixed-versions.md`](.claude/rules/package-json-fixed-versions.md).
+- The repo's Claude skills ship as the **`team-topologies-modeler` plugin**
+  ([`plugins/team-topologies-modeler/`](plugins/team-topologies-modeler/)) via the marketplace in
+  [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json): `team-topologies` for the
+  method, `tt-format` for the file format plus its checker (`skills/tt-format/scripts/check.mjs`).
+  The checker hand-mirrors `schema-model` (notation sizes, schema, serializer) — when you change
+  those, update it; `packages/schema-model/src/plugin-check.sync.test.ts` fails on drift. Install
+  with `/plugin marketplace add Miragon/team-topologies-modeler` and
+  `/plugin install team-topologies-modeler@team-topologies`; the skill files are readable directly
+  under `plugins/team-topologies-modeler/skills/` either way.
 - Contributor onboarding in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Code Style

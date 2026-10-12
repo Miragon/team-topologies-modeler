@@ -37,7 +37,17 @@
           "path": "apps/webapp/package.json",
           "jsonpath": "$.dependencies['@miragon/team-topologies-schema-model']"
         },
-        { "type": "json", "path": "e2e/package.json", "jsonpath": "$.version" }
+        { "type": "json", "path": "e2e/package.json", "jsonpath": "$.version" },
+        {
+          "type": "json",
+          "path": "plugins/team-topologies-modeler/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": ".claude-plugin/marketplace.json",
+          "jsonpath": "$.plugins[0].version"
+        }
       ]
     }
   }
