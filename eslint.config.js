@@ -70,6 +70,13 @@ export default tseslint.config(
       globals: { ...globals.node, ...globals.browser },
     },
   },
+  // Claude Code plugin scripts run as plain Node CLIs, outside the workspaces.
+  {
+    files: ["plugins/**/*.mjs"],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
   // React app: hooks + fast-refresh hygiene.
   {
     files: ["apps/webapp/**/*.{ts,tsx}"],

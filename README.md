@@ -142,6 +142,22 @@ boundary between the teams they relate to (spatial overlap), so there is no sour
 Text annotations are optional notes beside the diagram; `attachedTo` ties one to a team, interaction
 or flow (drawn as a dashed connector). An empty `annotations` list is left out of the file.
 
+## Claude Code plugin
+
+The repository ships two Claude skills as a [Claude Code](https://claude.com/claude-code) plugin, so
+an agent can design, draw, review and edit Team Topologies diagrams in any project:
+
+```
+/plugin marketplace add Miragon/team-topologies-modeler
+/plugin install team-topologies-modeler@team-topologies
+```
+
+`team-topologies` covers the method (team types, interaction modes, cognitive load, reviews);
+`tt-format` covers the `.tt` / `.ttm.json` format, a layout grid and a dependency-free checker that
+validates a file and reads back which teams each interaction connects. Details in
+[`plugins/team-topologies-modeler/`](plugins/team-topologies-modeler/README.md); the marketplace
+manifest is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and the agent notes in [CLAUDE.md](CLAUDE.md).

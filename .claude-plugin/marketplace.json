@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
+  "name": "team-topologies",
+  "owner": {
+    "name": "Miragon",
+    "url": "https://miragon.io"
+  },
+  "description": "Team Topologies skills for Claude Code — the method after Skelton & Pais and the `.tt` / `.ttm.json` format used by the Team Topologies Modeler.",
+  "plugins": [
+    {
+      "name": "team-topologies-modeler",
+      "source": "./plugins/team-topologies-modeler",
+      "description": "Team Topologies for Claude: team types, interaction modes and topology reviews, plus the complete `.tt` / `.ttm.json` format with a layout grid and a dependency-free checker. Lets Claude design, draw, review and edit Team Topologies diagrams as plain JSON.",
+      "version": "0.10.1",
+      "author": {
+        "name": "Miragon",
+        "url": "https://miragon.io"
+      },
+      "homepage": "https://github.com/Miragon/team-topologies-modeler",
+      "license": "MIT",
+      "category": "modeling",
+      "keywords": [
+        "team-topologies",
+        "team-types",
+        "interaction-modes",
+        "platform-team",
+        "org-design",
+        "cognitive-load",
+        "modeling",
+        "miragon"
+      ]
+    }
+  ]
+}
