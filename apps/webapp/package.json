@@ -17,7 +17,7 @@
     "@miragon/team-topologies-renderer": "0.10.1",
     "@miragon/team-topologies-schema-model": "0.10.1",
     "diagram-js": "15.28.0",
-    "didi": "11.0.1",
+    "didi": "12.0.0",
     "lz-string": "1.5.0",
     "tiny-svg": "4.1.4",
     "react": "19.3.0",
