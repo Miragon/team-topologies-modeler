@@ -102,21 +102,59 @@ export const ICON_X: IconNode = [
 const ICON_STROKE_WIDTH = 2.5;
 const ICON_SIZE = 16;
 
+/**
+ * The SVG elements and attributes Lucide icon nodes are made of. The markup is assigned to
+ * innerHTML by hosts, so anything else a caller passes in (a <script>, an onload) is dropped.
+ */
+const SVG_ELEMENTS = ["path", "circle", "ellipse", "line", "polyline", "polygon", "rect"] as const;
+const SVG_ATTRIBUTES = [
+  "d",
+  "cx",
+  "cy",
+  "r",
+  "rx",
+  "ry",
+  "x",
+  "y",
+  "x1",
+  "y1",
+  "x2",
+  "y2",
+  "width",
+  "height",
+  "points",
+] as const;
+
 function escapeAttribute(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function positiveNumberOr(value: unknown, fallback: number): number {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : fallback;
 }
 
 /** Decorative (`aria-hidden`) inline SVG for a Lucide icon; the control around it carries the name. */
 export function iconMarkup(icon: IconNode, options: IconMarkupOptions = {}): string {
-  const size = options.size ?? ICON_SIZE;
-  const strokeWidth = options.strokeWidth ?? ICON_STROKE_WIDTH;
+  const size = positiveNumberOr(options.size, ICON_SIZE);
+  const strokeWidth = positiveNumberOr(options.strokeWidth, ICON_STROKE_WIDTH);
   const classAttribute = options.className ? ` class="${escapeAttribute(options.className)}"` : "";
   const children = icon
     .map(([tag, attributes]) => {
+      const element = SVG_ELEMENTS.find((allowed) => allowed === tag);
+      if (!element) return "";
       const attributeList = Object.entries(attributes)
-        .map(([name, value]) => `${name}="${escapeAttribute(value)}"`)
+        .flatMap(([name, value]) => {
+          const attribute = SVG_ATTRIBUTES.find((allowed) => allowed === name);
+          return attribute ? [`${attribute}="${escapeAttribute(String(value))}"`] : [];
+        })
         .join(" ");
-      return `<${tag} ${attributeList}/>`;
+      return `<${element} ${attributeList}/>`;
     })
     .join("");
   return (
