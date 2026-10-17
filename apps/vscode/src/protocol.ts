@@ -5,6 +5,9 @@
  *  - Host -> webview: `init`/`update` with the current document text (the native JSON document).
  *  - Webview -> host: `edit` after every graphical change (serialized JSON) -> WorkspaceEdit.
  *  - Webview -> host: `export` (SVG text or Base64 PNG) -> save dialog + write file.
+ *  - Host -> webview: `flush` (with a correlation `id`) right before the text document is saved.
+ *    The webview commits a field still being typed in (an `edit`), then answers `flushed`, so the
+ *    save includes text that is visible but not yet committed.
  *
  * Only for the PNG editor (`*.tt.png`/`*.ttm.png`, binary CustomDocument file):
  *  - Host -> webview: `requestPng` (with a correlation `id`) when the host needs the fully
@@ -21,8 +24,13 @@ export type HostToWebview =
   | { type: "init"; text: string }
   /** External document change (text editor, Git, …) -> re-import. */
   | { type: "update"; text: string }
-  /** PNG editor: request the current embedded PNG for save/backup (reply: `pngResponse`). */
-  | { type: "requestPng"; id: number };
+  /**
+   * PNG editor: request the current embedded PNG for save/backup (reply: `pngResponse`). With
+   * `includeDraft` (a save, not a backup) a draft still being typed in the panels is committed first.
+   */
+  | { type: "requestPng"; id: number; includeDraft: boolean }
+  /** About to save: commit any draft in the panels (reply: `flushed`, after its `edit`). */
+  | { type: "flush"; id: number };
 
 export type WebviewToHost =
   | { type: "ready" }
@@ -32,5 +40,7 @@ export type WebviewToHost =
   | { type: "export"; format: "svg" | "png"; data: string }
   /** Reply to `requestPng`: Base64 PNG (`data`) OR `error`. `id` correlates with the request. */
   | { type: "pngResponse"; id: number; data?: string; error?: string }
+  /** Reply to `flush`: every `edit` it caused was posted before this. */
+  | { type: "flushed"; id: number }
   | { type: "info"; message: string }
   | { type: "error"; message: string };

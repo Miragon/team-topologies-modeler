@@ -78,6 +78,7 @@ docs: add contributing guide
 | --------------------------------------- | ----------------------------------------------------- | -------- |
 | `@miragon/team-topologies-schema-model` | Types, notation spec, Zod validation, serialization   | DOM-free |
 | `@miragon/team-topologies-renderer`     | diagram-js bootstrap, renderer, viewer, import/export | DOM      |
+| `@miragon/team-topologies-ui` (private) | Shared React chrome: Inspector, Legend                | DOM      |
 | `apps/webapp`                           | Vite + React demo editor                              | DOM      |
 | `apps/vscode`                           | VS Code custom editor for `.tt`/`.ttm.json`           | DOM      |
 

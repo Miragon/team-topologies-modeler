@@ -1,47 +1,29 @@
 /* ============================================================================
-   Team Topologies Modeler — application styles
+   Team Topologies Modeler: application styles
 
-   Layout = a full-bleed canvas (the "plain" renderer) with Excalidraw-style
-   floating chrome layered on top: menu (left), palette (centre), Share (right),
-   legend (bottom-left), legal notice (bottom-right), selection inspector (top-right).
-   No header bar.
+   A full-bleed canvas with floating chrome on top and no header bar (guide §5):
+   menu and diagram title top-left, palette top-centre (from the renderer), Share
+   top-right, inspector on the right below the top row, zoom bottom-right, legend
+   above the legal notice bottom-left, toasts bottom-centre.
+
+   The token alias layer, buttons, fields, focus ring, motion and the inspector
+   and legend come from @miragon/team-topologies-ui (ui.css); this file holds
+   only the webapp's own chrome and layout.
    ========================================================================== */
 
-:root {
-  /* Miragon corporate identity. The --cd-* brand tokens come from the renderer's vendored
-     cd-tokens.generated.css (imported transitively via @miragon/team-topologies-renderer). The
-     aliases below are this app's semantic layer over them — one light mode, no dark toggle. */
-  --font-sans:
-    "Geist Variable", "Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
-    "Helvetica Neue", Arial, sans-serif;
-  --font-mono:
-    "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+/* ---- Layout ------------------------------------------------------------------
+   The shared tokens (aliases, --tt-edge/--tt-gap/--tt-row, layers) and the panel
+   placement defaults come from ui.css; these are the webapp's own bottom anchors. */
 
-  --ink: var(--cd-schwarz);
-  --ink-soft: #5b5b5b;
-  --ink-faint: #8a8a8a;
-  --line: #e6e2e2;
-  --line-strong: #d9d4d4;
-  --bg: var(--cd-grau);
-  --surface: var(--cd-weiss);
-  --surface-2: #f2f0f0;
-  --accent: var(--cd-blau);
-  --accent-strong: var(--cd-blau-link);
-  --accent-soft: rgba(51, 93, 229, 0.12);
-  --link: var(--cd-blau-link);
-  --success: var(--cd-success);
-  --warning: var(--cd-warning);
-  --info: var(--cd-info);
-  --danger: var(--cd-danger);
-  --danger-soft: var(--cd-danger-soft);
-  --shadow-sm: var(--cd-shadow-1);
-  --shadow-md: var(--cd-shadow-2);
-  --shadow-pop: var(--cd-shadow-3);
-  --radius: var(--cd-radius-md);
-  --radius-sm: var(--cd-radius-sm);
-  --radius-lg: var(--cd-radius-lg);
-  color-scheme: light;
+:root {
+  --tt-legal-height: 20px;
+  /* Bottom anchors: the legend sits above the legal line; zoom and toasts on the edge. */
+  --tt-legend-bottom: calc(var(--tt-edge) + var(--tt-legal-height) + var(--tt-gap));
+  --tt-zoom-bottom: var(--tt-edge);
+  --tt-toast-bottom: var(--tt-edge);
 }
+
+/* ---- Base ------------------------------------------------------------------ */
 
 * {
   box-sizing: border-box;
@@ -56,103 +38,184 @@ body,
 
 body {
   font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
   color: var(--ink);
-  background: var(--bg);
+  background: var(--paper);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* ---- App shell: canvas fills the viewport, chrome floats over it ---------- */
+/* ---- App shell -------------------------------------------------------------- */
 
 .tt-app {
   position: relative;
   height: 100%;
   overflow: hidden;
-  background: var(--bg);
+  background: var(--paper);
 }
 
 .tt-canvas {
   position: absolute;
   inset: 0;
+  z-index: var(--z-canvas);
 }
 
-/* ---- Floating chrome anchors -------------------------------------------- */
+/* ---- Top chrome row ---------------------------------------------------------- */
 
 .tt-chrome {
   position: absolute;
-  top: 12px;
-  z-index: 10;
+  top: var(--tt-edge);
+  z-index: var(--z-chrome);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--tt-gap);
+  height: var(--tt-row);
 }
 
 .tt-chrome--left {
-  left: 12px;
+  left: var(--tt-edge);
 }
 
 .tt-chrome--right {
-  right: 12px;
+  right: var(--tt-edge);
 }
 
-/* ---- Icon buttons (menu trigger, Share) --------------------------------- */
+/* ---- Chrome icon buttons (Menu, Share, zoom) ------------------------------------ */
 
 .tt-iconbtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: var(--tt-gap);
+  height: var(--tt-row);
+  min-width: var(--tt-row);
+  padding: 0 16px 0 12px;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
+  line-height: 1;
   color: var(--ink);
-  padding: 7px 14px;
+  white-space: nowrap;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: var(--radius);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-1);
   cursor: pointer;
   transition:
-    background 0.12s,
-    border-color 0.12s,
-    color 0.12s,
-    transform 0.04s;
+    background-color var(--cd-motion-fast) var(--cd-ease),
+    border-color var(--cd-motion-fast) var(--cd-ease),
+    color var(--cd-motion-fast) var(--cd-ease),
+    box-shadow var(--cd-motion-fast) var(--cd-ease),
+    transform var(--cd-motion-fast) var(--cd-ease);
 }
 
-.tt-iconbtn__glyph {
-  font-size: 14px;
-  line-height: 1;
-}
-
-.tt-iconbtn__icon {
-  display: block;
-  flex: none;
-}
-
-.tt-iconbtn:hover,
+.tt-iconbtn:hover:not(:disabled),
 .tt-iconbtn[aria-expanded="true"] {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--accent-ink);
+  color: var(--accent-ink);
   background: var(--accent-soft);
 }
 
-.tt-iconbtn:active {
-  transform: translateY(1px);
+.tt-iconbtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .tt-iconbtn--primary {
   border-color: var(--accent);
   background: var(--accent);
   color: var(--cd-weiss);
-  box-shadow: 0 2px 10px rgba(51, 93, 229, 0.22);
 }
 
-.tt-iconbtn--primary:hover {
-  border-color: var(--accent-strong);
-  background: var(--accent-strong);
+.tt-iconbtn--primary:hover:not(:disabled) {
+  border-color: var(--accent-ink);
+  background: var(--accent-ink);
   color: var(--cd-weiss);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
 }
 
-/* ---- Menu dropdown ------------------------------------------------------ */
+.tt-iconbtn--primary:active:not(:disabled) {
+  box-shadow: var(--shadow-1);
+  transform: translateY(0);
+}
+
+/* ---- Diagram title (inline, next to the menu) ---------------------------------- */
+
+.tt-title {
+  /* Keeps the left group clear of the centred palette (about 400px wide). */
+  --tt-title-max: clamp(64px, calc(50vw - 370px), 280px);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tt-gap);
+  min-width: 0;
+  height: var(--tt-row);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  cursor: text;
+  transition:
+    border-color var(--cd-motion-fast) var(--cd-ease),
+    box-shadow var(--cd-motion-fast) var(--cd-ease);
+}
+
+.tt-title:hover {
+  border-color: var(--line-strong);
+}
+
+.tt-title:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus-ring-soft);
+}
+
+/* The hidden ::after copy sizes the field to its text (a plain input has a fixed width). */
+.tt-title__sizer {
+  display: inline-grid;
+  min-width: 0;
+  max-width: var(--tt-title-max);
+}
+
+.tt-title__sizer::after,
+.tt-title__input {
+  grid-area: 1 / 1;
+  min-width: 0;
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+.tt-title__sizer::after {
+  content: attr(data-value);
+  padding-right: 2px;
+  visibility: hidden;
+  overflow: hidden;
+  white-space: pre;
+}
+
+.tt-title__input {
+  width: 100%;
+  padding: 0;
+  color: inherit;
+  text-overflow: ellipsis;
+  border: 0;
+  background: transparent;
+  outline: none;
+}
+
+.tt-title__icon {
+  color: var(--ink-muted);
+}
+
+.tt-title:focus-within .tt-title__icon {
+  color: var(--accent-ink);
+}
+
+/* ---- Menu dropdown ------------------------------------------------------------- */
 
 .tt-menu {
   position: relative;
@@ -160,674 +223,734 @@ body {
 
 .tt-menu__dropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + var(--tt-gap));
   left: 0;
-  z-index: 20;
-  min-width: 250px;
+  min-width: var(--tt-menu-min-width);
+  max-height: calc(100vh - var(--tt-below-row) - var(--tt-edge));
+  overflow-y: auto;
   padding: 6px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  box-shadow: var(--shadow-pop);
-  animation: tt-menu-pop 0.12s ease;
-}
-
-@keyframes tt-menu-pop {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-}
-
-.tt-menu__title {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 6px 8px 8px;
-}
-
-.tt-menu__title-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-
-.tt-menu__title input {
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
-  padding: 7px 9px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  width: 100%;
-}
-
-.tt-menu__title input:focus {
-  outline: 2px solid var(--accent-soft);
-  border-color: var(--accent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-3);
+  outline: none;
+  animation: tt-pop-in var(--cd-motion-fast) var(--cd-ease-out);
 }
 
 .tt-menu__item {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
   font: inherit;
   font-size: 13px;
+  line-height: 1.5;
   color: var(--ink);
   text-align: left;
-  padding: 8px 10px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: transparent;
   cursor: pointer;
+  transition:
+    background-color var(--cd-motion-fast) var(--cd-ease),
+    color var(--cd-motion-fast) var(--cd-ease);
 }
 
-.tt-menu__glyph {
-  flex: none;
-  width: 16px;
-  text-align: center;
-  font-size: 14px;
-  color: var(--ink-soft);
+.tt-menu__icon {
+  color: var(--ink-muted);
+  transition: color var(--cd-motion-fast) var(--cd-ease);
 }
 
+.tt-menu__label {
+  flex: 1 1 auto;
+}
+
+/* Key hints use the sans face: in Geist Mono a capital O reads as a zero (⌘O vs. ⌘0). */
 .tt-menu__kbd {
   margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ink-faint);
+  padding: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+  border: 0;
+  background: none;
 }
 
-.tt-menu__item:hover:not(:disabled) {
+.tt-menu__check {
+  margin-left: auto;
+  color: var(--accent-ink);
+}
+
+.tt-menu__item:not([aria-disabled="true"]):hover,
+.tt-menu__item:not([aria-disabled="true"]):focus-visible {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
-.tt-menu__item:hover:not(:disabled) .tt-menu__glyph {
-  color: var(--accent);
+.tt-menu__item:not([aria-disabled="true"]):hover .tt-menu__icon,
+.tt-menu__item:not([aria-disabled="true"]):focus-visible .tt-menu__icon {
+  color: var(--accent-ink);
 }
 
+/* Inset, so the ring stays inside the dropdown's padding. */
+.tt-menu__item:focus-visible {
+  outline-offset: -2px;
+}
+
+.tt-menu__item[aria-disabled="true"],
 .tt-menu__item:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: not-allowed;
-}
-
-.tt-menu__item.is-active {
-  color: var(--accent);
-}
-
-.tt-menu__item.is-active .tt-menu__glyph {
-  color: var(--accent);
 }
 
 .tt-menu__sep {
   height: 1px;
-  margin: 5px 8px;
+  margin: 4px 8px;
   background: var(--line);
 }
 
-/* ---- Buttons (inspector + dialogs) -------------------------------------- */
-
-.tt-btn {
-  appearance: none;
-  border: 1px solid var(--line-strong);
-  background: var(--surface);
-  color: var(--ink);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 550;
-  padding: 6px 11px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    background 0.12s,
-    border-color 0.12s,
-    box-shadow 0.12s,
-    transform 0.04s;
-}
-
-.tt-btn:hover {
-  background: var(--surface-2);
-  border-color: var(--ink-faint);
-}
-
-.tt-btn:active {
-  transform: translateY(1px);
-}
-
-.tt-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.tt-btn.is-active {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.tt-btn--primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--cd-weiss);
-}
-
-.tt-btn--primary:hover {
-  background: var(--accent-strong);
-  border-color: var(--accent-strong);
-}
-
-.tt-btn--danger {
-  background: var(--surface);
-  border-color: rgba(201, 42, 42, 0.32);
-  color: var(--danger);
-  width: 100%;
-  margin-top: 6px;
-}
-
-.tt-btn--danger:hover {
-  background: var(--danger-soft);
-  border-color: var(--danger);
-}
-
-.tt-btn--ghost {
-  border-color: transparent;
-  background: var(--surface-2);
-}
-
-.tt-btn--sm {
-  font-size: 12px;
-  padding: 4px 9px;
-}
-
-/* Visible keyboard focus for every interactive control (WCAG 2.4.7). */
-.tt-btn:focus-visible,
-.tt-iconbtn:focus-visible,
-.tt-menu__item:focus-visible,
-.tt-legend__close:focus-visible,
-.tt-toast:focus-visible,
-.tt-field__color input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-/* ---- Inspector: floating panel, top-right (shown on selection) ---------- */
-
-.tt-inspector {
-  position: absolute;
-  top: 60px;
-  right: 12px;
-  z-index: 8;
-  width: 288px;
-  max-height: calc(100% - 88px);
-  overflow-y: auto;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  box-shadow: var(--shadow-pop);
-  padding: 16px;
-}
-
-.tt-inspector__content {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.tt-inspector__header {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 15px;
-  font-weight: 680;
-}
-
-.tt-inspector__meta {
-  font-size: 12px;
-  color: var(--ink-faint);
-  line-height: 1.45;
-  margin: 0;
-}
-
-.tt-inspector__direction {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.tt-inspector__chip {
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 3px 10px;
-  font-size: 12px;
-  font-weight: 550;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tt-inspector__arrow {
-  color: var(--ink-faint);
-  font-weight: 700;
-}
-
-/* ---- Form fields -------------------------------------------------------- */
-
-.tt-field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.tt-field--row {
-  flex-direction: row;
-  align-items: flex-end;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.tt-field__label {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--ink-soft);
-  letter-spacing: 0.01em;
-}
-
-.tt-field__control {
-  font: inherit;
-  font-size: 13.5px;
-  color: var(--ink);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  background: var(--surface);
-  width: 100%;
-  resize: vertical;
-}
-
-.tt-field__control:focus {
-  outline: 2px solid var(--accent-soft);
-  border-color: var(--accent);
-}
-
-.tt-field__color {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.tt-field__color input[type="color"] {
-  width: 46px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid var(--line-strong);
-  border-radius: 6px;
-  background: none;
-  cursor: pointer;
-}
-
-/* ---- Legend ------------------------------------------------------------- */
-
-.tt-legend {
-  position: absolute;
-  /* Bottom-left corner, sitting above the legal-notice footer line. */
-  left: 16px;
-  bottom: 44px;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
-  padding: 12px 14px;
-  z-index: 4;
-  backdrop-filter: blur(4px);
-  min-width: 172px;
-}
-
-.tt-legend__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--ink-soft);
-  margin-bottom: 8px;
-}
-
-.tt-legend__close {
-  border: none;
-  background: none;
-  font-size: 17px;
-  line-height: 1;
-  color: var(--ink-faint);
-  cursor: pointer;
-  padding: 0 2px;
-}
-
-.tt-legend__close:hover {
-  color: var(--ink);
-}
-
-.tt-legend__group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.tt-legend__row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 12.5px;
-  color: var(--ink);
-}
-
-.tt-legend__divider {
-  height: 1px;
-  background: var(--line);
-  margin: 10px 0;
-}
-
-/* ---- Legal notice (bottom-left corner, subtle) ---- */
+/* ---- Legal notice: bottom-left ------------------------------------------------------ */
 
 .tt-legal {
   position: absolute;
-  left: 16px;
-  bottom: 14px;
-  z-index: 4;
+  left: var(--tt-edge);
+  bottom: var(--tt-edge);
+  z-index: var(--z-overlay);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
-  font-size: 11.5px;
-  color: var(--ink-soft);
+  column-gap: var(--tt-gap);
+  max-width: calc(100% - 2 * var(--tt-edge));
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+.tt-legal__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .tt-legal a {
-  color: var(--ink-soft);
+  color: var(--ink-muted);
   text-decoration: none;
+  border-radius: var(--radius-sm);
 }
 
 .tt-legal a:hover {
-  color: var(--accent);
+  color: var(--accent-ink);
   text-decoration: underline;
 }
 
-/* ---- Modal -------------------------------------------------------------- */
+/* ---- Zoom control: bottom-right ----------------------------------------------------- */
+
+.tt-zoom {
+  position: absolute;
+  right: var(--tt-edge);
+  bottom: var(--tt-zoom-bottom);
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: var(--tt-row);
+  padding: 3px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
+}
+
+.tt-zoom__btn {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 4px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color var(--cd-motion-fast) var(--cd-ease),
+    color var(--cd-motion-fast) var(--cd-ease);
+}
+
+.tt-zoom__btn--value {
+  min-width: 56px;
+}
+
+.tt-zoom__btn:hover:not(:disabled, [aria-disabled="true"]) {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.tt-zoom__btn:disabled,
+.tt-zoom__btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tt-zoom__sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 4px 2px;
+  background: var(--line);
+}
+
+/* ---- Busy indicator (e.g. a PNG export in progress) ------------------------------------ */
+
+.tt-icon--spin {
+  animation: tt-spin calc(2 * var(--cd-motion-slow)) linear infinite;
+}
+
+@keyframes tt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Dialog shell -------------------------------------------------------------------- */
 
 .tt-modal {
   position: fixed;
   inset: 0;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 30;
+  padding: 16px;
 }
 
 .tt-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(8, 10, 32, 0.42);
+  background: var(--backdrop);
+  backdrop-filter: blur(4px);
+  animation: tt-fade-in var(--cd-motion-base) var(--cd-ease-out);
 }
 
 .tt-modal__panel {
   position: relative;
-  width: min(560px, calc(100vw - 40px));
-  max-height: calc(100vh - 80px);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: calc(100% - 32px);
+  overflow: hidden;
   background: var(--surface);
-  border-radius: 14px;
-  box-shadow: var(--shadow-md);
-  padding: 4px 24px 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-3);
+  animation: tt-rise-in var(--cd-motion-base) var(--cd-ease-out);
+}
+
+.tt-modal__panel--sm {
+  width: min(440px, 100%);
 }
 
 .tt-modal__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  position: sticky;
-  top: 0;
+  gap: 16px;
+  padding: 16px 16px 8px 24px;
   background: var(--surface);
-  padding-top: 18px;
 }
 
+.tt-modal__title,
 .tt-modal__header h2 {
-  font-size: 18px;
   margin: 0;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
 }
 
 .tt-modal__body {
-  font-size: 13.5px;
-  color: var(--ink-soft);
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 8px 24px 24px;
+  font-size: 16px;
   line-height: 1.6;
+  color: var(--ink);
+}
+
+.tt-modal__body p {
+  margin: 0 0 16px;
+}
+
+.tt-modal__body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Only reached when a dialog has no control to focus; the panel itself is not a control. */
+.tt-modal__panel:focus {
+  outline: none;
 }
 
 .tt-modal__body h3 {
+  margin: 24px 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
   color: var(--ink);
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin: 18px 0 8px;
 }
 
 .tt-modal__foot {
   margin-top: 16px;
-  padding-top: 14px;
+  padding-top: 16px;
+  font-size: 13px;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--line);
+}
+
+.tt-modal__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--tt-gap);
+  padding: 16px 24px;
   border-top: 1px solid var(--line);
 }
 
 .tt-shortcuts {
   width: 100%;
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
   border-collapse: collapse;
+}
+
+.tt-shortcuts__caption {
+  padding: 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: left;
+  color: var(--ink);
 }
 
 .tt-shortcuts td {
   padding: 4px 0;
   vertical-align: top;
+  border-top: 1px solid var(--line);
 }
 
-.tt-shortcuts td:first-child {
-  width: 45%;
+.tt-shortcuts td.tt-shortcuts__input {
+  width: 50%;
+  padding-right: 16px;
+}
+
+/* A key combination never breaks inside itself; alternatives wrap between each other. */
+.tt-shortcut__input {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.tt-shortcut__plus,
+.tt-shortcut__or,
+.tt-shortcut__context {
+  color: var(--ink-muted);
+}
+
+.tt-shortcut__or {
+  margin: 0 8px;
+}
+
+.tt-shortcut__context {
+  display: block;
 }
 
 kbd {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  background: var(--surface-2);
-  border: 1px solid var(--line-strong);
-  border-bottom-width: 2px;
-  border-radius: 5px;
+  display: inline-block;
   padding: 2px 6px;
+  font-family: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  white-space: nowrap;
   color: var(--ink);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
 }
 
-/* ---- Toaster ------------------------------------------------------------ */
+/* ---- Toasts: bottom-centre ----------------------------------------------------------- */
 
 .tt-toaster {
   position: fixed;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: var(--tt-edge);
+  right: var(--tt-edge);
+  bottom: var(--tt-toast-bottom);
+  z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  z-index: 40;
   align-items: center;
+  gap: var(--tt-gap);
+  pointer-events: none;
 }
 
 .tt-toast {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 9px;
-  border: 1px solid var(--line);
-  /* Kind = coloured left border + dot AND the message text (never colour alone — WCAG). */
-  border-left: 3px solid var(--toast-accent, var(--info));
-  font: inherit;
+  gap: var(--tt-gap);
+  max-width: min(480px, 100%);
+  min-height: var(--tt-row);
+  padding: 4px 4px 4px 16px;
+  overflow: hidden;
   font-size: 13px;
-  font-weight: 550;
+  font-weight: 600;
+  line-height: 1.5;
   color: var(--ink);
   background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 9px 16px;
-  box-shadow: var(--shadow-md);
-  cursor: pointer;
-  animation: tt-toast-in 0.18s ease;
+  box-shadow: var(--shadow-2);
+  pointer-events: auto;
+  animation: tt-rise-in var(--cd-motion-base) var(--cd-ease-out);
 }
 
-.tt-toast__dot {
+/* A straight bar instead of border-left, which bends into a crescent on a rounded card. */
+.tt-toast::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--toast-accent);
+}
+
+.tt-toast.is-leaving {
+  animation: tt-sink-out var(--cd-motion-base) var(--cd-ease) forwards;
+}
+
+.tt-toast__icon {
+  color: var(--toast-accent);
+}
+
+.tt-toast__message {
+  flex: 1 1 auto;
+  padding: 4px 0;
+}
+
+.tt-toast__close {
+  display: inline-grid;
+  place-items: center;
   flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--toast-accent, var(--info));
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--ink-muted);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color var(--cd-motion-fast) var(--cd-ease),
+    color var(--cd-motion-fast) var(--cd-ease);
+}
+
+.tt-toast__close:hover {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.tt-toast--info {
+  --toast-accent: var(--info);
 }
 
 .tt-toast--success {
   --toast-accent: var(--success);
 }
+
+.tt-toast--warning {
+  --toast-accent: var(--warning);
+}
+
 .tt-toast--error {
   --toast-accent: var(--danger);
 }
 
-@keyframes tt-toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ---- Empty-state welcome card ------------------------------------------- */
+/* ---- Empty state (welcome card) ------------------------------------------------------- */
 
 .tt-empty {
   position: absolute;
   inset: 0;
-  z-index: 5;
+  z-index: var(--z-overlay);
   display: grid;
   place-items: center;
-  /* Clicks and file drops pass through to the canvas; only the card reacts. */
+  padding: 16px;
+  /* Clicks pass through to the canvas; only the card reacts. */
   pointer-events: none;
 }
 
 .tt-empty__card {
-  pointer-events: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
+  padding: 32px 40px;
   text-align: center;
-  gap: 12px;
-  max-width: 380px;
-  padding: 36px 40px;
-  /* Frosted panel: translucent surface token (not a hardcoded white) so the
-     canvas shows through the blur, matching the sibling Wardley modeler. */
   background: color-mix(in srgb, var(--surface) 84%, transparent);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-pop);
+  box-shadow: var(--shadow-2);
   backdrop-filter: blur(8px);
-  animation: tt-empty-in 0.2s ease;
+  pointer-events: auto;
+  animation: tt-rise-in var(--cd-motion-base) var(--cd-ease-out);
 }
 
+/* The official icon carries its own tile radius; no clipping and no glow on top. */
 .tt-empty__mark {
-  width: 60px;
-  height: 60px;
-  border-radius: 15px;
-  /* Accent-tinted glow lifts the mark off the frosted card (accent == --cd-blau). */
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 30%, transparent);
+  display: block;
+  width: 64px;
+  height: 64px;
 }
 
 .tt-empty__title {
-  margin: 8px 0 0;
-  font-size: 22px;
+  margin: 0;
+  font-size: 21px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  line-height: 1.3;
   color: var(--ink);
+  text-wrap: balance;
 }
 
 .tt-empty__text {
   margin: 0;
-  color: var(--ink-soft);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  text-wrap: balance;
 }
 
 .tt-empty__actions {
   display: flex;
-  gap: 10px;
-  margin-top: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--tt-gap);
 }
 
-/* The welcome card gets larger, rounder call-to-action buttons than the compact
-   toolbar `.tt-btn` — matched to the start-card scale without touching the shared button. */
 .tt-empty__actions .tt-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 10px 20px;
-  border-radius: var(--radius);
-}
-
-.tt-empty__actions .tt-btn:active {
-  transform: translateY(0);
-}
-
-.tt-empty__actions .tt-btn--primary {
-  box-shadow: var(--shadow-sm);
-}
-
-.tt-empty__actions .tt-btn--primary:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
-
-/* Ghost: bordered surface button (Wardley parity) — scoped so the borderless
-   global `.tt-btn--ghost` used elsewhere (Inspector) is untouched. */
-.tt-empty__actions .tt-btn--ghost {
-  border-color: var(--line);
-  background: var(--surface);
-  color: var(--ink);
-}
-
-.tt-empty__actions .tt-btn--ghost:hover {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
+  height: var(--tt-row);
+  padding: 0 24px;
 }
 
 .tt-empty__hint {
-  margin-top: 2px;
-  color: var(--ink-faint);
-  font-size: 12px;
-  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tt-gap);
+  font-size: 13px;
+  color: var(--ink-muted);
 }
 
-@keyframes tt-empty-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+/* Phones can't drag files into a page, so the hint would promise something they can't do. */
+@media (hover: none) and (pointer: coarse) {
+  .tt-empty__hint {
+    display: none;
   }
 }
 
-/* Narrow screens: shrink the floating inspector so it never covers the canvas. */
-@media (max-width: 720px) {
-  .tt-inspector {
-    width: calc(100vw - 24px);
-    max-width: 320px;
+/* ---- Drag-over state (guide §9) -------------------------------------------------------- */
+
+/* Opaque and edge to edge, so neither the canvas nor the chrome (or its focus ring and shadows)
+   shows through; the dashed frame sits at the chrome's edge distance. */
+.tt-dropzone {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dropzone);
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  pointer-events: none;
+  animation: tt-fade-in var(--cd-motion-fast) var(--cd-ease-out);
+}
+
+.tt-dropzone::before {
+  content: "";
+  position: absolute;
+  inset: var(--tt-edge);
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-lg);
+}
+
+.tt-dropzone__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tt-gap);
+  padding: 8px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+}
+
+/* ---- Welcome mode: the empty state hides the working chrome (guide §8) -------------------
+   The legal notice stays. Visibility flips only after the fade, so hidden chrome can't be
+   focused or clicked, while showing it again is immediate. */
+
+.tt-chrome,
+.tt-legend,
+.tt-inspector,
+.tt-zoom,
+.tt-app .djs-palette {
+  transition:
+    opacity var(--cd-motion-base) var(--cd-ease),
+    visibility 0s;
+}
+
+.tt-app--welcome .tt-chrome,
+.tt-app--welcome .tt-legend,
+.tt-app--welcome .tt-inspector,
+.tt-app--welcome .tt-zoom,
+.tt-app--welcome .djs-palette {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--cd-motion-base) var(--cd-ease),
+    visibility 0s linear var(--cd-motion-base);
+}
+
+/* ---- Medium widths: the centred toast would run into the legal line or the zoom control -- */
+
+@media (max-width: 1280px) {
+  :root {
+    --tt-toast-bottom: calc(var(--tt-edge) + var(--tt-row) + var(--tt-gap));
+  }
+}
+
+/* ---- Wide-but-not-desktop: keep the left group clear of the centred palette -------------
+   Menu and Share both go icon-only, so the top row stays symmetric. */
+
+@media (max-width: 1100px) and (min-width: 761px) {
+  .tt-iconbtn__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .tt-iconbtn {
+    width: var(--tt-row);
+    padding: 0;
+  }
+
+  .tt-title {
+    --tt-title-max: clamp(64px, calc(50vw - 320px), 280px);
+  }
+}
+
+/* ---- Narrow screens (≤ 760px) ----------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  /* No room for the legal line beside the zoom control: it becomes the bottom strip, and
+     zoom, legend and toasts stack above it. */
+  :root {
+    --tt-zoom-bottom: calc(var(--tt-edge) + var(--tt-legal-height) + var(--tt-gap));
+    --tt-legend-bottom: calc(var(--tt-zoom-bottom) + var(--tt-row) + var(--tt-gap));
+    --tt-toast-bottom: var(--tt-legend-bottom);
+  }
+
+  .tt-legal {
+    font-size: 12px;
+  }
+
+  /* Menu and Share collapse to icons; the label stays as their accessible name. */
+  .tt-iconbtn__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .tt-iconbtn {
+    width: var(--tt-row);
+    padding: 0;
+  }
+
+  .tt-chrome--left {
+    right: calc(var(--tt-edge) + var(--tt-row) + var(--tt-gap));
+  }
+
+  .tt-title {
+    flex: 0 1 auto;
+    --tt-title-max: 100%;
+  }
+
+  /* 16px keeps iOS Safari from zooming the page when a field gets focus. */
+  .tt-title {
+    font-size: 16px;
+  }
+
+  /* The inspector sheet covers the bottom of the screen; whatever would peek out around it is
+     noise (ui.css hides the legend). */
+  .tt-app:has(.tt-inspector) :is(.tt-legal, .tt-zoom) {
+    visibility: hidden;
+  }
+
+  /* Toasts rise above the sheet, so they never cover the field being edited. */
+  .tt-app:has(.tt-inspector) .tt-toaster {
+    bottom: calc(var(--tt-inspector-sheet-height) + var(--tt-edge) + var(--tt-gap));
+  }
+
+  .tt-empty__card {
+    padding: 24px;
+  }
+
+  .tt-modal {
+    padding: var(--tt-edge);
+  }
+
+  .tt-modal__header {
+    padding: 12px 12px 8px 16px;
+  }
+
+  .tt-modal__body {
+    padding: 8px 16px 16px;
+  }
+
+  .tt-modal__footer {
+    padding: 12px 16px;
+  }
+
+  /* Input and action share a line when they fit; otherwise the action wraps below. */
+  .tt-shortcuts tr {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 16px;
+    padding: 8px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .tt-shortcuts td,
+  .tt-shortcuts td.tt-shortcuts__input {
+    width: auto;
+    padding: 0;
+    border-top: 0;
+  }
+}
+
+@media (pointer: coarse) {
+  .tt-title {
+    font-size: 16px;
   }
 }

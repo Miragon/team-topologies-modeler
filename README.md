@@ -46,9 +46,9 @@ is distinguished by shape as well as colour, so diagrams stay readable with colo
   canvas, palette, inspector, PNG/SVG export and a shareable, self-contained URL (LZ-compressed, no
   backend). Deployed on Netlify.
 - **VS Code extension** ([`apps/vscode`](apps/vscode/README.md)) — a custom editor for `.tt` /
-  `.ttm.json` files: the JSON file stays the source of truth (save, Git and diff keep working), and
-  editable embedded-PNG diagrams (`*.tt.png`) let you drop a diagram into a wiki or README and still
-  edit it graphically.
+  `.ttm.json` files with the same inspector and legend as the web app: the JSON file stays the
+  source of truth (save, Git and diff keep working), and editable embedded-PNG diagrams (`*.tt.png`)
+  let you drop a diagram into a wiki or README and still edit it graphically.
 
 Both targets share two published packages:
 
@@ -80,6 +80,8 @@ packages/
                                             deterministic JSON, migrations, factory, the example.
   renderer/      @miragon/team-topologies-renderer     — diagram-js bootstrap: viewer/modeler, renderer, palette,
                                             context-pad, label editing, import/export, CSS.
+  ui/            @miragon/team-topologies-ui           — private: the React inspector and legend shared by
+                                            the webapp and the VS Code webview.
 apps/
   webapp/        @miragon/team-topologies-webapp       — Vite + React editor application.
   vscode/        team-topologies-modeler  — VS Code custom editor for .tt / .ttm.json.
@@ -108,7 +110,7 @@ boundary between the teams they relate to (spatial overlap), so there is no sour
 ```jsonc
 {
   "version": 3,
-  "title": "Online shop — team topology",
+  "title": "Online shop team topology",
   "nodes": [
     {
       "id": "team_checkout",

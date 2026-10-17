@@ -4,8 +4,17 @@
  * label and uses the same typography.
  */
 
-import { isTtAnnotation, isTtFlow, isTtInteraction, type TtElement } from "../model/di-types.js";
-import { FONT, INK, INK_SOFT } from "./styles.js";
+import { INTERACTION_MODE_SPECS, TEAM_TYPE_SPECS } from "@miragon/team-topologies-schema-model";
+import {
+  isTtAnnotation,
+  isTtFlow,
+  isTtInteraction,
+  type TtElement,
+  type TtInteraction,
+  type TtTeam,
+} from "../model/di-types.js";
+import { MIRAGON } from "../theme/index.js";
+import { FONT, INK, INK_MUTED } from "./styles.js";
 
 /** Horizontal padding between a shape's outline and its centred label. */
 const LABEL_INSET = 10;
@@ -30,6 +39,66 @@ export interface LabelLayout {
   fill: string;
 }
 
+/** WCAG AA for body text. */
+const MIN_TEXT_CONTRAST = 4.5;
+
+type Rgb = readonly [number, number, number];
+
+function parseHexColour(colour: unknown): Rgb | undefined {
+  if (typeof colour !== "string") return undefined;
+  const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(colour.trim());
+  if (!match) return undefined;
+  const hex =
+    match[1].length === 3 ? [...match[1]].map((digit) => digit + digit).join("") : match[1];
+  const channel = (offset: number) => parseInt(hex.slice(offset, offset + 2), 16);
+  return [channel(0), channel(2), channel(4)];
+}
+
+function blendOver(colour: Rgb, backdrop: Rgb, opacity: number): Rgb {
+  const mix = (index: 0 | 1 | 2) =>
+    Math.round(colour[index] * opacity + backdrop[index] * (1 - opacity));
+  return [mix(0), mix(1), mix(2)];
+}
+
+function relativeLuminance([red, green, blue]: Rgb): number {
+  const linear = (channel: number) => {
+    const value = channel / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue);
+}
+
+function contrastRatio(first: Rgb, second: Rgb): number {
+  const [lighter, darker] = [relativeLuminance(first), relativeLuminance(second)].sort(
+    (a, b) => b - a,
+  );
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/**
+ * Label colour for text on a shape filled with `fill` at `opacity` over the white sheet:
+ * schwarz while it stays readable (every official notation fill), weiss on dark custom fills.
+ */
+export function readableTextColour(fill: string, opacity = 1): string {
+  const fillRgb = parseHexColour(fill);
+  const ink = parseHexColour(INK);
+  const paper = parseHexColour(MIRAGON.weiss);
+  if (!fillRgb || !ink || !paper) return INK;
+  const background = blendOver(fillRgb, paper, opacity);
+  const inkContrast = contrastRatio(ink, background);
+  if (inkContrast >= MIN_TEXT_CONTRAST) return INK;
+  return contrastRatio(paper, background) > inkContrast ? MIRAGON.weiss : INK;
+}
+
+function shapeTextColour(element: TtTeam | TtInteraction): string {
+  if (isTtInteraction(element)) {
+    const spec = INTERACTION_MODE_SPECS[element.mode] ?? INTERACTION_MODE_SPECS.collaboration;
+    return readableTextColour(element.fill ?? spec.fill, spec.opacity);
+  }
+  const spec = TEAM_TYPE_SPECS[element.teamType] ?? TEAM_TYPE_SPECS["stream-aligned"];
+  return readableTextColour(element.fill ?? spec.fill);
+}
+
 /** Width of the flow arrow's head; the label stays on the shaft. */
 export function flowHeadWidth(width: number, height: number): number {
   return Math.min(width * 0.16, height * 1.1);
@@ -49,7 +118,7 @@ export function labelLayout(element: TtElement): LabelLayout {
       },
       align: "left-top",
       fontSize: FONT.annotation,
-      fontWeight: "450",
+      fontWeight: "400",
       fill: INK,
     };
   }
@@ -60,9 +129,9 @@ export function labelLayout(element: TtElement): LabelLayout {
       box: { x: LABEL_INSET, y: 0, width: shaftWidth - 2 * LABEL_INSET, height },
       align: "center",
       fontSize: FONT.small,
-      fontWeight: "650",
+      fontWeight: "600",
       letterSpacing: "0.06em",
-      fill: INK_SOFT,
+      fill: INK_MUTED,
     };
   }
 
@@ -70,8 +139,8 @@ export function labelLayout(element: TtElement): LabelLayout {
     box: { x: LABEL_INSET, y: 0, width: width - 2 * LABEL_INSET, height },
     align: "center",
     fontSize: isTtInteraction(element) ? FONT.small : FONT.label,
-    fontWeight: isTtInteraction(element) ? "600" : "640",
-    fill: INK,
+    fontWeight: "600",
+    fill: shapeTextColour(element),
   };
 }
 

@@ -1,0 +1,36 @@
+{
+  "name": "@miragon/team-topologies-ui",
+  "version": "0.10.1",
+  "private": true,
+  "description": "Shared React chrome (Inspector, Legend) for the Team Topologies webapp and the VS Code webview.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./ui.css": "./src/styles/ui.css",
+    "./package.json": "./package.json"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "npm --prefix ../.. run test"
+  },
+  "dependencies": {
+    "@miragon/team-topologies-renderer": "0.10.1",
+    "@miragon/team-topologies-schema-model": "0.10.1",
+    "diagram-js": "15.28.1",
+    "lucide-react": "1.59.0"
+  },
+  "peerDependencies": {
+    "react": "19.3.0"
+  },
+  "devDependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typescript": "6.0.3"
+  }
+}

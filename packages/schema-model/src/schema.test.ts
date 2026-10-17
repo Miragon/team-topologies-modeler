@@ -8,7 +8,7 @@ describe("parseDocument", () => {
     const result = parseDocument(SAMPLE_DOCUMENT);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.document.nodes).toHaveLength(5);
+      expect(result.document.nodes).toHaveLength(6);
       expect(result.document.interactions).toHaveLength(4);
       expect(result.document.flows).toHaveLength(1);
       expect(result.document.annotations).toHaveLength(1);

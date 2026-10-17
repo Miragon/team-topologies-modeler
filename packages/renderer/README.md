@@ -29,16 +29,24 @@ npm install @miragon/team-topologies-renderer @miragon/team-topologies-schema-mo
 
 ## Editing gestures (`Modeler`)
 
-| Gesture                            | Effect                                                                  |
-| ---------------------------------- | ----------------------------------------------------------------------- |
-| Double-click an element            | Edit its label in place (Enter commits, Shift+Enter breaks, Esc aborts) |
-| `Ctrl/Cmd+A`                       | Select every element                                                    |
-| Shift+drag on the canvas           | Lasso-select (also the first palette tool)                              |
-| Shift+click                        | Add an element to / remove it from the selection                        |
-| Drag a selected element            | Move the whole selection as one undo step                               |
-| Arrow keys (Shift: ×10)            | Nudge the selection                                                     |
-| `Ctrl/Cmd+C` / `V`, Delete         | Copy, paste, delete the selection                                       |
-| `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z/Y` | Undo / redo                                                             |
+| Gesture                              | Effect                                                                  |
+| ------------------------------------ | ----------------------------------------------------------------------- |
+| Double-click an element              | Edit its label in place (Enter commits, Shift+Enter breaks, Esc aborts) |
+| `Ctrl/Cmd+A`                         | Select every element                                                    |
+| Shift+drag on the canvas             | Lasso-select (also the first palette tool)                              |
+| Shift+click                          | Add an element to / remove it from the selection                        |
+| Drag a selected element              | Move the whole selection as one undo step                               |
+| Arrow keys (Shift: ×10)              | Nudge the selection                                                     |
+| `Ctrl/Cmd+C` / `V`, Delete           | Copy, paste, delete the selection                                       |
+| `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z/Y`   | Undo / redo                                                             |
+| Esc                                  | Clear the selection                                                     |
+| `+` or `=`, `-`                      | Zoom in, zoom out (no Ctrl/Cmd, so the browser's page zoom stays)       |
+| Shift+1, Shift+0                     | Fit the diagram to the view, zoom to 100 %                              |
+| Enter / Space on a palette entry     | Create that element in the middle of the view (lasso: select all)       |
+| Enter / Space on a context-pad entry | Run it (rename, add annotation, delete)                                 |
+
+The shortcuts act only while the page itself or the canvas has focus, never inside host chrome,
+form fields, the label editor or an open modal dialog.
 
 All three share a common base (`TtBaseViewer`) with the same import/export and lifecycle API.
 
@@ -51,7 +59,7 @@ import { SAMPLE_DOCUMENT } from "@miragon/team-topologies-schema-model";
 
 const modeler = new Modeler({ container: document.querySelector("#canvas")! });
 
-// Load a document (auto-fits the viewport)
+// Load a document (resets the undo history and fits the viewport)
 const { warnings } = modeler.importDocument(SAMPLE_DOCUMENT);
 
 // Read the live canvas back as the canonical model
@@ -71,7 +79,10 @@ modeler.redo();
 
 > **Typeface.** The canvas labels are drawn in the Miragon typeface **Geist**. The library does not
 > ship the font; self-host it in the host app (e.g. `@fontsource-variable/geist`) so the on-screen
-> canvas and exported SVG render in Geist. Without it, text falls back to a system sans.
+> canvas and exported SVG render in Geist. Without it, text falls back to a system sans. An SVG drawn
+> as an image (to rasterise a PNG) can't use the page's fonts, so embed them first:
+> `embedSvgStyles(svg, geistFontFaceCss({ latin, latinExt }))`, with the two latin Geist WOFF2 files
+> as `data:` URLs.
 
 ## API
 
@@ -88,16 +99,17 @@ new Modeler({
 
 ### Shared methods (`Viewer` / `NavigatedViewer` / `Modeler`)
 
-| Method                             | Returns                         | Purpose                                           |
-| ---------------------------------- | ------------------------------- | ------------------------------------------------- |
-| `importDocument(doc)`              | `{ warnings: ImportWarning[] }` | Replace canvas content and auto-fit.              |
-| `exportDocument()`                 | `TtDocument`                    | Rebuild the canonical model from the live canvas. |
-| `saveSVG()`                        | `{ svg: string }`               | Self-contained SVG snapshot (fitted viewBox).     |
-| `setMeta(partial)` / `getMeta()`   | — / `RootBusinessObject`        | Read/write diagram-level metadata (e.g. `title`). |
-| `attachTo(el)` / `detach()`        | `void`                          | Move the canvas in/out of the DOM (keeps state).  |
-| `clear()` / `destroy()`            | `void`                          | Empty the canvas / tear it down.                  |
-| `on(event, cb)` / `off(event, cb)` | `void`                          | Subscribe to diagram-js events.                   |
-| `get<T>(name)`                     | `T`                             | Resolve a diagram-js service (advanced).          |
+| Method                             | Returns                         | Purpose                                                      |
+| ---------------------------------- | ------------------------------- | ------------------------------------------------------------ |
+| `importDocument(doc)`              | `{ warnings: ImportWarning[] }` | Replace canvas content, reset undo history and auto-fit.     |
+| `fitToView()`                      | `void`                          | Fit every element, keeping the strip under the palette free. |
+| `exportDocument()`                 | `TtDocument`                    | Rebuild the canonical model from the live canvas.            |
+| `saveSVG()`                        | `{ svg: string }`               | Self-contained SVG snapshot (fitted viewBox).                |
+| `setMeta(partial)` / `getMeta()`   | — / `RootBusinessObject`        | Read/write diagram-level metadata (e.g. `title`).            |
+| `attachTo(el)` / `detach()`        | `void`                          | Move the canvas in/out of the DOM (keeps state).             |
+| `clear()` / `destroy()`            | `void`                          | Empty the canvas / tear it down.                             |
+| `on(event, cb)` / `off(event, cb)` | `void`                          | Subscribe to diagram-js events.                              |
+| `get<T>(name)`                     | `T`                             | Resolve a diagram-js service (advanced).                     |
 
 ### Modeler-only
 
@@ -110,8 +122,19 @@ new Modeler({
 - **Runtime element types:** `TtTeam`, `TtInteraction`, `TtFlow`, `TtAnnotation`, `TtElement`, and
   `TtAssociation` (the connector from an annotation to the element it is attached to).
 - **Palette icon generators:** `teamIconSvg(type)`, `interactionIconSvg(mode)`, `flowIconSvg()`,
-  `annotationIconSvg()` — WYSIWYG SVG glyphs matching what the canvas draws.
-- **Other:** `TtViewerOptions`, `ImportWarning`, `RootBusinessObject`, `ROOT_ID`, `saveSVG`.
+  `annotationIconSvg()` — WYSIWYG SVG glyphs matching what the canvas draws. The annotation glyph
+  strokes in `currentColor`.
+- **Functional icons:** `iconMarkup(icon, { size?, strokeWidth?, className? })` returns inline SVG
+  markup (Lucide style: 24 × 24 grid, stroke 2.5, `currentColor`) for the bundled `ICON_*` Lucide
+  nodes (`ICON_MENU`, `ICON_PLUS`, `ICON_MINUS`, `ICON_MAXIMIZE`, `ICON_DOWNLOAD`, `ICON_X`, …), so
+  a host without an icon library can match the canvas chrome.
+- **Design tokens:** `MIRAGON` (the Miragon colours by name) and `CD_TOKENS` (the same values keyed
+  by their `--cd-*` CSS name), for host code that paints outside CSS, e.g. a PNG background.
+- **Fonts in exports:** `geistFontFaceCss({ latin, latinExt })` builds the Geist `@font-face` rules
+  from two `data:` URLs (`GEIST_UNICODE_RANGES` holds their subsets), and `embedSvgStyles(svg, css)`
+  puts CSS at the top of a `saveSVG()` result, so a rasterised PNG keeps the canvas typeface.
+- **Other:** `TtViewerOptions`, `ImportWarning`, `RootBusinessObject`, `ROOT_ID`, `saveSVG`,
+  `TtViewport` (the palette-aware fit behind `fitToView()`, DI name `ttViewport`).
 
 ## How it's built
 
@@ -123,14 +146,14 @@ viewer via `additionalModules`:
 | ---------------------- | -------------------------------------------------------------------------------------- |
 | `ttModelModule`        | Element factory with notation defaults (`TtElementFactory`).                           |
 | `ttDrawModule`         | SVG rendering of teams, interactions, flow and annotations (`TeamTopologiesRenderer`). |
-| `ioModule`             | Document ↔ canvas bridge (`TtImporter`, `TtExporter`, `saveSVG`).                      |
+| `ioModule`             | Document ↔ canvas bridge (`TtImporter`, `TtExporter`, `saveSVG`, `TtViewport`).        |
 | `ttModelingModule`     | High-level mutations — label, type, mode, colours, description, annotations.           |
 | `ttRulesModule`        | Editing rules (what can move / resize / be created / be attached).                     |
 | `ttBehaviorsModule`    | Keeps the model **flat** and annotation connectors cropped, one per annotation.        |
 | `ttPaletteModule`      | The lasso tool and the drag-to-create palette.                                         |
 | `ttContextPadModule`   | Per-element actions (rename, add/attach annotation, delete; delete a multi-selection). |
 | `ttLabelEditingModule` | Double-click in-place label editing.                                                   |
-| `ttKeyboardModule`     | Undo / redo / select all / delete / copy / paste / nudge shortcuts.                    |
+| `ttKeyboardModule`     | Undo / redo / select all / delete / copy / paste / nudge / Esc / zoom shortcuts.       |
 | `ttZOrderModule`       | Fixed stacking order (flow behind, teams, interactions, annotations on top).           |
 
 ### Rendering
@@ -141,11 +164,15 @@ from the spec in [`@miragon/team-topologies-schema-model`](../schema-model): the
 interaction glyphs (parallelogram, triangle, circle) drawn dashed and translucent; the flow-of-change
 as a dashed left-to-right band; an annotation as a BPMN-style open bracket with left-aligned text,
 tied to its element by a dashed connector. Labels are word-wrapped (explicit line breaks are kept)
-and centred. Per-element `fill`/`stroke` overrides win over the spec defaults.
+and centred. Per-element `fill`/`stroke` overrides win over the spec defaults, and stay visible
+while an element is selected or hovered (the selection is a separate blue outline). On a dark custom
+fill, team and interaction labels switch to white.
 
 ## Import / export
 
-The package reads and writes the canonical `TtDocument` (JSON) and exports a standalone **SVG**.
+The package reads and writes the canonical `TtDocument` (JSON) and exports a standalone **SVG**. The
+export leaves out selection, hover and resize chrome and puts a white sheet behind the diagram, so
+it looks the same wherever it is opened.
 PNG export and the embedded-scene round-trip (storing the document inside the exported image) live in
 the [web app](../../apps/webapp) and the [VS Code extension](../../apps/vscode), which add the canvas
 rasterisation those formats need.

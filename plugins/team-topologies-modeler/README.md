@@ -4,15 +4,16 @@ Two skills that teach Claude [Team Topologies](https://teamtopologies.com/) and 
 `.ttm.json` file format used by the
 [Team Topologies Modeler](https://github.com/Miragon/team-topologies-modeler).
 
-| Skill             | What it covers                                                                                                                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `team-topologies` | The method after Skelton & Pais: the four team types, the three interaction modes, cognitive load, fracture planes, designing a topology, and reviews with feedback annotations.     |
-| `tt-format`       | The file format: every field, top-left coordinates, sizes, interactions as overlapping shapes, the upward X-as-a-Service triangle, stacking order, a layout grid and canonical form. |
+| Skill             | What it covers                                                                                                                                                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `team-topologies` | The method after Skelton & Pais: the four team types, the three interaction modes, cognitive load, fracture planes, designing a topology, and reviews with feedback annotations.                                                                 |
+| `tt-format`       | The file format: every field, top-left coordinates, sizes, interactions as overlapping shapes, the upward X-as-a-Service triangle, stacking order, a layout grid (stream-aligned teams as stacked lanes, the platform below) and canonical form. |
 
 `tt-format` ships a dependency-free checker (`scripts/check.mjs`, Node ≥ 18) that validates a file
-exactly like the modeler does, spells out which teams every interaction connects, flags layout
-mistakes and rewrites the file in canonical form — so Claude can check a diagram it drew without
-seeing it. Two worked example diagrams live in `skills/tt-format/examples/`.
+exactly like the modeler does, spells out which teams every interaction connects (including every
+lane a platform serves under a stack), flags layout mistakes such as stream-aligned teams side by
+side or staggered (a hand-off along the flow) and rewrites the file in canonical form — so Claude can check a
+diagram it drew without seeing it. Two worked example diagrams live in `skills/tt-format/examples/`.
 
 ## Install
 
@@ -42,7 +43,7 @@ Nothing to invoke by hand. The skills trigger when you ask Claude to work on Tea
 You can also call them explicitly with `/team-topologies-modeler:tt-format`.
 
 Open the result in the `miragon-gmbh.team-topologies-modeler` VS Code extension, in the
-[web app](https://team-topologies.modeler.miragon.io) (Menu → Import…, `.ttm.json`), or in designIQ.
+[web app](https://team-topologies.modeler.miragon.io) (Menu → Open…, or drop the file onto the page), or in designIQ.
 
 ## Development
 

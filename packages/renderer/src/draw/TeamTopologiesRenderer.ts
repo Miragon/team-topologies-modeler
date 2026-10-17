@@ -21,8 +21,8 @@ import {
   TEAM_TYPE_SPECS,
   dashArray,
 } from "@miragon/team-topologies-schema-model";
-import { FONT, INK_SOFT } from "./styles.js";
-import { TT_RENDER_PRIORITY } from "./styles.js";
+import { MIRAGON } from "../theme/index.js";
+import { FONT, STROKE_MUTED, TT_RENDER_PRIORITY } from "./styles.js";
 import {
   LINE_HEIGHT,
   flowHeadWidth,
@@ -64,7 +64,7 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
     const rect = svgAttr(svgCreate("rect"), {
       width: element.width,
       height: element.height,
-      fill: "#eee",
+      fill: MIRAGON.linie,
     });
     svgAppend(visuals, rect);
     return rect;
@@ -74,7 +74,7 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
     const line = svgAttr(svgCreate("path"), {
       d: waypointsPath(connection.waypoints),
       fill: "none",
-      stroke: INK_SOFT,
+      stroke: STROKE_MUTED,
       "stroke-width": 1.5,
       "stroke-dasharray": "4 4",
       "stroke-linecap": "round",
@@ -210,7 +210,7 @@ export default class TeamTopologiesRenderer extends BaseRenderer {
     const bracket = svgAttr(svgCreate("path"), {
       d: `M${arm},${i} L${i},${i} L${i},${h - i} L${arm},${h - i}`,
       fill: "none",
-      stroke: INK_SOFT,
+      stroke: STROKE_MUTED,
       "stroke-width": sw,
       "stroke-linejoin": "round",
     });

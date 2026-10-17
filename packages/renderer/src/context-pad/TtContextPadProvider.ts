@@ -2,8 +2,13 @@
  * Context-pad actions. Teams, interactions and flows: rename, add an attached
  * annotation, delete. Annotations: edit text, connect to an element, delete. An
  * annotation connector: delete. A multi-selection: delete all.
+ *
+ * Entries are focusable buttons; Enter or Space runs their keyboard action.
+ * Connecting has none, because it is a pointer gesture that needs a drop target,
+ * so Tab skips it. "Add annotation" on the element attaches one by keyboard.
  */
 
+import type Canvas from "diagram-js/lib/core/Canvas";
 import type ContextPad from "diagram-js/lib/features/context-pad/ContextPad";
 import type Modeling from "diagram-js/lib/features/modeling/Modeling";
 import type Connect from "diagram-js/lib/features/connect/Connect";
@@ -14,13 +19,35 @@ import type {
   default as ContextPadProvider,
 } from "diagram-js/lib/features/context-pad/ContextPadProvider";
 import type { Element } from "diagram-js/lib/model/Types";
-import { isTtAnnotation, isTtAssociation, isTtElement, type TtElement } from "../model/di-types.js";
+import {
+  isTtAnnotation,
+  isTtAssociation,
+  isTtElement,
+  isTtFlow,
+  isTtInteraction,
+  type TtElement,
+} from "../model/di-types.js";
 import type TtLabelEditing from "../label-editing/TtLabelEditing.js";
 import type TtModeling from "../modeling/TtModeling.js";
-import { ICON_ANNOTATION, ICON_DELETE, ICON_EDIT, ICON_LINK, iconMarkup } from "../draw/icons.js";
+import {
+  ICON_LINK,
+  ICON_MESSAGE_SQUARE_PLUS,
+  ICON_PENCIL,
+  ICON_TRASH,
+  iconMarkup,
+  type IconNode,
+} from "../draw/icons.js";
 
-function cpHtml(path: string, title: string): string {
-  return `<div class="entry tt-cp-entry" title="${title}">${iconMarkup(path)}</div>`;
+const ENTRY_SELECTOR = ".djs-context-pad .entry[data-action]";
+
+function cpHtml(icon: IconNode, title: string, focusable = true): string {
+  return `<div class="entry tt-cp-entry" role="button" tabindex="${focusable ? 0 : -1}" aria-label="${title}">${iconMarkup(icon)}</div>`;
+}
+
+function editTitle(element: TtElement): string {
+  if (isTtAnnotation(element)) return "Edit text";
+  if (isTtInteraction(element) || isTtFlow(element)) return "Edit label";
+  return "Rename";
 }
 
 export default class TtContextPadProvider implements ContextPadProvider {
@@ -31,51 +58,55 @@ export default class TtContextPadProvider implements ContextPadProvider {
     "ttLabelEditing",
     "connect",
     "selection",
+    "canvas",
   ];
 
   constructor(
-    contextPad: ContextPad,
+    private readonly contextPad: ContextPad,
     private readonly modeling: Modeling,
     private readonly ttModeling: TtModeling,
     private readonly labelEditing: TtLabelEditing,
     private readonly connect: Connect,
     private readonly selection: Selection,
+    private readonly canvas: Canvas,
   ) {
     contextPad.registerProvider(this);
+    canvas
+      .getContainer()
+      .addEventListener("keydown", (keyboardEvent) => this.onEntryKeyDown(keyboardEvent));
   }
 
   getContextPadEntries(element: Element): ContextPadEntries {
     if (isTtAssociation(element))
-      return { delete: this.deleteEntry([element], "Remove connector") };
+      return { delete: this.deleteEntry([element], "Delete connector") };
     if (!isTtElement(element)) return {};
 
     if (isTtAnnotation(element)) {
       const startConnect = (event: Event) => this.connect.start(event as MouseEvent, element);
       return {
-        "edit-label": this.editEntry(element, "Edit text"),
+        "edit-label": this.editEntry(element),
         connect: {
           group: "edit",
-          title: "Attach to an element",
-          html: cpHtml(ICON_LINK, "Attach to an element"),
+          title: "Attach to element",
+          html: cpHtml(ICON_LINK, "Attach to element", false),
           action: { click: startConnect, dragstart: startConnect },
         },
         delete: this.deleteEntry([element], "Delete"),
       };
     }
 
+    const appendAnnotation = () => {
+      const annotation = this.ttModeling.appendAnnotation(element);
+      this.selection.select(annotation as unknown as Element);
+      this.labelEditing.activate(annotation);
+    };
     return {
-      "edit-label": this.editEntry(element, "Rename"),
+      "edit-label": this.editEntry(element),
       "append-annotation": {
         group: "edit",
         title: "Add annotation",
-        html: cpHtml(ICON_ANNOTATION, "Add annotation"),
-        action: {
-          click: () => {
-            const annotation = this.ttModeling.appendAnnotation(element);
-            this.selection.select(annotation as unknown as Element);
-            this.labelEditing.activate(annotation);
-          },
-        },
+        html: cpHtml(ICON_MESSAGE_SQUARE_PLUS, "Add annotation"),
+        action: { click: appendAnnotation, keyboard: appendAnnotation },
       },
       delete: this.deleteEntry([element], "Delete"),
     };
@@ -85,12 +116,24 @@ export default class TtContextPadProvider implements ContextPadProvider {
     return { delete: this.deleteEntry(elements, `Delete ${elements.length} elements`) };
   }
 
-  private editEntry(element: TtElement, title: string): ContextPadEntry {
+  private onEntryKeyDown(event: KeyboardEvent): void {
+    if ((event.key !== "Enter" && event.key !== " ") || event.repeat) return;
+    const entry = (event.target as HTMLElement | null)?.closest?.(ENTRY_SELECTOR);
+    const action = entry?.getAttribute("data-action");
+    if (!action) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.contextPad.triggerEntry(action, "keyboard", event);
+  }
+
+  private editEntry(element: TtElement): ContextPadEntry {
+    const title = editTitle(element);
+    const activate = () => this.labelEditing.activate(element);
     return {
       group: "edit",
       title,
-      html: cpHtml(ICON_EDIT, title),
-      action: { click: () => this.labelEditing.activate(element) },
+      html: cpHtml(ICON_PENCIL, title),
+      action: { click: activate, keyboard: activate },
     };
   }
 
@@ -98,8 +141,14 @@ export default class TtContextPadProvider implements ContextPadProvider {
     return {
       group: "edit",
       title,
-      html: cpHtml(ICON_DELETE, title),
-      action: { click: () => this.modeling.removeElements([...elements]) },
+      html: cpHtml(ICON_TRASH, title),
+      action: {
+        click: () => this.modeling.removeElements([...elements]),
+        keyboard: () => {
+          this.modeling.removeElements([...elements]);
+          this.canvas.focus();
+        },
+      },
     };
   }
 }

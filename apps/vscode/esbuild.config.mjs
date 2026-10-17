@@ -1,11 +1,14 @@
 // Two bundles from one run:
 //   1. Extension host  (Node/CJS, `vscode` external)  -> dist/extension.cjs
-//   2. Webview          (Browser/IIFE, Modeler + CSS)  -> dist/webview.js (+ dist/webview.css)
+//   2. Webview          (Browser/IIFE, Modeler + React panels + CSS)
+//                       -> dist/webview.js (+ dist/webview.css, Geist font files in dist/fonts/)
 //
 // Like the demo webapp, we bundle the @miragon/team-topologies-* packages straight from SOURCE (aliased to
-// src/index.ts). That makes the build self-contained: no prior lib build needed, and the diagram-js
-// imports resolve relative to the renderer source (packages/renderer/node_modules).
+// src/index.ts; the ui package's own `exports` already point there). That makes the build
+// self-contained: no prior lib build needed, and the diagram-js imports resolve relative to the
+// renderer source (packages/renderer/node_modules).
 import * as esbuild from "esbuild";
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -20,6 +23,41 @@ const r = (p) => resolve(root, p);
 const alias = {
   "@miragon/team-topologies-renderer": r("packages/renderer/src/index.ts"),
   "@miragon/team-topologies-schema-model": r("packages/schema-model/src/index.ts"),
+};
+
+/**
+ * Two copies of React in one bundle break every hook ("Invalid hook call"). The ui package is
+ * bundled from its source folder, so a nested copy there would win over the root one without this
+ * (the webapp's Vite config dedupes the same way).
+ */
+const webAlias = {
+  ...alias,
+  react: r("node_modules/react"),
+  "react-dom": r("node_modules/react-dom"),
+};
+
+/**
+ * `import url from "file?dataurl"` inlines that one file as a data: URL, while every other import of
+ * the same file type keeps its loader. The PNG export needs Geist inline: an SVG drawn as an image
+ * can't load the webview's font files.
+ * @type {import('esbuild').Plugin}
+ */
+const dataUrlImports = {
+  name: "dataurl-imports",
+  setup(build) {
+    build.onResolve({ filter: /\?dataurl$/ }, async (args) => {
+      const resolved = await build.resolve(args.path.slice(0, -"?dataurl".length), {
+        kind: args.kind,
+        resolveDir: args.resolveDir,
+      });
+      if (resolved.errors.length > 0) return { errors: resolved.errors };
+      return { path: resolved.path, namespace: "dataurl" };
+    });
+    build.onLoad({ filter: /.*/, namespace: "dataurl" }, async (args) => ({
+      contents: await readFile(args.path),
+      loader: "dataurl",
+    }));
+  },
 };
 
 /** @type {import('esbuild').BuildOptions} */
@@ -51,7 +89,15 @@ const web = {
   platform: "browser",
   format: "iife",
   target: "es2022",
-  alias,
+  alias: webAlias,
+  // The shared ui package is React source compiled here, so JSX needs the automatic runtime.
+  jsx: "automatic",
+  define: { "process.env.NODE_ENV": JSON.stringify(production ? "production" : "development") },
+  // Geist is self-hosted (no CDN, offline): the font files ship next to the bundle, inside the
+  // webview's localResourceRoots, so the CSP's `font-src ${webview.cspSource}` covers them.
+  loader: { ".woff2": "file", ".woff": "file" },
+  assetNames: "fonts/[name]-[hash]",
+  plugins: [dataUrlImports],
 };
 
 if (watch) {

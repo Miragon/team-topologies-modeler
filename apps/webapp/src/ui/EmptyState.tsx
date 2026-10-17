@@ -1,65 +1,57 @@
 /**
- * A non-blocking welcome card that overlays the canvas on a fresh start. It
- * offers exactly two actions — a primary "New file" that dismisses the card so
- * modelling can begin on the blank canvas, and a "Show example" that loads the
- * bundled topology. Opening a file lives in the menu, not here. Clicks and file
- * drops fall through to the canvas, and the card disappears once the first
- * element exists or the user starts a new file.
+ * The start screen (guide §8): on a fresh start, a centred card with the Miragon Komet, exactly two
+ * actions and a drop hint, while the working chrome stays hidden (`.tt-app--welcome`). It goes away
+ * for the rest of the session as soon as the user starts, see uiStore `welcome`.
  */
 
+import { Upload } from "lucide-react";
 import { SAMPLE_DOCUMENT, emptyDocument } from "@miragon/team-topologies-schema-model";
+import { Icon } from "@miragon/team-topologies-ui";
 import { useModeler } from "@/state/modelerContext";
+import { replaceDocument } from "@/state/replace";
 import { useUiStore } from "./uiStore";
-import { toast } from "./toast";
 
 export function EmptyState() {
-  const { modeler, isEmpty } = useModeler();
-  const welcomeDismissed = useUiStore((s) => s.welcomeDismissed);
-  const dismissWelcome = useUiStore((s) => s.dismissWelcome);
+  const { modeler } = useModeler();
+  const welcome = useUiStore((s) => s.welcome);
 
-  if (!isEmpty || welcomeDismissed) return null;
-
-  const newDiagram = () => {
-    modeler.importDocument(emptyDocument());
-    dismissWelcome();
-  };
-
-  const loadExample = () => {
-    modeler.importDocument(SAMPLE_DOCUMENT);
-    toast("Loaded example diagram", "info");
-  };
+  if (welcome !== "visible") return null;
 
   return (
-    <div className="tt-empty" role="region" aria-label="Empty canvas">
+    <section className="tt-empty" aria-labelledby="tt-empty-title">
       <div className="tt-empty__card">
         <img
           className="tt-empty__mark"
-          src={`${import.meta.env.BASE_URL}miragon-icon.svg`}
-          width={60}
-          height={60}
+          src={`${import.meta.env.BASE_URL}miragon-komet-blau.svg`}
+          width={64}
+          height={64}
           alt=""
-          aria-hidden
         />
-        <h2 className="tt-empty__title">Team Topologies</h2>
-        <p className="tt-empty__text">Start a new diagram, or open the example.</p>
+        <h1 id="tt-empty-title" className="tt-empty__title">
+          Miragon Modeler for Team Topologies
+        </h1>
+        <p className="tt-empty__text">Start a new diagram, or explore the example.</p>
         <div className="tt-empty__actions">
           <button
             type="button"
             className="tt-btn tt-btn--primary tt-empty__new"
-            onClick={newDiagram}
+            onClick={() => void replaceDocument(modeler, emptyDocument(), { kind: "new" })}
           >
             New diagram
           </button>
           <button
             type="button"
             className="tt-btn tt-btn--ghost tt-empty__example"
-            onClick={loadExample}
+            onClick={() => void replaceDocument(modeler, SAMPLE_DOCUMENT, { kind: "example" })}
           >
             Show example
           </button>
         </div>
-        <span className="tt-empty__hint">Drag &amp; drop a .json file to open it</span>
+        <span className="tt-empty__hint">
+          <Icon icon={Upload} />
+          Or drop a .tt or .ttm.json file here
+        </span>
       </div>
-    </div>
+    </section>
   );
 }

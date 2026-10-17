@@ -6,8 +6,9 @@ description: >-
   `annotations`): every field, top-left pixel coordinates, default and minimum sizes, how an
   interaction is drawn as a shape overlapping two teams instead of a line, the X-as-a-Service
   triangle that always points up at the consumer, stacking order, the canonical form the modeler
-  saves, a layout grid for drawing a readable diagram, and a bundled checker script that validates a
-  file, reads back which teams every interaction connects and flags layout mistakes. Use whenever
+  saves, a layout grid with stream-aligned teams stacked as parallel lanes and the platform below
+  them, and a bundled checker script that validates a file, reads back which teams every interaction
+  connects and flags layout mistakes. Use whenever
   reading, writing, drawing, generating, editing, laying out, validating or debugging a `.tt` /
   `.ttm.json` file or a Team Topologies diagram as JSON. For the Team Topologies method itself —
   choosing team types and interaction modes, reviewing a topology — use the `team-topologies` skill.
@@ -37,7 +38,7 @@ organisation needs, and how to critique a topology, is the `team-topologies` ski
 ```json
 {
   "version": 3,
-  "title": "Online shop — team topology",
+  "title": "Online shop team topology",
   "nodes": [],
   "interactions": [],
   "flows": [],
@@ -86,7 +87,8 @@ has an `id`, a `position` `{ "x", "y" }` and a `size` `{ "width", "height" }`.
 
 `id`, optional `label` (default text `Flow of change`), `position`, `size`. A dashed arrow that
 **always points right**; default 520 × 64, minimum 160 × 36. No colour fields. It anchors the
-left-to-right reading of the diagram; use one per group of teams.
+left-to-right reading of the diagram; use one per stack of lanes (several business areas:
+`reference/layout.md`).
 
 ### `annotations` — text notes
 
@@ -108,18 +110,22 @@ dashed connector to that element. Default 200 × 64, minimum 60 × 30. No colour
 An interaction relates exactly the two teams its bounding box overlaps. Place it **on the gap
 between them**, overlapping each by roughly 10–20 px:
 
-- **Side by side** (A left of B, rows overlapping vertically) — collaboration and facilitating:
+- **Side by side** (A left of B, overlapping vertically) — collaboration and facilitating:
   `x = (A.right + B.left) / 2 − w / 2`, `y = centre of the vertical overlap of A and B − h / 2`.
 - **Stacked** (A above B) — every mode, and the **only** option for X-as-a-Service:
-  `y = (A.bottom + B.top) / 2 − h / 2`, `x = centre of the upper team − w / 2` (stay inside the
-  horizontal overlap of both).
-- With the default glyph sizes, a **60 px horizontal gap** and a **54 px vertical gap** between team
-  edges give every glyph a 12–15 px bite into both teams.
+  `y = (A.bottom + B.top) / 2 − h / 2`,
+  `x = centre of the horizontal overlap of A and B − w / 2`.
+- With the default glyph sizes, a **60 px horizontal gap** gives the glyphs a 12–26 px bite into
+  both teams, the **54 px gap** above a platform gives the triangle 12 px, and the **30 px gap**
+  between stacked lanes gives 21–27 px.
 
 **X-as-a-Service has a fixed direction.** The triangle cannot be rotated; its tip points up at the
 consumer and its base sits on the provider. So the provider must be **below** the consumer — which
-is why platforms go underneath the stream-aligned teams they serve, one triangle per consuming team.
-A triangle between two side-by-side teams has no readable direction.
+is why the platform goes underneath the stack of stream-aligned lanes. One triangle into the lowest
+lane is enough: by convention a platform directly under a stack of stream-aligned lanes serves
+**every** lane of that stack, and the checker reads it that way. A gap over 60 px, a lane that does
+not overlap the platform horizontally at all, or another team between two lanes breaks the stack
+(`reference/layout.md`). A triangle between two side-by-side teams has no readable direction.
 
 ## Stacking order
 
@@ -138,11 +144,22 @@ every array by `id`. That matters only for groupings:
 ## Labels and text
 
 Team, interaction and flow labels are centred and word-wrapped; annotation text flows from the top
-left. Capacity per line is about `(width − 20) / (0.58 × fontSize)` characters — font size 13.5 for
+left. Capacity per line is about `textWidth / (0.58 × fontSize)` characters — font size 13.5 for
 teams, 11 for interactions and flows, 12 for annotations — with a line height of 1.2 × font size.
-A 240-wide stream-aligned team fits ~28 characters per line, a 120-wide enabling team ~12, a default
-collaboration glyph ~14, an X-as-a-Service triangle ~10. A real line break is written `\n` inside the
-JSON string. Keep interaction labels to one or two words; put explanations into annotations.
+`textWidth` is `width − 20` for teams and interactions, `width − 20 − min(0.16 × width, 1.1 ×
+height)` for flows (the arrowhead holds no text) and `width − 16` for annotations.
+
+- A 240-wide stream-aligned team fits ~28 characters per line, a 120-wide enabling team ~12, a
+  default collaboration glyph ~14, a facilitating circle ~10.
+- An **X-as-a-Service triangle** narrows towards its tip: at the default size ~7 characters fit on
+  one line, so use one short word (`CI/CD`, `scoring`). The checker measures the triangle, not its
+  box.
+- An **annotation**'s text box is `(width − 16) × (height − 12)`: `(width − 16) / 6.96` characters
+  per line, 14.4 px per line, so `height = 14.4 × lines + 12`. Word wrap breaks early — plan one
+  line more than `characters / capacity`. A 200 × 64 note holds ~3 lines of ~26 characters.
+
+A real line break is written `\n` inside the JSON string. Keep interaction labels to one or two
+words; put explanations into annotations.
 
 ## Ids
 
@@ -159,18 +176,24 @@ descriptive ids rather than random ones:
 1. **Decide the content first** — teams, types, the interaction for each pair and why (the
    `team-topologies` skill). Write it down as a short list before touching coordinates.
 2. **Lay out with the grid** in `reference/layout.md`: flow of change on top, stream-aligned teams
-   in a row along it, enabling teams at the side, complicated-subsystem teams next to the team they
-   serve, the platform below the row.
+   stacked as parallel lanes below it, enabling teams at the left side spanning exactly the lanes
+   they facilitate, complicated-subsystem teams to the right of the lane they collaborate with —
+   or, once they provide X-as-a-Service, under an extension of that lane — and the platform below
+   the stack. Several business areas sharing one platform stay in one stack. Never put
+   stream-aligned teams side by side or staggered — along the flow that reads as a hand-off from
+   one to the next.
 3. **Place each interaction** on its gap with the formulas above; providers of X-as-a-Service go
-   below their consumers.
+   below their consumers, and the platform needs only one triangle, into the lowest lane.
 4. **Add annotations** in free space — beside or below the diagram, ≥ 24 px from any shape — and
-   attach each one to the element it explains.
+   attach each one to the element it explains. Several temporary interactions with one purpose and
+   one end (an enabling team on one time box) share one note, attached to the team they share; a
+   note about the whole diagram stays unattached.
 5. **Run the checker** and fix every error and warning; its reading of the interactions must match
    the list from step 1. Then `--write` to save the canonical form.
 6. **Show it**: the VS Code extension opens `.tt` / `.ttm.json` as a diagram; the web app
-   (<https://team-topologies.modeler.miragon.io>, Menu → Import…) loads `.ttm.json` files (its file
-   picker filters on `.json`); with designIQ use `create_model` / `save_model_content`, then
-   `open_team_topology_modeler`.
+   (<https://team-topologies.modeler.miragon.io>, Menu → Open…, or drop the file onto the page)
+   opens `.tt`, `.ttm.json` and `.json` files; with designIQ use `create_model` /
+   `save_model_content`, then `open_team_topology_modeler`.
 
 ## Editing an existing file
 
@@ -197,15 +220,20 @@ It reports:
 - **errors** — anything that stops the modeler opening the file: invalid JSON, wrong field types,
   unknown `type`/`mode`, non-hex colours, non-positive sizes, duplicate ids, a non-array collection,
   an interaction without `position`/`size`;
-- **warnings** — what opens but reads wrong: an interaction overlapping zero, one or more than two
-  teams; an X-as-a-Service triangle between side-by-side teams or pointing from a stream-aligned team
-  up at a platform; partly overlapping teams; a grouping that hides or covers its inner teams;
-  annotations or interactions covering other shapes; text that overflows its shape; sizes below the
-  minimum; unknown fields (dropped on save); `attachedTo` pointing nowhere; a missing title or a
-  version other than 3;
+- **warnings** — what opens but reads wrong: stream-aligned teams one after the other along the
+  flow (side by side or staggered — sharing less than half their width and at most 60 px apart
+  vertically; a hand-off; once per neighbouring pair, on the right-hand team; not inside a platform
+  grouping); an interaction overlapping zero, one or more than two teams; an X-as-a-Service
+  triangle between side-by-side teams or pointing from a stream-aligned team up at a platform;
+  partly overlapping teams; a grouping that hides or covers its inner teams; annotations or
+  interactions covering other shapes; text that overflows its shape, including a label running
+  over the triangle's slanted edges; sizes below the minimum; unknown fields (dropped on save);
+  `attachedTo` pointing nowhere; a missing title or a version other than 3;
 - **readings** — one line per interaction (`x-as-a-service  "Cloud Platform" → "Checkout"`,
-  `collaboration  "A" ↔ "B"`), grouping and annotation. This is how you "see" the diagram: compare it
-  with what you meant to draw.
+  `collaboration  "A" ↔ "B"`), grouping and annotation, plus one line per lane a platform serves
+  through the stack, bottom-up
+  (`x-as-a-service  "Cloud Platform" → "Product Discovery"  (stacked above "Order Fulfilment")`).
+  This is how you "see" the diagram: compare it with what you meant to draw.
 
 A clean run ends with `OK: no errors, no warnings`.
 
@@ -221,8 +249,12 @@ indentation. Writing canonical files keeps diffs minimal when the user later sav
 
 - `version` is `3`; every element has a unique `id`, a `position` and a positive `size`.
 - `type` and `mode` values are spelled exactly as in the tables; colours (if any) are hex.
+- Stream-aligned teams are stacked as parallel lanes, never side by side or staggered.
 - Every interaction overlaps exactly the two teams it relates; every X-as-a-Service provider sits
-  below its consumer.
+  below its consumer; the platform sits under the stack with one triangle into the lowest lane, and
+  the readings list every lane it should serve — a platform shared by several areas keeps them in
+  one stack.
+- Every enabling team spans exactly the lanes it facilitates, with one glyph per lane.
 - No two teams partly overlap; groupings sort before their inner teams and keep their middle free.
 - Labels fit their shapes; explanations live in annotations, not in labels.
 - The checker reports no errors and no warnings, its readings match the intended topology, and the
@@ -230,5 +262,7 @@ indentation. Writing canonical files keeps diffs minimal when the user later sav
 
 ## Reference files (read on demand)
 
-- `reference/layout.md` — the layout grid with exact numbers, multi-stream layouts, groupings, and a
-  complete worked diagram with its checker output.
+- `reference/layout.md` — the stacked-lane grid with exact numbers, lane order, annotation slots,
+  what serves and what breaks the platform stack, a subsystem as a service (and on the platform),
+  several business areas with a shared or separate platforms, groupings, a complete worked diagram
+  with its checker output, and wrong/right pairs.

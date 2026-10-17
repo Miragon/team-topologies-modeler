@@ -4,7 +4,7 @@ import { getNonce } from "./util.js";
 /**
  * HTML scaffold of the Team Topologies webview (identical for the text and PNG editor — both load
  * the same bundle `dist/webview.js` and speak the same protocol). Strict CSP: scripts only via nonce,
- * no external sources (offline-capable, fonts come from the system font stack).
+ * no external sources (offline-capable; the Geist font files are bundled into `dist/fonts/`).
  */
 export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
   const nonce = getNonce();
@@ -32,8 +32,9 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
   </head>
   <body>
     <div id="app">
-      <div id="canvas" class="tt-canvas"></div>
       <div id="toolbar" class="toolbar"></div>
+      <div id="canvas" class="tt-canvas"></div>
+      <div id="panels"></div>
     </div>
     <script nonce="${nonce}" src="${scriptUri}"></script>
   </body>

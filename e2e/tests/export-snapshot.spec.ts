@@ -6,7 +6,7 @@ import { exportStableSvg, gotoApp, loadExample } from "./support/modeler";
  * geometry, character-count word-wrap) serialises deterministically, so its SVG
  * is a stable baseline. The snapshot path is platform-neutral (see
  * playwright.config.ts) so a single committed baseline is valid on macOS and
- * Linux CI. Regenerate with `npm run test:e2e -- --update-snapshots`.
+ * Linux CI. Regenerate with `npm run test:e2e -w e2e -- --update-snapshots`.
  */
 test.describe("example export snapshot", () => {
   test("the bundled example renders to a stable SVG", async ({ page }) => {

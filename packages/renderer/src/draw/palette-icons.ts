@@ -5,12 +5,16 @@
  */
 
 import {
+  FLOW_SPEC,
   INTERACTION_MODE_SPECS,
   TEAM_TYPE_SPECS,
   dashArray,
 } from "@miragon/team-topologies-schema-model";
 import type { InteractionMode, TeamType } from "@miragon/team-topologies-schema-model";
-import { INK_SOFT } from "./styles.js";
+import { ICON_SQUARE_DASHED_MOUSE_POINTER, iconMarkup } from "./icons.js";
+
+/** The lasso is a tool, not notation, so it is a Lucide icon sized to sit beside the previews. */
+const LASSO_ICON_SIZE = 20;
 
 function svg(inner: string): string {
   return `<svg class="tt-palette-svg" width="24" height="24" viewBox="0 0 26 26" aria-hidden="true">${inner}</svg>`;
@@ -35,25 +39,27 @@ export function teamIconSvg(type: TeamType): string {
 }
 
 export function flowIconSvg(): string {
+  const dash = dashArray(FLOW_SPEC.strokeStyle, 1.5);
   return svg(
-    `<g fill="none" stroke="#6b6459" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="3 2">` +
-      `<polygon points="3,9 16,9 16,5 23,13 16,21 16,17 3,17"/></g>`,
+    `<g fill="none" stroke="${FLOW_SPEC.stroke}" stroke-width="1.5" stroke-linejoin="round"` +
+      (dash ? ` stroke-dasharray="${dash}"` : "") +
+      `><polygon points="3,9 16,9 16,5 23,13 16,21 16,17 3,17"/></g>`,
   );
 }
 
 export function annotationIconSvg(): string {
   return svg(
-    `<g fill="none" stroke="${INK_SOFT}" stroke-width="1.5" stroke-linecap="round">` +
+    `<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">` +
       `<path d="M10 4H5v18h5"/><path d="M13 9h9M13 13h9M13 17h6"/></g>`,
   );
 }
 
-/** Dashed selection frame with a pointer — the lasso (multi-select) tool. */
+/** The lasso (multi-select) tool: Lucide square-dashed-mouse-pointer. */
 export function lassoIconSvg(): string {
-  return svg(
-    `<rect x="3" y="3" width="16" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2"/>` +
-      `<path d="M14 12l9 3.6-3.8 1.4-1.4 3.8z" fill="currentColor"/>`,
-  );
+  return iconMarkup(ICON_SQUARE_DASHED_MOUSE_POINTER, {
+    size: LASSO_ICON_SIZE,
+    className: "tt-palette-svg",
+  });
 }
 
 export function interactionIconSvg(mode: InteractionMode): string {

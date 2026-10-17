@@ -58,14 +58,19 @@ export default tseslint.config(
   },
   // DOM-dependent packages/apps + E2E specs (page.evaluate runs in the browser): browser globals.
   {
-    files: ["packages/renderer/**/*.ts", "apps/webapp/**/*.{ts,tsx}", "e2e/**/*.ts"],
+    files: [
+      "packages/renderer/**/*.ts",
+      "packages/ui/**/*.{ts,tsx}",
+      "apps/webapp/**/*.{ts,tsx}",
+      "e2e/**/*.ts",
+    ],
     languageOptions: {
       globals: { ...globals.browser },
     },
   },
   // The VS Code extension has a Node host AND a browser webview — allow both global sets.
   {
-    files: ["apps/vscode/**/*.ts"],
+    files: ["apps/vscode/**/*.{ts,tsx}"],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },
     },
@@ -77,9 +82,9 @@ export default tseslint.config(
       globals: { ...globals.node },
     },
   },
-  // React app: hooks + fast-refresh hygiene.
+  // React code (the webapp and the shared chrome package): hooks + fast-refresh hygiene.
   {
-    files: ["apps/webapp/**/*.{ts,tsx}"],
+    files: ["packages/ui/**/*.{ts,tsx}", "apps/webapp/**/*.{ts,tsx}"],
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
@@ -88,6 +93,15 @@ export default tseslint.config(
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+    },
+  },
+  // The VS Code webview's React panels: an esbuild bundle without hot reload, so hooks only.
+  {
+    files: ["apps/vscode/**/*.tsx"],
+    plugins: { "react-hooks": reactHooks },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
     },
   },
   {

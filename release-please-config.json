@@ -15,6 +15,17 @@
           "path": "packages/renderer/package.json",
           "jsonpath": "$.dependencies['@miragon/team-topologies-schema-model']"
         },
+        { "type": "json", "path": "packages/ui/package.json", "jsonpath": "$.version" },
+        {
+          "type": "json",
+          "path": "packages/ui/package.json",
+          "jsonpath": "$.dependencies['@miragon/team-topologies-renderer']"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/package.json",
+          "jsonpath": "$.dependencies['@miragon/team-topologies-schema-model']"
+        },
         { "type": "json", "path": "apps/vscode/package.json", "jsonpath": "$.version" },
         {
           "type": "json",
@@ -26,6 +37,11 @@
           "path": "apps/vscode/package.json",
           "jsonpath": "$.dependencies['@miragon/team-topologies-schema-model']"
         },
+        {
+          "type": "json",
+          "path": "apps/vscode/package.json",
+          "jsonpath": "$.dependencies['@miragon/team-topologies-ui']"
+        },
         { "type": "json", "path": "apps/webapp/package.json", "jsonpath": "$.version" },
         {
           "type": "json",
@@ -36,6 +52,11 @@
           "type": "json",
           "path": "apps/webapp/package.json",
           "jsonpath": "$.dependencies['@miragon/team-topologies-schema-model']"
+        },
+        {
+          "type": "json",
+          "path": "apps/webapp/package.json",
+          "jsonpath": "$.dependencies['@miragon/team-topologies-ui']"
         },
         { "type": "json", "path": "e2e/package.json", "jsonpath": "$.version" },
         {

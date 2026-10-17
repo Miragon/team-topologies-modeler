@@ -7,10 +7,15 @@
  */
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Modeler, isTtElement } from "@miragon/team-topologies-renderer";
+import { Modeler } from "@miragon/team-topologies-renderer";
+import { useModelerSelection } from "@miragon/team-topologies-ui";
 import { saveToStorage } from "./persistence";
 import { writeDocumentToLocation } from "@/io/url";
-import { ModelerContext, type ModelerContextValue, type Selected } from "./modelerContext";
+import { ModelerContext, type ModelerContextValue } from "./modelerContext";
+
+/** Matches the static <title> in index.html. */
+const PRODUCT_NAME = "Miragon Modeler for Team Topologies";
+const AUTOSAVE_DELAY_MS = 600;
 
 export function ModelerProvider({ children }: { children: ReactNode }) {
   const modelerRef = useRef<Modeler>(undefined);
@@ -20,24 +25,30 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
   if (!modelerRef.current) modelerRef.current = new Modeler({ height: "100%" });
   const modeler = modelerRef.current;
 
-  const [selected, setSelected] = useState<Selected>(null);
+  const { selected, revision } = useModelerSelection(modeler);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [title, setTitleState] = useState("Untitled team topology");
-  const [revision, setRevision] = useState(0);
-  const [isEmpty, setIsEmpty] = useState(false);
 
   // Debounced autosave of the current document: to localStorage (so a refresh
   // never loses work) and into the address-bar hash (so the URL is always a
   // shareable/bookmarkable snapshot, no Share click required).
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const saveNow = () => {
+    saveTimer.current = undefined;
+    const doc = modeler.exportDocument();
+    saveToStorage(doc);
+    writeDocumentToLocation(doc);
+  };
   const persist = () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      const doc = modeler.exportDocument();
-      saveToStorage(doc);
-      writeDocumentToLocation(doc);
-    }, 600);
+    saveTimer.current = setTimeout(saveNow, AUTOSAVE_DELAY_MS);
+  };
+  // Closing or hiding the tab inside the debounce window would otherwise lose the last edit.
+  const flushPendingSave = () => {
+    if (!saveTimer.current) return;
+    clearTimeout(saveTimer.current);
+    saveNow();
   };
 
   useEffect(() => {
@@ -45,63 +56,40 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
       setCanUndo(modeler.canUndo());
       setCanRedo(modeler.canRedo());
     };
-    const bump = () => setRevision((r) => r + 1);
     const syncTitle = () => setTitleState(modeler.getMeta()?.title ?? "Untitled team topology");
-    // Only ever runs after the first import (event- or initial-sync-driven), so
-    // it never forces the modeler to materialise before DiagramCanvas attaches.
-    const syncEmpty = () => {
-      const doc = modeler.exportDocument();
-      setIsEmpty(
-        doc.nodes.length === 0 &&
-          doc.interactions.length === 0 &&
-          doc.flows.length === 0 &&
-          doc.annotations.length === 0,
-      );
-    };
 
-    // The inspector edits one element; a multi-selection has nothing single to show.
-    const onSelection = (e: unknown) => {
-      const selection = (e as { newSelection?: unknown[] }).newSelection ?? [];
-      const only = selection.length === 1 ? selection[0] : undefined;
-      setSelected(isTtElement(only) ? only : null);
-    };
     const onCommandStack = () => {
       syncHistory();
-      bump();
-      syncEmpty();
       persist();
-    };
-    const onElements = () => {
-      bump();
-      syncEmpty();
     };
     const onImport = () => {
       syncHistory();
       syncTitle();
-      syncEmpty();
-      bump();
       // New / Example / Import-file / shared-link all re-import: keep the
       // autosave + address-bar hash in step with the freshly loaded document.
       persist();
     };
 
-    modeler.on("selection.changed", onSelection);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") flushPendingSave();
+    };
+
     modeler.on("commandStack.changed", onCommandStack);
-    modeler.on("elements.changed", onElements);
     modeler.on("import.done", onImport);
+    window.addEventListener("pagehide", flushPendingSave);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     // Initial sync (the first import.done may fire before we subscribed). This
     // effect runs after DiagramCanvas has attached + imported, so reading the
     // document here is safe.
     syncHistory();
     syncTitle();
-    syncEmpty();
 
     return () => {
-      modeler.off("selection.changed", onSelection);
       modeler.off("commandStack.changed", onCommandStack);
-      modeler.off("elements.changed", onElements);
       modeler.off("import.done", onImport);
+      window.removeEventListener("pagehide", flushPendingSave);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modeler]);
@@ -112,10 +100,15 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
     persist();
   };
 
+  useEffect(() => {
+    const name = title.trim();
+    document.title = name ? `${name} · ${PRODUCT_NAME}` : PRODUCT_NAME;
+  }, [title]);
+
   const value = useMemo<ModelerContextValue>(
-    () => ({ modeler, selected, canUndo, canRedo, title, revision, isEmpty, setTitle }),
+    () => ({ modeler, selected, canUndo, canRedo, title, revision, setTitle }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [modeler, selected, canUndo, canRedo, title, revision, isEmpty],
+    [modeler, selected, canUndo, canRedo, title, revision],
   );
 
   return <ModelerContext.Provider value={value}>{children}</ModelerContext.Provider>;

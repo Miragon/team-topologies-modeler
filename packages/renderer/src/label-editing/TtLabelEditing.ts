@@ -9,7 +9,13 @@
 
 import type Canvas from "diagram-js/lib/core/Canvas";
 import type EventBus from "diagram-js/lib/core/EventBus";
-import { isTtAnnotation, isTtElement, type TtElement } from "../model/di-types.js";
+import {
+  isTtAnnotation,
+  isTtElement,
+  isTtFlow,
+  isTtInteraction,
+  type TtElement,
+} from "../model/di-types.js";
 import type TtModeling from "../modeling/TtModeling.js";
 import { LINE_HEIGHT, labelLayout } from "../draw/label-layout.js";
 import { FONT } from "../draw/styles.js";
@@ -19,6 +25,13 @@ const EDITING_MARKER = "tt-label-editing";
 
 /** Narrow shapes (small interaction glyphs) still get an editor wide enough to type in. */
 const MIN_EDITOR_WIDTH = 96;
+
+function editorName(element: TtElement): string {
+  if (isTtAnnotation(element)) return "Annotation text";
+  if (isTtInteraction(element)) return "Interaction label";
+  if (isTtFlow(element)) return "Flow label";
+  return "Team name";
+}
 
 interface ActiveEdit {
   commit: () => void;
@@ -63,7 +76,7 @@ export default class TtLabelEditing {
     editor.className = "tt-label-editor";
     editor.value = element.ttLabel ?? "";
     editor.rows = 1;
-    editor.setAttribute("aria-label", isTtAnnotation(element) ? "Annotation text" : "Label");
+    editor.setAttribute("aria-label", editorName(element));
     Object.assign(editor.style, {
       left: `${(left - viewbox.x) * scale}px`,
       width: `${width * scale}px`,
@@ -108,13 +121,16 @@ export default class TtLabelEditing {
       cleanup();
       if (changed) this.modeling.updateLabel(element, value);
     };
+    // Removing the focused editor would drop focus to the page; keep keyboard users on the canvas.
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
         e.preventDefault();
         commit();
+        this.canvas.focus();
       } else if (e.key === "Escape") {
         e.preventDefault();
         cleanup();
+        this.canvas.focus();
       }
     };
     const onBlur = () => commit();

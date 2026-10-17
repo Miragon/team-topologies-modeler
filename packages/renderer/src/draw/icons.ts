@@ -1,19 +1,127 @@
 /**
- * A handful of Material-style icon paths (Apache-2.0) used by the context pad,
- * exposed as HTML markup. Reusable by host chrome too.
+ * Functional icons for the canvas chrome (context pad, palette tools) and for hosts without an
+ * icon library of their own (the VS Code webview), returned as inline SVG markup.
+ *
+ * Lucide icons (ISC licence, © Lucide Icons and Contributors), copied unchanged from
+ * lucide-static 1.59.0 and inlined so the published renderer has no icon runtime dependency.
  */
 
-export const ICON_ARROW_FORWARD = "M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z";
-export const ICON_EDIT =
-  "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z";
-export const ICON_DELETE =
-  "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z";
-export const ICON_LINK =
-  "M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z";
-/** An open bracket with text lines — the annotation glyph. */
-export const ICON_ANNOTATION = "M4 3h5v2H6v14h3v2H4V3zm7 4h9v2h-9V7zm0 4h9v2h-9v-2zm0 4h6v2h-6v-2z";
-export const ICON_SWAP = "M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z";
+/** One Lucide icon: its SVG child elements on the 24 × 24 grid. */
+export type IconNode = ReadonlyArray<readonly [string, Readonly<Record<string, string>>]>;
 
-export function iconMarkup(path: string, size = 18): string {
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="${path}"/></svg>`;
+export interface IconMarkupOptions {
+  /** Rendered width and height in px; the viewBox stays on the 24 × 24 grid. */
+  size?: number;
+  strokeWidth?: number;
+  className?: string;
+}
+
+export const ICON_PENCIL: IconNode = [
+  [
+    "path",
+    {
+      d: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+    },
+  ],
+  ["path", { d: "m15 5 4 4" }],
+];
+
+export const ICON_TRASH: IconNode = [
+  ["path", { d: "M10 11v6" }],
+  ["path", { d: "M14 11v6" }],
+  ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" }],
+  ["path", { d: "M3 6h18" }],
+  ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" }],
+];
+
+export const ICON_LINK: IconNode = [
+  ["path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" }],
+  ["path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" }],
+];
+
+export const ICON_MESSAGE_SQUARE_PLUS: IconNode = [
+  [
+    "path",
+    {
+      d: "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z",
+    },
+  ],
+  ["path", { d: "M12 8v6" }],
+  ["path", { d: "M9 11h6" }],
+];
+
+export const ICON_SQUARE_DASHED_MOUSE_POINTER: IconNode = [
+  [
+    "path",
+    {
+      d: "M12.034 12.681a.498.498 0 0 1 .647-.647l9 3.5a.5.5 0 0 1-.033.943l-3.444 1.068a1 1 0 0 0-.66.66l-1.067 3.443a.5.5 0 0 1-.943.033z",
+    },
+  ],
+  ["path", { d: "M5 3a2 2 0 0 0-2 2" }],
+  ["path", { d: "M19 3a2 2 0 0 1 2 2" }],
+  ["path", { d: "M5 21a2 2 0 0 1-2-2" }],
+  ["path", { d: "M9 3h1" }],
+  ["path", { d: "M9 21h2" }],
+  ["path", { d: "M14 3h1" }],
+  ["path", { d: "M3 9v1" }],
+  ["path", { d: "M21 9v2" }],
+  ["path", { d: "M3 14v1" }],
+];
+
+export const ICON_MENU: IconNode = [
+  ["path", { d: "M4 5h16" }],
+  ["path", { d: "M4 12h16" }],
+  ["path", { d: "M4 19h16" }],
+];
+
+export const ICON_MINUS: IconNode = [["path", { d: "M5 12h14" }]];
+
+export const ICON_PLUS: IconNode = [
+  ["path", { d: "M5 12h14" }],
+  ["path", { d: "M12 5v14" }],
+];
+
+export const ICON_MAXIMIZE: IconNode = [
+  ["path", { d: "M8 3H5a2 2 0 0 0-2 2v3" }],
+  ["path", { d: "M21 8V5a2 2 0 0 0-2-2h-3" }],
+  ["path", { d: "M3 16v3a2 2 0 0 0 2 2h3" }],
+  ["path", { d: "M16 21h3a2 2 0 0 0 2-2v-3" }],
+];
+
+export const ICON_DOWNLOAD: IconNode = [
+  ["path", { d: "M12 15V3" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }],
+  ["path", { d: "m7 10 5 5 5-5" }],
+];
+
+export const ICON_X: IconNode = [
+  ["path", { d: "M18 6 6 18" }],
+  ["path", { d: "m6 6 12 12" }],
+];
+
+const ICON_STROKE_WIDTH = 2.5;
+const ICON_SIZE = 16;
+
+function escapeAttribute(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+/** Decorative (`aria-hidden`) inline SVG for a Lucide icon; the control around it carries the name. */
+export function iconMarkup(icon: IconNode, options: IconMarkupOptions = {}): string {
+  const size = options.size ?? ICON_SIZE;
+  const strokeWidth = options.strokeWidth ?? ICON_STROKE_WIDTH;
+  const classAttribute = options.className ? ` class="${escapeAttribute(options.className)}"` : "";
+  const children = icon
+    .map(([tag, attributes]) => {
+      const attributeList = Object.entries(attributes)
+        .map(([name, value]) => `${name}="${escapeAttribute(value)}"`)
+        .join(" ");
+      return `<${tag} ${attributeList}/>`;
+    })
+    .join("");
+  return (
+    `<svg${classAttribute} xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24"` +
+    ` fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round"` +
+    ` stroke-linejoin="round" aria-hidden="true" focusable="false">${children}</svg>`
+  );
 }

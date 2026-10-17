@@ -9,11 +9,11 @@ import { MIRAGON } from "../theme/index.js";
 /** BaseRenderer default priority is 1000; 1500 wins the render.shape/connection event. */
 export const TT_RENDER_PRIORITY = 1500;
 
-/** Selection / hover accent (Miragon blue — kept in sync with the app theme via the shared palette). */
-export const ACCENT = MIRAGON.blau;
-
 export const INK = MIRAGON.schwarz;
-export const INK_SOFT = "#5B5B5B";
+/** Secondary canvas text (e.g. the flow-of-change label), ≥ 4.5:1 on the paper surround. */
+export const INK_MUTED = MIRAGON.textLeise;
+/** Structural strokes that recede (annotation bracket, association connector), ≥ 3:1. */
+export const STROKE_MUTED = MIRAGON.kontur;
 
 export const FONT = {
   /**
@@ -30,6 +30,3 @@ export const FONT = {
   small: 11,
   annotation: 12,
 } as const;
-
-/** Paper colour used for the label halo so text stays legible over lines. */
-export const PAPER = MIRAGON.weiss;
