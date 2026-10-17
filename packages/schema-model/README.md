@@ -43,7 +43,7 @@ relate to (spatial overlap, the Team Topologies convention) — there is no sour
 ```jsonc
 {
   "version": 3,
-  "title": "Online shop — team topology",
+  "title": "Online shop team topology",
   "nodes": [
     {
       "id": "team_checkout",
