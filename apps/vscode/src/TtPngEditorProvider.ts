@@ -224,7 +224,7 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
     document: TtPngDocument,
     cancellation: vscode.CancellationToken,
   ): Promise<void> {
-    await this.writePng(document, document.uri, cancellation);
+    await this.writePng(document, document.uri, cancellation, { includeDraft: true });
     document.isNew = false;
   }
 
@@ -233,7 +233,7 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
     destination: vscode.Uri,
     cancellation: vscode.CancellationToken,
   ): Promise<void> {
-    await this.writePng(document, destination, cancellation);
+    await this.writePng(document, destination, cancellation, { includeDraft: true });
   }
 
   public async backupCustomDocument(
@@ -244,7 +244,8 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
     // The parent folder of the backup target (usually under storagePath) may not exist yet — the
     // VS Code API requires creating it before writing, otherwise the backup (hot-exit) fails.
     await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(context.destination, ".."));
-    await this.writePng(document, context.destination, cancellation);
+    // A backup runs on its own timer and must not commit a field the user is still typing in.
+    await this.writePng(document, context.destination, cancellation, { includeDraft: false });
     return {
       id: context.destination.toString(),
       delete: () => {
@@ -271,8 +272,9 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
     document: TtPngDocument,
     target: vscode.Uri,
     cancellation: vscode.CancellationToken,
+    { includeDraft }: { includeDraft: boolean },
   ): Promise<void> {
-    const base64 = await this.requestPng(document, cancellation);
+    const base64 = await this.requestPng(document, cancellation, includeDraft);
     if (cancellation.isCancellationRequested) return;
     await vscode.workspace.fs.writeFile(target, new Uint8Array(Buffer.from(base64, "base64")));
   }
@@ -284,6 +286,7 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
   private requestPng(
     document: TtPngDocument,
     cancellation: vscode.CancellationToken,
+    includeDraft: boolean,
   ): Promise<string> {
     const binding = this.bindings.get(document);
     if (!binding) {
@@ -321,7 +324,7 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
           reject(err);
         },
       });
-      void binding.webview.postMessage({ type: "requestPng", id });
+      void binding.webview.postMessage({ type: "requestPng", id, includeDraft });
     });
   }
 

@@ -4,6 +4,12 @@ import { exportImageToFile } from "./exportImage.js";
 import type { HostToWebview, WebviewToHost } from "./protocol.js";
 
 /**
+ * VS Code gives a save participant about 1.5 s before it skips it, and drops one that overruns
+ * repeatedly; a webview that doesn't answer in time is saved without its draft instead.
+ */
+const FLUSH_TIMEOUT_MS = 1000;
+
+/**
  * CustomTextEditor for `.tt` / `.ttm.json`. The document (native JSON) remains the source of truth —
  * VS Code handles dirty state, saving, Git, diff, and file undo "for free". The webview renders the
  * diagram (diagram-js modeler) and mirrors graphical changes back into the document via WorkspaceEdit.
@@ -45,6 +51,35 @@ export class TtEditorProvider implements vscode.CustomTextEditorProvider {
     // change events arrive.
     const suppressEcho = new Set<string>();
 
+    // Edits apply one after another, so a save that waits for the webview's flush also waits for
+    // the edit that flush produced.
+    let appliedEdits: Promise<void> = Promise.resolve();
+    const pendingFlushes = new Map<number, () => void>();
+    let nextFlushId = 1;
+
+    const flushWebview = (): Promise<void> =>
+      new Promise<void>((resolve) => {
+        const id = nextFlushId++;
+        const finish = (): void => {
+          clearTimeout(timer);
+          pendingFlushes.delete(id);
+          resolve();
+        };
+        const timer = setTimeout(finish, FLUSH_TIMEOUT_MS);
+        pendingFlushes.set(id, finish);
+        post({ type: "flush", id }).then((delivered) => {
+          if (!delivered) finish();
+        }, finish);
+      }).then(() => appliedEdits);
+
+    // An inspector field commits on blur or Enter, and Ctrl/Cmd+S keeps the focus where it is. An
+    // autosave after a delay is left alone: it would commit, and add an undo step, mid-typing.
+    const saveSub = vscode.workspace.onWillSaveTextDocument((e) => {
+      if (e.document.uri.toString() !== document.uri.toString()) return;
+      if (e.reason === vscode.TextDocumentSaveReason.AfterDelay) return;
+      e.waitUntil(flushWebview());
+    });
+
     const changeSub = vscode.workspace.onDidChangeTextDocument((e) => {
       if (e.document.uri.toString() !== document.uri.toString()) return;
       const text = document.getText();
@@ -60,8 +95,16 @@ export class TtEditorProvider implements vscode.CustomTextEditorProvider {
         case "ready":
           await post({ type: "init", text: document.getText() });
           break;
-        case "edit":
-          await this.replaceWholeDocument(document, msg.text, suppressEcho);
+        case "edit": {
+          const applying = appliedEdits.then(() =>
+            this.replaceWholeDocument(document, msg.text, suppressEcho),
+          );
+          appliedEdits = applying.catch(() => undefined);
+          await applying;
+          break;
+        }
+        case "flushed":
+          pendingFlushes.get(msg.id)?.();
           break;
         case "export":
           await exportImageToFile(document.uri, msg.format, msg.data);
@@ -78,6 +121,8 @@ export class TtEditorProvider implements vscode.CustomTextEditorProvider {
     webviewPanel.onDidDispose(() => {
       changeSub.dispose();
       messageSub.dispose();
+      saveSub.dispose();
+      for (const finish of [...pendingFlushes.values()]) finish();
     });
   }
 

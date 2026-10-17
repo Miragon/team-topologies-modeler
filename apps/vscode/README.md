@@ -51,7 +51,17 @@ A diagram shows teams and how they interact.
   element to edit its label in place. Select several elements with `Ctrl/Cmd+A`, a Shift+drag lasso
   or Shift+click, then move, copy or delete them together. Undo/redo via `Ctrl/Cmd+Z` and
   `Ctrl/Cmd+Shift+Z`.
-- **Collapsed menu** (top-right, Excalidraw-style): fit-to-view · export SVG/PNG.
+- **Inspector** (right, a bottom sheet in narrow panes): select an element to edit its properties
+  without touching the JSON. Change a team's type, name, description and fill or outline colour, an
+  interaction's mode and label, the flow-of-change label, or an annotation's text, and detach an
+  annotation from its element. Every change is one edit of the file and one undo step. With several
+  elements selected, it deletes them together. While the file's text isn't a valid diagram, the
+  inspector is read-only.
+- **Legend** (bottom-left): which shape stands for which team type, interaction mode and element.
+  Switch it on and off with **Legend** in the menu or its close button. It starts hidden in panes
+  narrower than 760 px or shorter than 820 px, and each editor remembers your choice.
+- **Menu** (top-left): show or hide the legend, export as PNG / SVG. **Zoom control**
+  (bottom-right): zoom out, the current level (click for 100 %), zoom in, fit to view.
 - **Editable embedded-PNG diagrams (`*.tt.png` / `*.ttm.png`).** Exported PNGs store the diagram
   inside a `tEXt` chunk, so the file stays a normal image you can drop into a wiki, README, or chat —
   and can be reopened and edited graphically. To start one, run **Team Topologies: New Empty Diagram

@@ -6,10 +6,15 @@
  * Only what the browser needs remains here (rasterization via canvas, Blob/FileReader).
  */
 
+import { MIRAGON, embedSvgStyles, geistFontFaceCss } from "@miragon/team-topologies-renderer";
+import geistLatin from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?dataurl";
+import geistLatinExt from "@fontsource-variable/geist/files/geist-latin-ext-wght-normal.woff2?dataurl";
 import { EMBED_KEYWORD, encodeDoc, pngInsertText } from "../png.js";
 
+/** An SVG drawn as an image can't reach the webview's font files, so Geist travels inline. */
+const GEIST_FONT_CSS = geistFontFaceCss({ latin: geistLatin, latinExt: geistLatinExt });
+
 const SVG_ATTR = "data-tt-document";
-const BG = "#ffffff";
 
 export function embedSvg(svg: string, doc: string): string {
   return svg.replace(/<svg\b/, `<svg ${SVG_ATTR}="${encodeDoc(doc)}"`);
@@ -34,7 +39,8 @@ async function rasterize(
   height: number,
   scale: number,
 ): Promise<Uint8Array> {
-  const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+  const withFont = embedSvgStyles(svg, GEIST_FONT_CSS);
+  const url = URL.createObjectURL(new Blob([withFont], { type: "image/svg+xml" }));
   try {
     const img = new Image();
     img.width = width;
@@ -44,12 +50,14 @@ async function rasterize(
       img.onerror = () => reject(new Error("Could not render the SVG."));
       img.src = url;
     });
+    // load can fire before the embedded font is ready; decode() waits for it.
+    await img.decode().catch(() => undefined);
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(width * scale);
     canvas.height = Math.round(height * scale);
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas 2D context not available.");
-    ctx.fillStyle = BG;
+    ctx.fillStyle = MIRAGON.weiss;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
