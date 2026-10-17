@@ -1,0 +1,557 @@
+/* ============================================================================
+   Team Topologies shared chrome: styles of @miragon/team-topologies-ui
+
+   The inspector (right, below the top row; a bottom sheet on narrow screens)
+   and the legend (bottom-left), plus the button, field, focus and motion
+   system they are built from. A host loads the renderer stylesheet (it brings
+   the --cd-* tokens) and this file, then its own chrome.
+   ========================================================================== */
+
+/* ---- Tokens ---------------------------------------------------------------
+   The semantic alias layer over the vendored --cd-* brand tokens: one light
+   mode, no own greys, no hand-copied rgba. :where() keeps it at zero
+   specificity, so a host's own :root wins whatever the import order. */
+
+:where(:root) {
+  --font-sans:
+    "Geist Variable", "Geist", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+    "Helvetica Neue", Arial, sans-serif;
+
+  --paper: var(--cd-grau);
+  --surface: var(--cd-weiss);
+  --surface-2: var(--cd-grau);
+  --ink: var(--cd-schwarz);
+  --ink-muted: var(--cd-text-leise);
+  --line: var(--cd-linie);
+  --line-strong: var(--cd-kontur);
+  --accent: var(--cd-blau);
+  --accent-ink: var(--cd-blau-link);
+  --accent-soft: var(--cd-info-soft);
+  --brand: var(--cd-gruen);
+  --success: var(--cd-success);
+  --success-soft: var(--cd-success-soft);
+  --warning: var(--cd-warning);
+  --warning-soft: var(--cd-warning-soft);
+  --danger: var(--cd-danger);
+  --danger-soft: var(--cd-danger-soft);
+  --info: var(--cd-info);
+  --info-soft: var(--cd-info-soft);
+  --backdrop: color-mix(in srgb, var(--cd-schwarz) 42%, transparent);
+  /* The opaque blue-soft disappears on white, so the input focus ring mixes blau instead. */
+  --focus-ring-soft: color-mix(in srgb, var(--cd-blau) 24%, transparent);
+
+  --shadow-1: var(--cd-shadow-1);
+  --shadow-2: var(--cd-shadow-2);
+  --shadow-3: var(--cd-shadow-3);
+  --radius-sm: var(--cd-radius-sm);
+  --radius: var(--cd-radius-md);
+  --radius-lg: var(--cd-radius-lg);
+  --radius-pill: var(--cd-radius-pill);
+
+  /* Layout: every anchor sits --tt-edge from the viewport edge; the top row is one height. */
+  --tt-edge: 12px;
+  --tt-gap: 8px;
+  --tt-row: 40px;
+  --tt-below-row: calc(var(--tt-edge) + var(--tt-row) + var(--tt-edge));
+
+  /* Layers (guide §5): canvas 0, chrome 20–40, modals 50, toasts 60. */
+  --z-canvas: 0;
+  --z-overlay: 20;
+  --z-inspector: 25;
+  --z-chrome: 30;
+  --z-dropzone: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+
+  /* Placement of the shared panels; a host overrides what its own chrome needs. */
+  --tt-inspector-top: var(--tt-below-row);
+  --tt-inspector-right: var(--tt-edge);
+  --tt-inspector-width: 288px;
+  /* Kept free below the side panel, so it never covers the zoom control. */
+  --tt-inspector-bottom: calc(var(--tt-row) + 2 * var(--tt-edge));
+  --tt-inspector-z: var(--z-inspector);
+  --tt-inspector-sheet-height: 45vh;
+  --tt-legend-left: var(--tt-edge);
+  --tt-legend-bottom: var(--tt-edge);
+  --tt-legend-top: var(--tt-below-row);
+  --tt-legend-z: var(--z-overlay);
+
+  /* Both hosts' menus, so the dropdown has the same width in the webapp and in VS Code. */
+  --tt-menu-min-width: 248px;
+
+  color-scheme: light;
+}
+
+/* ---- Panels --------------------------------------------------------------------
+   Set on the panels themselves, so they look the same whatever the host's body says. */
+
+.tt-inspector,
+.tt-legend {
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:where(.tt-inspector, .tt-legend),
+:where(.tt-inspector, .tt-legend) * {
+  box-sizing: border-box;
+}
+
+.tt-icon {
+  display: block;
+  flex: none;
+}
+
+/* ---- Focus ------------------------------------------------------------------
+   Every interactive element gets the same visible ring (guide §8, §12). Text fields
+   use the input pattern further down instead. */
+
+:where(button, a[href], summary, [role="button"], [role^="menuitem"], [tabindex]):focus-visible,
+input[type="color"]:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+
+/* ---- Buttons (panels, dialogs, empty state) ---------------------------------------
+   One system (guide §8): ghost/secondary is the default, plus primary, danger
+   (inline destructive action, outline) and destructive (confirm, filled). */
+
+.tt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--tt-gap);
+  height: 36px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink);
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  appearance: none;
+  transition:
+    background-color var(--cd-motion-fast) var(--cd-ease),
+    border-color var(--cd-motion-fast) var(--cd-ease),
+    color var(--cd-motion-fast) var(--cd-ease),
+    box-shadow var(--cd-motion-fast) var(--cd-ease),
+    transform var(--cd-motion-fast) var(--cd-ease);
+}
+
+.tt-btn:hover:not(:disabled) {
+  border-color: var(--accent-ink);
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.tt-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.tt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tt-btn--ghost {
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+.tt-btn--primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--cd-weiss);
+  box-shadow: var(--shadow-1);
+}
+
+.tt-btn--primary:hover:not(:disabled) {
+  border-color: var(--accent-ink);
+  background: var(--accent-ink);
+  color: var(--cd-weiss);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
+}
+
+.tt-btn--primary:active:not(:disabled) {
+  box-shadow: var(--shadow-1);
+  transform: translateY(0);
+}
+
+.tt-btn--danger {
+  border-color: var(--danger);
+  background: var(--surface);
+  color: var(--danger);
+}
+
+.tt-btn--danger:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.tt-btn--destructive {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--cd-weiss);
+  box-shadow: var(--shadow-1);
+}
+
+.tt-btn--destructive:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--danger) 85%, var(--cd-schwarz));
+  background: color-mix(in srgb, var(--danger) 85%, var(--cd-schwarz));
+  color: var(--cd-weiss);
+  box-shadow: var(--shadow-2);
+}
+
+.tt-btn--sm {
+  height: 28px;
+  padding: 0 12px;
+}
+
+/* ---- Close buttons (legend, dialogs, panels) ------------------------------------- */
+
+.tt-closebtn {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font: inherit;
+  font-size: 21px;
+  line-height: 1;
+  color: var(--ink-muted);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color var(--cd-motion-fast) var(--cd-ease),
+    color var(--cd-motion-fast) var(--cd-ease);
+}
+
+.tt-closebtn--sm {
+  width: 28px;
+  height: 28px;
+}
+
+.tt-closebtn:hover {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+/* ---- Form fields ---------------------------------------------------------------- */
+
+.tt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tt-field--row {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tt-field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.tt-field__control {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  resize: vertical;
+  transition:
+    border-color var(--cd-motion-fast) var(--cd-ease),
+    box-shadow var(--cd-motion-fast) var(--cd-ease);
+}
+
+.tt-field__control::placeholder {
+  color: var(--ink-muted);
+  opacity: 1;
+}
+
+.tt-field__control:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus-ring-soft);
+}
+
+/* A token-coloured chevron drawn with two gradient strokes, so no hard-coded icon colour. */
+select.tt-field__control {
+  appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 40%, var(--ink-muted) 40% 60%, transparent 60%),
+    linear-gradient(-45deg, transparent 40%, var(--ink-muted) 40% 60%, transparent 60%);
+  background-size: 6px 6px;
+  background-position:
+    calc(100% - 20px) 50%,
+    calc(100% - 15px) 50%;
+  background-repeat: no-repeat;
+}
+
+.tt-field__color {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tt-field__color input[type="color"] {
+  width: 48px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+/* ---- Inspector: right, below the top row (bottom sheet on narrow screens) ------------ */
+
+.tt-inspector {
+  position: absolute;
+  top: var(--tt-inspector-top);
+  right: var(--tt-inspector-right);
+  z-index: var(--tt-inspector-z);
+  width: var(--tt-inspector-width);
+  max-height: calc(100% - var(--tt-inspector-top) - var(--tt-inspector-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+  font-size: 13px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  animation: tt-pop-in var(--cd-motion-fast) var(--cd-ease-out);
+}
+
+.tt-inspector__content,
+.tt-inspector__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tt-inspector__fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Read-only (guide §9): the controls fade and refuse the pointer; the values stay readable. */
+.tt-inspector__fields:disabled :is(.tt-field__control, input[type="color"]) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* The 32px close target sits in the corner padding instead of pushing the content down. */
+.tt-inspector__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tt-gap);
+  margin: -8px -8px 0 0;
+}
+
+.tt-inspector__header {
+  display: flex;
+  align-items: center;
+  gap: var(--tt-gap);
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.tt-inspector__meta {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+/* Labels recede behind the values they name. */
+.tt-inspector .tt-field__label {
+  color: var(--ink-muted);
+}
+
+.tt-inspector__attachment {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tt-gap) 16px;
+}
+
+.tt-inspector .tt-btn--danger,
+.tt-inspector__delete {
+  width: 100%;
+  margin-top: var(--tt-gap);
+}
+
+/* ---- Notation previews (legend, inspector) ----------------------------------------- */
+
+.tt-shape-icon {
+  display: inline-block;
+  flex: none;
+  line-height: 0;
+}
+
+.tt-shape-icon > svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Legend: bottom-left ------------------------------------------------------------- */
+
+.tt-legend {
+  position: absolute;
+  left: var(--tt-legend-left);
+  bottom: var(--tt-legend-bottom);
+  z-index: var(--tt-legend-z);
+  min-width: 184px;
+  max-height: calc(100% - var(--tt-legend-top) - var(--tt-legend-bottom) - var(--tt-edge));
+  overflow-y: auto;
+  padding: 8px 12px 12px 16px;
+  font-size: 13px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  backdrop-filter: blur(8px);
+  animation: tt-rise-in var(--cd-motion-base) var(--cd-ease-out);
+}
+
+.tt-legend__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tt-gap);
+  margin: 0 -4px 4px 0;
+}
+
+.tt-legend__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.tt-legend__group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tt-legend__group + .tt-legend__group {
+  margin-top: var(--tt-gap);
+  padding-top: var(--tt-gap);
+  border-top: 1px solid var(--line);
+}
+
+.tt-legend__row {
+  display: flex;
+  align-items: center;
+  gap: var(--tt-gap);
+  min-height: 24px;
+  color: var(--ink);
+}
+
+/* ---- Motion ---------------------------------------------------------------------------- */
+
+@keyframes tt-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes tt-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes tt-sink-out {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes tt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---- Narrow screens (≤ 760px) ----------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  /* 16px keeps iOS Safari from zooming the page when a field gets focus. */
+  .tt-field__control {
+    font-size: 16px;
+  }
+
+  .tt-inspector {
+    top: auto;
+    left: var(--tt-edge);
+    right: var(--tt-edge);
+    bottom: var(--tt-edge);
+    width: auto;
+    max-height: var(--tt-inspector-sheet-height);
+    animation-name: tt-rise-in;
+  }
+
+  /* The sheet covers the bottom of the screen; a legend peeking out around it is noise. */
+  :root:has(.tt-inspector) .tt-legend {
+    visibility: hidden;
+  }
+}
+
+@media (pointer: coarse) {
+  .tt-field__control {
+    font-size: 16px;
+  }
+}
+
+/* ---- Reduced motion (guide §7) ---------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

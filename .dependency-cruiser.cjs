@@ -1,7 +1,8 @@
 /**
  * DOM-boundary enforcement at the module-graph level. Complements the ESLint rule: forbids the
  * DOM-free package (schema-model) from depending on diagram-js / DOM libraries or on the
- * DOM-dependent @miragon/team-topologies-renderer.
+ * DOM-dependent @miragon/team-topologies-renderer. Also keeps the layering one-way: the libraries
+ * never reach up into the shared React chrome (ui), and ui never into an app.
  */
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
@@ -19,6 +20,20 @@ module.exports = {
       severity: "error",
       from: { path: "^packages/(schema-model)/src" },
       to: { path: "^packages/renderer/src" },
+    },
+    {
+      name: "libraries-no-ui",
+      comment: "schema-model and renderer stay React-free: they must not depend on the ui package.",
+      severity: "error",
+      from: { path: "^packages/(schema-model|renderer)/" },
+      to: { path: "^packages/ui/" },
+    },
+    {
+      name: "ui-no-apps",
+      comment: "The shared ui package is host-agnostic: it must not import from an app.",
+      severity: "error",
+      from: { path: "^packages/ui/" },
+      to: { path: "^apps/" },
     },
     {
       name: "no-circular",

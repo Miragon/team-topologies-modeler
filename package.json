@@ -11,6 +11,7 @@
   "workspaces": [
     "packages/schema-model",
     "packages/renderer",
+    "packages/ui",
     "apps/webapp",
     "apps/vscode",
     "e2e"

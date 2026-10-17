@@ -20,7 +20,7 @@ The brand tokens are **vendored** from that skill as
 [`packages/renderer/src/theme/cd-tokens.generated.css`](packages/renderer/src/theme/cd-tokens.generated.css)
 — do **not** fork the hex values; re-copy the file from the skill to update. The pure-TS mirror in
 [`packages/renderer/src/theme/palette.ts`](packages/renderer/src/theme/palette.ts) is the single
-source for canvas colours; a drift test (`packages/renderer/test/theme.sync.test.ts`) fails if the
+source for canvas colours; a drift test (`packages/renderer/src/theme/theme.sync.test.ts`) fails if the
 two diverge. The four Team Topologies team-type / interaction colours in
 [`packages/schema-model/src/notation.ts`](packages/schema-model/src/notation.ts) are the **official
 notation** (Team-Shape-Templates) and are serialized into documents — they stay as-is; the CI applies
@@ -38,6 +38,7 @@ sets `save-exact=true`) — including internal `@miragon/team-topologies-*` deps
 | --------------------------------------- | ------------------------------------------------------------------------ | --- |
 | `@miragon/team-topologies-schema-model` | Types, the notation spec, Zod validation, migrations, JSON serialization | no  |
 | `@miragon/team-topologies-renderer`     | diagram-js bootstrap, renderer, viewer/modeler, import/export, CSS       | yes |
+| `@miragon/team-topologies-ui` (private) | shared React chrome (Inspector, Legend) for webapp and VS Code webview   | yes |
 | `apps/webapp`                           | Vite + React demo editor                                                 | yes |
 | `apps/vscode`                           | VS Code extension: custom editor for `.tt`/`.ttm.json`                   | yes |
 
@@ -45,6 +46,11 @@ sets `save-exact=true`) — including internal `@miragon/team-topologies-*` deps
 libraries (`tiny-svg`, `min-dom`) or use the DOM (`window`/`document`). Enforced twice — ESLint
 (`no-restricted-imports`/`no-restricted-globals`) **and** `dependency-cruiser` — so a violating import
 fails `npm run lint` and `npm run depcruise`.
+
+The `ui` package is consumed from source only (no build, not published). It takes the modeler and
+host state as props, ships its styles as `@miragon/team-topologies-ui/ui.css` (token aliases, buttons,
+fields, focus, motion, inspector, legend), and must never import from `apps/**`; `schema-model` and
+`renderer` must never import it (both enforced by `dependency-cruiser`).
 
 ## Commands
 
