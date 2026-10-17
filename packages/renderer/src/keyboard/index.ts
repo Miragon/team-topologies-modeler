@@ -1,7 +1,7 @@
 import type { ModuleDeclaration } from "didi";
 import TtKeyboard from "./TtKeyboard.js";
 
-/** Undo/redo + delete-selection on the canvas container. */
+/** Canvas shortcuts: history, selection, clipboard, nudging and zoom (see TtKeyboard). */
 export const ttKeyboardModule: ModuleDeclaration = {
   __init__: ["ttKeyboard"],
   ttKeyboard: ["type", TtKeyboard],

@@ -12,21 +12,17 @@
    ========================================================================== */
 
 .tt-djs-container {
-  --tt-accent: var(--cd-blau);
-  --tt-accent-soft: rgba(51, 93, 229, 0.12);
-  --tt-line: #e6e2e2;
-  --tt-ink: var(--cd-schwarz);
-  /* diagram-js chrome (multi-selection frame, lasso, active palette tool) in the brand accent. */
-  --element-selected-outline-stroke-color: var(--tt-accent);
-  --element-selected-outline-secondary-stroke-color: rgba(51, 93, 229, 0.5);
-  --lasso-fill-color: var(--tt-accent-soft);
-  --lasso-stroke-color: var(--tt-accent);
-  --palette-entry-selected-color: var(--tt-accent);
   position: relative;
+  /* Keeps diagram-js overlays (context pad z 100, label editor z 100, hover tooltips z 1000) on
+     the host's canvas layer, so host chrome, dialogs and toasts always paint above them. */
+  isolation: isolate;
   width: 100%;
   height: 100%;
   background-color: var(--cd-grau);
-  background-image: radial-gradient(rgba(29, 29, 29, 0.06) 0.6px, transparent 0.6px);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--cd-schwarz) 6%, transparent) 0.6px,
+    transparent 0.6px
+  );
   background-size: 22px 22px;
   font-family:
     "Geist Variable",
@@ -39,11 +35,63 @@
   overflow: hidden;
 }
 
-/* The canvas isn't a focusable control — never paint a focus ring on it. */
+/* diagram-js re-declares its theme variables on the inner .djs-parent, so overrides set on
+   .tt-djs-container itself never reach the canvas; they have to sit on that element. */
+.tt-djs-container .djs-parent {
+  --canvas-fill-color: var(--cd-weiss);
+  --accent-color: var(--cd-blau);
+  --bendpoint-fill-color: var(--cd-blau);
+  --element-dragger-color: var(--cd-blau);
+  --element-selected-outline-stroke-color: var(--cd-blau);
+  --element-selected-outline-secondary-stroke-color: color-mix(
+    in srgb,
+    var(--cd-blau) 50%,
+    transparent
+  );
+  --lasso-fill-color: color-mix(in srgb, var(--cd-blau) 12%, transparent);
+  --lasso-stroke-color: var(--cd-blau);
+  --resizer-fill-color: var(--cd-weiss);
+  --resizer-stroke-color: var(--cd-blau);
+  --snap-line-stroke-color: color-mix(in srgb, var(--cd-blau) 30%, transparent);
+  --shape-connect-allowed-fill-color: var(--cd-info-soft);
+  --shape-drop-allowed-fill-color: var(--cd-info-soft);
+  --shape-drop-not-allowed-fill-color: var(--cd-danger-soft);
+  --palette-entry-color: var(--cd-schwarz);
+  --palette-entry-hover-color: var(--cd-blau-link);
+  --palette-entry-selected-color: var(--cd-blau-link);
+  --palette-separator-color: var(--cd-linie);
+  --palette-background-color: var(--cd-weiss);
+  --palette-border-color: var(--cd-linie);
+  --context-pad-entry-background-color: var(--cd-weiss);
+  --context-pad-entry-hover-background-color: var(--cd-info-soft);
+  --button-border-radius: var(--cd-radius-sm);
+  --input-border-radius: var(--cd-radius-sm);
+  --surface-border-radius: var(--cd-radius-sm);
+  --hover-tooltip-font-family:
+    "Geist Variable", "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --hover-tooltip-font-size: 13px;
+  --hover-tooltip-secondary-font-size: 12px;
+  --hover-tooltip-background-color: var(--cd-schwarz);
+  --hover-tooltip-color: var(--cd-weiss);
+  --palette-tooltip-shortcut-background-color: color-mix(
+    in srgb,
+    var(--cd-weiss) 18%,
+    var(--cd-schwarz)
+  );
+}
+
+/* The canvas SVG keeps focus for every shortcut, and Chromium starts matching :focus-visible on
+   the first key press, so any ring here would frame the whole viewport for mouse users too. */
 .tt-djs-container:focus,
 .tt-djs-container:focus-visible,
 .tt-djs-container svg:focus {
   outline: none;
+}
+/* TtBaseViewer sets this class only while focus that arrived by Tab rests on the canvas. Inset,
+   so the ring stays visible at the viewport edges. */
+.tt-djs-container .djs-container > svg.tt-canvas-keyboard-focus {
+  outline: 2px solid var(--cd-blau-link);
+  outline-offset: -2px;
 }
 
 .tt-djs-container .djs-element text {
@@ -51,15 +99,19 @@
   -webkit-user-select: none;
 }
 
-/* Hover / selection accent on the shape outline (never on plain text visuals). */
-.tt-djs-container .djs-element.hover .djs-visual > :first-child:not(text),
-.tt-djs-container .djs-element.selected .djs-visual > :first-child:not(text) {
-  stroke: var(--tt-accent) !important;
+/* --- Selection and hover -------------------------------------------------- */
+/* Shapes show selection and hover through diagram-js's separate outline frame, so the fill and
+   stroke a user picked stay visible while the element is selected (§10). */
+.tt-djs-container .djs-shape.hover:not(.selected) > .djs-outline {
+  visibility: visible;
+  stroke: color-mix(in srgb, var(--cd-blau) 45%, transparent);
 }
 
-.tt-djs-container .djs-outline {
-  stroke: var(--tt-accent);
-  stroke-dasharray: 3 3;
+/* diagram-js hides the outline of a selected connection. Annotation connectors carry no user
+   colour, so tinting their own stroke is the selection cue (inline styles need !important). */
+.tt-djs-container .djs-connection.hover .djs-visual > path,
+.tt-djs-container .djs-connection.selected .djs-visual > path {
+  stroke: var(--cd-blau) !important;
 }
 
 /* The bounding frame drawn around a multi-selection. */
@@ -73,17 +125,9 @@
   stroke-dasharray: 5 4;
 }
 
-/* Resize handles (every team is resizable) in the accent. */
-.tt-djs-container .djs-resizer-visual {
-  fill: var(--cd-weiss);
-  stroke: var(--tt-accent);
-}
-.tt-djs-container .djs-resizer-hit {
-  fill: none;
-}
-
-/* --- Palette: horizontal floating pill, top-centre (Excalidraw style) ----- */
-/* Styled on .djs-palette itself so it travels if the host re-parents it. */
+/* --- Palette: horizontal floating toolbar, top-centre ---------------------- */
+/* Styled on .djs-palette itself so it travels if the host re-parents it. 32px entries + 3px
+   padding + 1px border give the 40px height shared by the host's top chrome row. */
 .djs-palette {
   left: 50%;
   top: 12px;
@@ -91,11 +135,20 @@
   width: auto;
   display: flex;
   align-items: center;
-  padding: 5px 6px;
+  padding: 3px;
   background: var(--cd-weiss);
-  border: 1px solid var(--tt-line);
+  border: 1px solid var(--cd-linie);
   border-radius: var(--cd-radius-md);
-  box-shadow: var(--cd-shadow-2);
+  box-shadow: var(--cd-shadow-1);
+}
+/* diagram-js switches to a fixed 94px two-column layout on short viewports (sized for a vertical
+   palette); the horizontal palette never needs it. */
+.djs-palette.two-column.open {
+  width: auto;
+}
+.tt-djs-container .djs-palette {
+  /* Top chrome sits above canvas overlays such as the context pad and the label editor. */
+  z-index: 110;
 }
 .djs-palette .djs-palette-entries,
 .djs-palette .group {
@@ -107,84 +160,180 @@
 .djs-palette .entry {
   position: relative;
   float: none;
-  width: 40px;
-  height: 40px;
-  line-height: normal;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  line-height: 1;
+  appearance: none;
   border-radius: var(--cd-radius-sm);
-  color: var(--tt-ink);
+  color: var(--cd-schwarz);
   transition:
-    background 120ms ease,
-    color 120ms ease,
-    box-shadow 120ms ease;
+    background-color var(--cd-motion-fast) var(--cd-ease),
+    color var(--cd-motion-fast) var(--cd-ease),
+    box-shadow var(--cd-motion-fast) var(--cd-ease);
 }
 .djs-palette .entry:hover {
-  background: var(--tt-accent-soft);
-  color: var(--tt-accent);
+  background: var(--cd-info-soft);
+  color: var(--cd-blau-link);
+}
+.djs-palette .entry:focus {
+  outline: none;
+}
+.djs-palette .entry:focus-visible {
+  outline: 2px solid var(--cd-blau-link);
+  outline-offset: 2px;
+}
+.djs-palette .entry.highlighted-entry {
+  background: var(--cd-info-soft);
+  box-shadow: inset 0 0 0 1.5px var(--cd-blau);
 }
 
-/* Vertical divider between the team group and the interaction-mode group. */
+/* Vertical divider between the tool groups. */
 .djs-palette .group + .group {
   position: relative;
-  margin-left: 9px;
-  padding-left: 9px;
+  margin-left: 8px;
+  padding-left: 8px;
 }
 .djs-palette .group + .group::before {
   content: "";
   position: absolute;
-  top: 6px;
-  bottom: 6px;
+  top: 4px;
+  bottom: 4px;
   left: 0;
   width: 1px;
-  background: var(--tt-line);
+  background: var(--cd-linie);
 }
 
-.tt-palette-entry {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  min-width: 24px;
-  min-height: 24px;
-  line-height: 1;
-}
 .tt-palette-svg {
   display: block;
   pointer-events: none;
 }
-.tt-mode-entry.is-active,
-.djs-palette .entry.highlighted-entry {
-  background: var(--tt-accent-soft);
-  box-shadow: inset 0 0 0 1.5px var(--tt-accent);
+
+/* --- Palette tooltips ------------------------------------------------------ */
+/* diagram-js anchors palette tooltips right of the entry (x = right + 8, y = entry centre), which
+   suits a vertical palette but covers the neighbouring tools here. Centre them below the
+   palette instead: 24px = 8px gap + half the 32px entry; 28px = half the entry + 3px padding +
+   1px border + 8px gap. */
+.tt-djs-container .djs-hover-tooltip {
+  width: max-content;
+  max-width: 280px;
+  padding: 4px 8px;
+  line-height: 1.5;
+  white-space: normal;
+  box-shadow: var(--cd-shadow-2);
+}
+.tt-djs-container .djs-hover-tooltip--right {
+  transform: translate(calc(-50% - 24px), 28px);
+}
+.tt-djs-container .djs-hover-tooltip--bottom {
+  transform: translateX(-50%);
+}
+.tt-djs-container .djs-palette-tooltip-shortcut {
+  font-family: inherit;
 }
 
-/* --- Context pad ---------------------------------------------------------- */
-.tt-djs-container .tt-cp-entry {
+/* --- Narrow screens: the palette gets its own row below the host's top chrome --- */
+@media (max-width: 760px) {
+  .djs-palette {
+    top: 64px;
+    max-width: calc(100% - 24px);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: 4px;
+    scrollbar-width: none;
+  }
+  .djs-palette::-webkit-scrollbar {
+    display: none;
+  }
+  /* The scrolling palette clips anything beyond its 3px padding. */
+  .djs-palette .entry:focus-visible {
+    outline-offset: 0;
+  }
+  /* Entries near the screen edge would push a centred tooltip off-screen; centre it on the
+     viewport, still below the palette. */
+  .tt-djs-container .djs-hover-tooltip--right,
+  .tt-djs-container .djs-hover-tooltip--bottom {
+    left: 50% !important;
+    max-width: min(280px, calc(100vw - 24px));
+  }
+  .tt-djs-container .djs-hover-tooltip--right {
+    transform: translate(-50%, 28px);
+  }
+}
+
+/* --- Context pad: one compact vertical toolbar beside the selection -------- */
+.tt-djs-container .djs-context-pad {
+  width: auto;
+}
+.tt-djs-container .djs-context-pad .group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: max-content;
+  padding: 4px;
+  background: var(--cd-weiss);
+  border: 1px solid var(--cd-linie);
+  border-radius: var(--cd-radius-md);
+  box-shadow: var(--cd-shadow-2);
+  /* The pad root ignores the pointer; without this, clicks between two entries would fall
+     through to the element underneath. */
+  pointer-events: auto;
+}
+.tt-djs-container .djs-context-pad .group + .group {
+  margin-top: 4px;
+}
+.tt-djs-container .djs-context-pad .entry {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
-  min-width: 22px;
-  min-height: 22px;
-  color: var(--tt-ink);
-}
-.tt-djs-container .djs-context-pad .entry {
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  appearance: none;
   border-radius: var(--cd-radius-sm);
-  box-shadow: var(--cd-shadow-1);
-  background: var(--cd-weiss);
+  background: transparent;
+  box-shadow: none;
+  color: var(--cd-schwarz);
   transition:
-    background 120ms ease,
-    color 120ms ease;
+    background-color var(--cd-motion-fast) var(--cd-ease),
+    color var(--cd-motion-fast) var(--cd-ease);
 }
 .tt-djs-container .djs-context-pad .entry:hover {
-  background: var(--tt-accent-soft);
-  color: var(--tt-accent);
+  background: var(--cd-info-soft);
+  color: var(--cd-blau-link);
+}
+.tt-djs-container .djs-context-pad .entry[data-action="delete"]:hover {
+  background: var(--cd-danger-soft);
+  color: var(--cd-danger);
+}
+.tt-djs-container .djs-context-pad .entry:focus {
+  outline: none;
+}
+.tt-djs-container .djs-context-pad .entry:focus-visible {
+  outline: 2px solid var(--cd-blau-link);
+  outline-offset: 2px;
+}
+.tt-djs-container .djs-context-pad .entry svg {
+  display: block;
 }
 
 /* --- In-place label editor ------------------------------------------------ */
 /* Typography, size and position are set inline from the element's label layout, so the editor
-   sits exactly on the rendered label; it has no box of its own. */
+   sits exactly on the rendered label. It stays transparent (WYSIWYG), so the focus ring is the
+   only cue that a text field is active and uses the full-contrast ring of every other control. */
 .tt-djs-container .tt-label-editor {
   position: absolute;
   z-index: 100;
@@ -198,10 +347,31 @@
   overflow: hidden;
   white-space: pre-wrap;
   overflow-wrap: break-word;
-  caret-color: var(--tt-accent);
+  caret-color: var(--cd-blau);
+}
+.tt-djs-container .tt-label-editor:focus {
+  outline: 2px solid var(--cd-blau-link);
+  outline-offset: 2px;
+  border-radius: var(--cd-radius-sm);
 }
 
 /* Hide the rendered label while its editor is open, so the text only shows once. */
 .tt-djs-container .djs-element.tt-label-editing .djs-visual > text {
   visibility: hidden;
+}
+
+/* --- Reduced motion -------------------------------------------------------- */
+/* Scoped to the renderer's own DOM: a global `*` rule would override every host app's motion. */
+@media (prefers-reduced-motion: reduce) {
+  .tt-djs-container *,
+  .tt-djs-container *::before,
+  .tt-djs-container *::after,
+  .djs-palette,
+  .djs-palette *,
+  .djs-palette *::before,
+  .djs-palette *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

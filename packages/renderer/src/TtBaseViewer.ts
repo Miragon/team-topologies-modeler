@@ -9,12 +9,20 @@ import type { ModuleDeclaration } from "didi";
 import type Canvas from "diagram-js/lib/core/Canvas";
 import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
 import type EventBus from "diagram-js/lib/core/EventBus";
+import type CommandStack from "diagram-js/lib/command/CommandStack";
 import type { Root } from "diagram-js/lib/model/Types";
 import type { TtDocument } from "@miragon/team-topologies-schema-model";
 import { saveSVG } from "./io/saveSvg.js";
 import type TtImporter from "./io/TtImporter.js";
 import type TtExporter from "./io/TtExporter.js";
+import type TtViewport from "./io/TtViewport.js";
 import { ROOT_ID, type ImportWarning, type RootBusinessObject } from "./io/types.js";
+
+/**
+ * Set on the canvas SVG while it holds focus that arrived by Tab. Mouse users never see a frame
+ * around the whole viewport, which a plain `:focus-visible` ring would show after any shortcut.
+ */
+const CANVAS_KEYBOARD_FOCUS_CLASS = "tt-canvas-keyboard-focus";
 
 export interface TtViewerOptions {
   /** Host element. When absent, a detached <div> is created (attach later). */
@@ -57,8 +65,38 @@ export abstract class TtBaseViewer {
     if (!this._diagram) {
       const modules = [...this._getModules(), ...(this._options.additionalModules ?? [])];
       this._diagram = new Diagram({ canvas: { container: this._container }, modules });
+      this._describeCanvas(this._diagram);
     }
     return this._diagram;
+  }
+
+  private _describeCanvas(diagram: Diagram): void {
+    const canvasContainer = diagram.get<Canvas>("canvas").getContainer();
+    const svg = canvasContainer.querySelector<SVGSVGElement>(":scope > svg");
+    if (!svg) return;
+    svg.setAttribute("role", "group");
+    svg.setAttribute("aria-roledescription", "canvas");
+    svg.setAttribute("aria-label", "Team Topologies diagram");
+
+    const ownerDocument = canvasContainer.ownerDocument;
+    let lastKeyWasTab = false;
+    const onKeyDown = (event: KeyboardEvent) => {
+      lastKeyWasTab = event.key === "Tab";
+    };
+    const onPointerDown = () => {
+      lastKeyWasTab = false;
+      svg.classList.remove(CANVAS_KEYBOARD_FOCUS_CLASS);
+    };
+    const onFocusIn = () => svg.classList.toggle(CANVAS_KEYBOARD_FOCUS_CLASS, lastKeyWasTab);
+    const onFocusOut = () => svg.classList.remove(CANVAS_KEYBOARD_FOCUS_CLASS);
+    ownerDocument.addEventListener("keydown", onKeyDown, true);
+    ownerDocument.addEventListener("pointerdown", onPointerDown, true);
+    svg.addEventListener("focusin", onFocusIn);
+    svg.addEventListener("focusout", onFocusOut);
+    diagram.get<EventBus>("eventBus").on("diagram.destroy", () => {
+      ownerDocument.removeEventListener("keydown", onKeyDown, true);
+      ownerDocument.removeEventListener("pointerdown", onPointerDown, true);
+    });
   }
 
   /** Resolve a diagram-js service from the didi injector. */
@@ -74,16 +112,30 @@ export abstract class TtBaseViewer {
     this.get<EventBus>("eventBus").off(event, callback);
   }
 
-  /** Load a document into the canvas (replaces existing content). */
+  /**
+   * Load a document into the canvas (replaces existing content) and fit it into view. Clears the
+   * undo history: its commands point at the replaced elements and would bring them back.
+   */
   importDocument(doc: TtDocument): { warnings: ImportWarning[] } {
     const diagram = this._ensureDiagram();
     const eventBus = diagram.get<EventBus>("eventBus");
     const importer = diagram.get<TtImporter>("ttImporter");
+    diagram.get<CommandStack>("commandStack", false)?.clear();
     importer.clear();
     const warnings = importer.import(doc);
-    this._fit();
+    this.fitToView();
     eventBus.fire("import.done", { warnings });
     return { warnings };
+  }
+
+  /**
+   * Fit the whole diagram into the viewport, keeping the strip under the floating palette free
+   * (88px at the top, 120px when the container is 760px wide or narrower).
+   */
+  fitToView(): void {
+    const viewport = this._ensureDiagram().get<TtViewport>("ttViewport", false);
+    if (viewport) viewport.fit();
+    else this.get<Canvas>("canvas").zoom("fit-viewport");
   }
 
   /** Current canvas state as a canonical document. */
@@ -118,49 +170,6 @@ export abstract class TtBaseViewer {
   /** Standalone, self-contained SVG snapshot. */
   saveSVG(): { svg: string } {
     return saveSVG(this.get<Canvas>("canvas"), this.get<ElementRegistry>("elementRegistry"));
-  }
-
-  /** Fit the content into the viewport, leaving room at the top for the palette. */
-  private _fit(topInset = 84, pad = 56): void {
-    const canvas = this.get<Canvas>("canvas");
-    const registry = this.get<ElementRegistry>("elementRegistry");
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const el of registry.getAll()) {
-      const e = el as { x?: number; y?: number; width?: number; height?: number };
-      if (
-        typeof e.x !== "number" ||
-        typeof e.y !== "number" ||
-        typeof e.width !== "number" ||
-        typeof e.height !== "number"
-      ) {
-        continue;
-      }
-      minX = Math.min(minX, e.x);
-      minY = Math.min(minY, e.y);
-      maxX = Math.max(maxX, e.x + e.width);
-      maxY = Math.max(maxY, e.y + e.height);
-    }
-    if (!Number.isFinite(minX)) return;
-
-    const rect = this._container.getBoundingClientRect();
-    const W = rect.width;
-    const H = rect.height;
-    const cw = Math.max(maxX - minX, 1);
-    const ch = Math.max(maxY - minY, 1);
-    if (!W || !H) {
-      canvas.zoom("fit-viewport");
-      return;
-    }
-    const s = Math.min((W - 2 * pad) / cw, (H - topInset - pad) / ch, 1.25);
-    canvas.viewbox({
-      x: minX + cw / 2 - W / 2 / s,
-      y: minY - topInset / s,
-      width: W / s,
-      height: H / s,
-    });
   }
 
   /** Attach the container into `target`. */

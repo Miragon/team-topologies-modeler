@@ -17,7 +17,7 @@ export type { TtViewerOptions, EventCallback } from "./TtBaseViewer.js";
 // Modules (for additionalModules / extension) + their services
 export { ttModelModule, TtElementFactory } from "./model/index.js";
 export { ttDrawModule, TeamTopologiesRenderer } from "./draw/index.js";
-export { ioModule, TtImporter, TtExporter, saveSVG, ROOT_ID } from "./io/index.js";
+export { ioModule, TtImporter, TtExporter, TtViewport, saveSVG, ROOT_ID } from "./io/index.js";
 export { ttModelingModule, TtModeling, TtLayouter } from "./modeling/index.js";
 export { ttRulesModule, TtRules } from "./rules/index.js";
 export {
@@ -49,6 +49,16 @@ export type {
   TtAssociation,
 } from "./model/di-types.js";
 export type { ImportWarning, RootBusinessObject } from "./io/index.js";
+
+// Geist inside exported SVGs, so a rasterised PNG keeps the canvas typeface.
+export { GEIST_UNICODE_RANGES, embedSvgStyles, geistFontFaceCss } from "./io/index.js";
+export type { GeistFontDataUrls } from "./io/index.js";
+
+// Miragon design tokens (pure data) — for host code that paints outside CSS, e.g. canvas exports.
+export { MIRAGON, CD_TOKENS } from "./theme/index.js";
+
+// Functional icons as SVG markup — for host chrome that has no icon library (the VS Code webview).
+export * from "./draw/icons.js";
 
 // Palette glyphs — reusable for host chrome (e.g. the legend).
 export {
