@@ -91,6 +91,7 @@ platform gap. Reviews should ask where the friction is.
 | Permanent enabling team doing the work            | capability never transfers; becomes a service desk | time-box facilitating; hand over, then move to the next team         |
 | Complicated-subsystem team for an ordinary module | component team, extra hand-offs                    | give the module to the stream-aligned team that changes it most      |
 | Stream-aligned team with many dependencies        | flow blocked by waiting                            | move ownership into the team, or provide the dependency as a service |
+| Stream-aligned teams chained along one flow       | each change waits at every hand-over               | one team owns each stream end to end; draw streams as parallel lanes |
 | Team collaborating with many teams at once        | overload, blurred ownership                        | at most one or two collaborations; turn the rest into X-as-a-Service |
 | Collaboration with no end                         | permanent coupling disguised as teamwork           | name the outcome that ends it and the mode that follows              |
 | One "shared services" team for everything         | unclear purpose, unbounded load                    | split into platform services, enabling support and owned components  |

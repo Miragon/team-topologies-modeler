@@ -83,6 +83,14 @@ const ANNOTATION_PADDING = { left: 10, right: 6, top: 6, bottom: 6 };
 const LINE_HEIGHT = 1.2;
 const AVERAGE_CHARACTER_WIDTH = 0.58;
 const FONT_SIZE = { team: 13.5, interaction: 11, flow: 11, annotation: 12 };
+// The renderer sets labels with dominant-baseline "central"; the letters sit on the alphabetic
+// baseline about this fraction of the font size lower, where the triangle is already wider.
+const BASELINE_BELOW_CENTRE = 0.3;
+
+// Stacked stream-aligned lanes sit 30px apart in the documented grid, while separate groups of
+// lanes (business areas, value streams) start ≥ 120px apart; a wider gap therefore starts another
+// group that the platform's one triangle does not reach.
+const MAX_STACKED_LANE_GAP = 60;
 
 const HEX_COLOUR = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
@@ -260,13 +268,22 @@ function labelBox(element) {
   return { width: width - 2 * LABEL_INSET, height, fontSize: FONT_SIZE[element.kind] };
 }
 
+// The renderer centres a label in the glyph's bounding box, but the triangle narrows towards its
+// tip, so a label that fits the box can still run over the slanted edges.
+function triangleWidthAtBaseline(interaction, lineCentre, fontSize) {
+  const { width, height } = interaction.size;
+  return (width * (lineCentre + BASELINE_BELOW_CENTRE * fontSize)) / height;
+}
+
 function checkLabelFits(element, warnings) {
   const text = element.kind === "annotation" ? element.text : element.label;
   if (!text) return;
   const { width, height, fontSize } = labelBox(element);
   const { lines, maxCharacters } = wrapLabel(text, Math.max(width, 1), fontSize);
-  const textHeight = lines.length * fontSize * LINE_HEIGHT;
+  const lineHeight = fontSize * LINE_HEIGHT;
+  const textHeight = lines.length * lineHeight;
   const longestLine = Math.max(...lines.map((line) => line.length));
+  const characterWidth = fontSize * AVERAGE_CHARACTER_WIDTH;
   if (textHeight > height) {
     warnings.push({
       path: element.id,
@@ -277,6 +294,22 @@ function checkLabelFits(element, warnings) {
       path: element.id,
       message: `${describe(element)}: a word in "${text}" is wider than the shape (~${maxCharacters} characters per line); widen it or break the word`,
     });
+  } else if (element.kind === "interaction" && element.mode === "x-as-a-service") {
+    const firstLineCentre = (height - textHeight) / 2 + lineHeight / 2;
+    const runsOverTheEdges = lines.some(
+      (line, index) =>
+        line.length * characterWidth >
+        triangleWidthAtBaseline(element, firstLineCentre + index * lineHeight, fontSize),
+    );
+    if (runsOverTheEdges) {
+      const capacity = Math.floor(
+        triangleWidthAtBaseline(element, height / 2, fontSize) / characterWidth,
+      );
+      warnings.push({
+        path: element.id,
+        message: `${describe(element)}: the label "${text}" runs over the triangle's slanted edges (~${capacity} characters fit on one line); use one short word, enlarge the triangle or explain it in an annotation`,
+      });
+    }
   }
 }
 
@@ -346,6 +379,64 @@ function checkTeams(teams, warnings, readings) {
   }
 }
 
+// Along the flow of change, two stream-aligned teams that share less than half of their horizontal
+// extent read as consecutive stages, whether they sit in one row or step down like a staircase.
+function followOneAnother(first, second) {
+  const firstBox = box(first);
+  const secondBox = box(second);
+  const verticalGap =
+    Math.max(firstBox.top, secondBox.top) - Math.min(firstBox.bottom, secondBox.bottom);
+  const horizontalOverlap =
+    Math.min(firstBox.right, secondBox.right) - Math.max(firstBox.left, secondBox.left);
+  return (
+    verticalGap <= MAX_STACKED_LANE_GAP &&
+    horizontalOverlap < Math.min(first.size.width, second.size.width) / 2
+  );
+}
+
+// The teams inside a platform grouping build the platform; they are not stages of the consumers'
+// flow, and the grouping has no room to stack them.
+const insideOnePlatform = (first, second, teams) =>
+  teams.some(
+    (outer) =>
+      outer.type === "platform" &&
+      contains(box(outer), box(first)) &&
+      contains(box(outer), box(second)),
+  );
+
+function checkStreamAlignedRows(teams, warnings) {
+  const streamAligned = teams
+    .filter((team) => team.type === "stream-aligned")
+    .sort(
+      (first, second) =>
+        first.position.x - second.position.x ||
+        first.position.y - second.position.y ||
+        compareIds(first, second),
+    );
+  for (let leftIndex = 0; leftIndex < streamAligned.length; leftIndex++) {
+    for (let rightIndex = leftIndex + 1; rightIndex < streamAligned.length; rightIndex++) {
+      const left = streamAligned[leftIndex];
+      const right = streamAligned[rightIndex];
+      if (!followOneAnother(left, right)) continue;
+      if (insideOnePlatform(left, right, teams)) continue;
+      const neighbourInBetween = streamAligned.some(
+        (middle) =>
+          middle !== left &&
+          middle !== right &&
+          box(middle).left >= box(left).left &&
+          box(middle).right <= box(right).right &&
+          followOneAnother(middle, left) &&
+          followOneAnother(middle, right),
+      );
+      if (neighbourInBetween) continue;
+      warnings.push({
+        path: right.id,
+        message: `${teamName(left)} and ${teamName(right)} sit one after the other along the flow of change (side by side or staggered); that reads as a hand-off — stack stream-aligned teams as parallel lanes, one below the other`,
+      });
+    }
+  }
+}
+
 function touchedTeams(interaction, teams) {
   const interactionBox = box(interaction);
   const touched = teams.filter((team) => overlaps(box(team), interactionBox));
@@ -355,9 +446,74 @@ function touchedTeams(interaction, teams) {
   );
 }
 
+const isServiceGlyph = (interaction, touched) =>
+  interaction.mode === "x-as-a-service" &&
+  touched.length === 2 &&
+  horizontallyAligned(box(touched[0]), box(touched[1]));
+
+function providerAndConsumer(first, second) {
+  const firstIsLower =
+    first.position.y + first.size.height / 2 > second.position.y + second.size.height / 2;
+  return firstIsLower ? [first, second] : [second, first];
+}
+
+const servicePairKey = (provider, consumer) => JSON.stringify([provider.id, consumer.id]);
+
+function lanesDirectlyAbove(lane, provider, teams) {
+  const laneBox = box(lane);
+  const providerBox = box(provider);
+  return teams.filter((upper) => {
+    if (upper.type !== "stream-aligned") return false;
+    const upperBox = box(upper);
+    const gap = laneBox.top - upperBox.bottom;
+    if (gap < 0 || gap > MAX_STACKED_LANE_GAP) return false;
+    if (!horizontallyAligned(upperBox, laneBox) || !horizontallyAligned(upperBox, providerBox)) {
+      return false;
+    }
+    const strip = {
+      left: Math.max(laneBox.left, upperBox.left),
+      right: Math.min(laneBox.right, upperBox.right),
+      top: upperBox.bottom,
+      bottom: laneBox.top,
+    };
+    return !teams.some(
+      (team) =>
+        team !== lane &&
+        team !== upper &&
+        overlaps(box(team), strip) &&
+        !(contains(box(team), laneBox) && contains(box(team), upperBox)),
+    );
+  });
+}
+
+// A platform under a stack of stream-aligned lanes serves every lane of the stack through the one
+// triangle in the lowest lane, so the lanes above are consumers too.
+function stackedLanesAbove(consumer, provider, teams) {
+  const reached = new Set([consumer]);
+  const pending = [consumer];
+  while (pending.length > 0) {
+    for (const upper of lanesDirectlyAbove(pending.shift(), provider, teams)) {
+      if (reached.has(upper)) continue;
+      reached.add(upper);
+      pending.push(upper);
+    }
+  }
+  reached.delete(consumer);
+  return [...reached].sort(
+    (first, second) => box(second).bottom - box(first).bottom || compareIds(first, second),
+  );
+}
+
 function checkInteractions(interactions, teams, warnings, readings) {
-  for (const interaction of [...interactions].sort(compareIds)) {
-    const touched = touchedTeams(interaction, teams);
+  const resolved = [...interactions]
+    .sort(compareIds)
+    .map((interaction) => ({ interaction, touched: touchedTeams(interaction, teams) }));
+  const servedPairs = new Set(
+    resolved
+      .filter(({ interaction, touched }) => isServiceGlyph(interaction, touched))
+      .map(({ touched }) => servicePairKey(...providerAndConsumer(...touched))),
+  );
+  for (const { interaction, touched } of resolved) {
     const label = interaction.label ? `  (${interaction.label})` : "";
     if (touched.length === 0) {
       warnings.push({
@@ -394,10 +550,19 @@ function checkInteractions(interactions, teams, warnings, readings) {
       });
       continue;
     }
-    const firstIsLower =
-      first.position.y + first.size.height / 2 > second.position.y + second.size.height / 2;
-    const [provider, consumer] = firstIsLower ? [first, second] : [second, first];
+    const [provider, consumer] = providerAndConsumer(first, second);
     readings.push(`x-as-a-service  ${teamName(provider)} → ${teamName(consumer)}${label}`);
+    if (provider.type === "platform" && consumer.type === "stream-aligned") {
+      const note = [interaction.label, `stacked above ${teamName(consumer)}`]
+        .filter(Boolean)
+        .join("; ");
+      for (const lane of stackedLanesAbove(consumer, provider, teams)) {
+        const pairKey = servicePairKey(provider, lane);
+        if (servedPairs.has(pairKey)) continue;
+        servedPairs.add(pairKey);
+        readings.push(`x-as-a-service  ${teamName(provider)} → ${teamName(lane)}  (${note})`);
+      }
+    }
     const providerIsStreamAligned = provider.type === "stream-aligned";
     const consumerUsuallyProvides =
       consumer.type === "platform" || consumer.type === "complicated-subsystem";
@@ -543,6 +708,7 @@ export function checkDocument(input) {
     checkLabelFits(element, warnings);
   }
   checkTeams(teams, warnings, readings);
+  checkStreamAlignedRows(teams, warnings);
   checkInteractions(interactions, teams, warnings, readings);
   checkCoverage(elements, warnings);
   checkAnnotationTargets(annotations, elementsById, warnings, readings);

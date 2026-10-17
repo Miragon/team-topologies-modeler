@@ -57,6 +57,8 @@ collaboration has a purpose and an end; enabling teams almost never provide X-as
    a codebase, its domains and deployables are candidates; its technical layers are not.
 2. **Check cognitive load.** Can one team of 5–9 people own the stream end to end? If not, split
    it along a fracture plane (see `reference/concepts.md`). If two streams are tiny, merge them.
+   A team the user states as smaller than 5 (a few specialists) stays as stated — flag it with a
+   `Risk:` annotation (fragile, a single point of failure) instead of merging it away.
 3. **Pull out what every stream needs but should not build** — runtime, CI/CD, observability, data
    pipelines — into a platform, consumed X-as-a-Service. Start thin.
 4. **Isolate genuine specialist subsystems** into complicated-subsystem teams — only where the
@@ -64,18 +66,29 @@ collaboration has a purpose and an end; enabling teams almost never provide X-as
 5. **Close capability gaps** with enabling teams that facilitate, time-boxed.
 6. **Choose one interaction per pair that actually needs one**, with its purpose. Mark every
    temporary one (collaboration, facilitating) with an annotation saying what ends it and what
-   follows ("Collaboration until the fraud rules are stable, then X-as-a-Service").
-7. **Draw it** with the `tt-format` skill: flow of change on top, stream-aligned teams along it,
-   platform below, enabling teams at the side, then run its checker.
+   follows ("Collaboration until the fraud rules are stable, then X-as-a-Service"). When several
+   share one purpose and one end — an enabling team facilitating two teams on one time box — one
+   annotation on the team they share covers them all.
+7. **Draw it** with the `tt-format` skill, like the book: flow of change on top, stream-aligned
+   teams stacked below it as parallel lanes (each owns its stream end to end), enabling teams at the
+   left side beside exactly the lanes they facilitate, complicated-subsystem teams to the right of
+   the lane they collaborate with — or under an extension of that lane once they provide
+   X-as-a-Service — and the platform below the stack; then run its checker. Business areas that
+   share a platform stay in one stack, each area named by an annotation; separate stacks, one per
+   area, only when each area really has a platform of its own.
 
 Never invent facts to fill gaps. If the user did not say how big a team is or who owns what, model
 the most likely shape and record each assumption as an annotation (`Assumption: …`), then list the
-assumptions in your answer so the user can correct them.
+assumptions in your answer so the user can correct them. Attach an assumption to the element it is
+about; one about the whole organisation (total headcount, the split across teams) stays unattached
+beside the diagram.
 
 ## Reviewing a topology (the core job)
 
 1. **Read the file** (or the user's description) and run the `tt-format` checker — its readings
-   list which teams each interaction really connects. Work from those, not from the ids.
+   list which teams each interaction really connects. Work from those, not from the ids. A platform
+   drawn under a stack of stream-aligned lanes serves **every** lane of the stack, even with a
+   single triangle into the lowest lane; the readings list each one (`stacked above …`).
 2. **Check the type mix.** Stream-aligned teams should be the majority. Many platform or
    complicated-subsystem teams point to component thinking.
 3. **Check each team.** Clear stream or purpose? Name a domain, not a layer? Plausible cognitive
@@ -84,7 +97,10 @@ assumptions in your answer so the user can correct them.
    purposeful? Platform consumed as a service rather than through permanent collaboration? Enabling
    teams facilitating, not doing the work?
 5. **Check the flow.** Does any stream-aligned team need several other teams to ship (hand-offs)?
-   Teams with no interaction at all — independent, or forgotten? Is a flow of change drawn?
+   Stream-aligned teams drawn side by side or staggered along one flow suggest exactly that — work
+   passing from one team to the next; the checker warns about it. Ask whether the chain is real (then fix the
+   boundaries) or only the drawing (then stack the teams as parallel lanes). Teams with no
+   interaction at all — independent, or forgotten? Is a flow of change drawn?
 6. **Look for evolution.** Which collaborations should become X-as-a-Service, which enabling
    engagements should end, which subsystem has outgrown its team?
 7. **Deliver feedback two ways:**
