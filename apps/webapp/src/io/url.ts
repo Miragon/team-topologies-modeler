@@ -11,6 +11,16 @@ import type { TtDocument } from "@miragon/team-topologies-schema-model";
 
 const HASH_KEY = "d";
 
+/**
+ * What the address bar carries: no diagram, a diagram that can't be read (truncated or edited
+ * link), or a valid one. A broken link must not look like "no link", or the user never learns
+ * why they see something else.
+ */
+export type HashDocumentResult =
+  | { status: "absent" }
+  | { status: "invalid"; detail: string }
+  | { status: "ok"; document: TtDocument };
+
 export function encodeDocumentToHash(doc: TtDocument): string {
   const json = serializeDocument(doc, false);
   return LZString.compressToEncodedURIComponent(json);
@@ -23,25 +33,31 @@ export function buildShareUrl(doc: TtDocument, base?: string): string {
   return `${origin}#${HASH_KEY}=${encodeDocumentToHash(doc)}`;
 }
 
-/** Reads a document from a raw location hash (e.g. `#d=...`); null if absent/invalid. */
-export function decodeDocumentFromHash(hash: string): TtDocument | null {
+/** Reads a document from a raw location hash (e.g. `#d=...`). */
+export function decodeDocumentFromHash(hash: string): HashDocumentResult {
   const raw = hash.startsWith("#") ? hash.slice(1) : hash;
-  if (!raw) return null;
+  if (!raw) return { status: "absent" };
   const params = new URLSearchParams(raw);
+  if (!params.has(HASH_KEY)) return { status: "absent" };
   const encoded = params.get(HASH_KEY);
-  if (!encoded) return null;
+  if (!encoded) return { status: "invalid", detail: "The link has no diagram data." };
   try {
     const json = LZString.decompressFromEncodedURIComponent(encoded);
-    if (!json) return null;
+    if (!json) return { status: "invalid", detail: "The diagram data could not be decompressed." };
     const parsed = parseDocument(JSON.parse(json));
-    return parsed.ok ? parsed.document : null;
-  } catch {
-    return null;
+    return parsed.ok
+      ? { status: "ok", document: parsed.document }
+      : { status: "invalid", detail: parsed.error };
+  } catch (error) {
+    return {
+      status: "invalid",
+      detail: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
-export function readDocumentFromLocation(): TtDocument | null {
-  if (typeof window === "undefined") return null;
+export function readDocumentFromLocation(): HashDocumentResult {
+  if (typeof window === "undefined") return { status: "absent" };
   return decodeDocumentFromHash(window.location.hash);
 }
 

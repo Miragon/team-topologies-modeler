@@ -37,6 +37,14 @@ export default defineConfig({
         find: "@miragon/team-topologies-schema-model",
         replacement: fromHere("../../packages/schema-model/src/index.ts"),
       },
+      {
+        find: "@miragon/team-topologies-ui/ui.css",
+        replacement: fromHere("../../packages/ui/src/styles/ui.css"),
+      },
+      {
+        find: "@miragon/team-topologies-ui",
+        replacement: fromHere("../../packages/ui/src/index.ts"),
+      },
     ],
   },
   server: {

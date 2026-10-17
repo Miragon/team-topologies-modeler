@@ -13,9 +13,10 @@ diagram. **No backend** — everything is local, and a diagram is shared by enco
 
 ## Highlights
 
-- **Full-bleed canvas + floating chrome.** Palette top-centre (from the renderer), a **☰ Menu** top-left
-  and a **Share** button top-right; a property **Inspector** appears top-right on selection; a **Legend**
-  bottom-left.
+- **Full-bleed canvas + floating chrome.** Palette top-centre (from the renderer), the **Menu** and
+  an inline diagram title top-left, a **Share** button top-right; a property **Inspector** appears on
+  the right on selection (a bottom sheet on phones); a **Zoom** control bottom-right; a **Legend**
+  bottom-left. A fresh start shows a welcome card instead of the working chrome.
 - **Edit by direct manipulation.** Drag from the palette to create, move, resize (resize a team to
   express cognitive load), edit labels in place, undo/redo — all from the diagram-js core.
 - **Multi-selection.** `Ctrl/Cmd+A`, a Shift+drag lasso or Shift+click select several elements; drag,
@@ -29,8 +30,10 @@ diagram. **No backend** — everything is local, and a diagram is shared by enco
   LZ-compressed into the URL hash (`#d=…`). Opening that link restores the diagram.
 - **Autosave.** Every edit is debounced to `localStorage` and mirrored into the address bar, so a
   reload brings your work back.
-- **Import / export.** Open a `.ttm.json` file, export **JSON**, **SVG** or **PNG** (rasterised at 2×),
-  start a **New** diagram, or load the bundled **example** topology.
+- **Import / export.** Open a `.tt`, `.ttm.json` or `.json` file (or drop it onto the page), export
+  **JSON**, **SVG** or **PNG** (rasterised at 2×), start a **New** diagram, or load the bundled
+  **example** topology. Replacing a non-empty diagram asks first and keeps the old one, so **Restore
+  previous diagram** in the menu brings it back.
 - **Offline-friendly.** No CDN calls; the type fallback degrades cleanly to the system sans stack.
 
 ## Run it
@@ -69,6 +72,10 @@ A thin React shell over the framework-agnostic modeler:
 - **State** — a React context mirrors modeler events (selection, undo/redo availability, title,
   revision) into React; small **Zustand** stores hold UI-only state (legend/help panels) and toasts.
   The diagram itself stays owned by diagram-js, not by React.
+- **Inspector and Legend** come from the private
+  [`@miragon/team-topologies-ui`](../../packages/ui) package, shared with the VS Code webview. The app
+  passes its modeler, selection and legend state in as props and loads the package's `ui.css`
+  before its own `app.css`.
 - **Sharing / persistence** — `serializeDocument()` →
   `LZString.compressToEncodedURIComponent` → `#d=…`. Autosave writes the same to `localStorage`
   (debounced ~600 ms) and to the address bar; very large diagrams skip the hash and rely on
@@ -76,7 +83,7 @@ A thin React shell over the framework-agnostic modeler:
 - **Export** — JSON via `serializeDocument()`; SVG via `modeler.saveSVG()`; PNG by rasterising that
   SVG onto a canvas.
 
-The renderer and schema-model packages are aliased to their **TypeScript source** in `vite.config.ts`,
+The renderer, schema-model and ui packages are aliased to their **TypeScript source** in `vite.config.ts`,
 so there is no separate library build step — `npm run dev:webapp` and the Netlify build compile the
 whole monorepo from source.
 

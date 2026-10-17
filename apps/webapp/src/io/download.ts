@@ -19,12 +19,20 @@ export function downloadBlob(filename: string, blob: Blob): void {
   }
 }
 
+const TRANSLITERATIONS: Record<string, string> = { ä: "ae", ö: "oe", ü: "ue", ß: "ss" };
+
 /** Turns a diagram title into a safe file name stem. */
 export function slugify(title: string, fallback = "team-topology"): string {
   const slug = title
+    .normalize("NFC")
     .toLowerCase()
+    // German umlauts become ae/oe/ue/ss first; NFKD would otherwise reduce them to a bare vowel.
+    .replace(/[äöüß]/g, (letter) => TRANSLITERATIONS[letter] ?? letter)
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "")
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
+    .replace(/^-+/, "")
+    .slice(0, 60)
+    .replace(/-+$/, "");
   return slug || fallback;
 }
