@@ -53,10 +53,25 @@ jobs:
           fi
 
       - name: Repair with Claude
-        uses: anthropics/claude-code-action@6c690188da61cf16ee7debb28383ba67f02abb4c # v1.0.242
+        uses: anthropics/claude-code-action@f27be6b65a4652f08a2ba3cff79114829b588967 # v1.0.252
+        env:
+          CLAUDE_BRANCH: ${{ github.event.workflow_run.head_branch }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           allowed_bots: "dependabot[bot]"
           plugin_marketplaces: "https://github.com/emaarco/hogwarts.git"
           plugins: "felix-felicis@emaarco"
           prompt: "/felix-felicis:dependency-update-shepherd ${{ github.event.workflow_run.pull_requests[0].number }}"
+          use_commit_signing: true
+          claude_args: --disallowedTools "Bash(git push:*)" "Bash(git commit:*)" "Bash(git rebase:*)"
+
+      - name: Fail on unverified pull request commits
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.workflow_run.pull_requests[0].number }}
+        run: |
+          UNVERIFIED=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/commits" --jq '.[] | select(.commit.verification.verified | not) | .sha')
+          if [[ -n "$UNVERIFIED" ]]; then
+            echo "::error::Unverified commits block the merge: $UNVERIFIED"
+            exit 1
+          fi
