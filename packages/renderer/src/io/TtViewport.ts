@@ -16,7 +16,8 @@ const TOP_INSET = 88;
 const TOP_INSET_NARROW = 120;
 const PADDING = 56;
 const SIDE_PADDING_NARROW = 24;
-const MAX_FIT_ZOOM = 1.25;
+/** Guide §5.9: a fit never zooms past 100 %, as the shell's fit does. */
+const MAX_FIT_ZOOM = 1;
 
 interface Bounds {
   minX: number;
@@ -33,7 +34,7 @@ export default class TtViewport {
     private readonly elementRegistry: ElementRegistry,
   ) {}
 
-  /** Fit every element into view, zooming in no further than 125 %. */
+  /** Fit every element into view, zooming in no further than 100 %. */
   fit(): void {
     const bounds = this.contentBounds();
     if (!bounds) return;

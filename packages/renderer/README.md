@@ -130,8 +130,9 @@ await modeler.importText(text); // silent, fitted; rejects without a trace for a
 modeler.onContentChanged(() => save(modeler.exportText()));
 ```
 
-Options: `additionalModules`, `undoRedoKeys`, `freeRectCenter` and `fitOnImport` (default true; a
-host whose chrome fits the diagram itself passes false). `modeler.diagram` is the wrapped `Modeler`.
+Options: `additionalModules`, `undoRedoKeys`, `freeRectCenter` and `fitOnImport` (default true: a
+fit of at most 100 % that keeps the palette's strip free; a host whose chrome fits the diagram
+itself passes false). `modeler.diagram` is the wrapped `Modeler`.
 
 ### Shared methods (`Viewer` / `NavigatedViewer` / `Modeler`)
 

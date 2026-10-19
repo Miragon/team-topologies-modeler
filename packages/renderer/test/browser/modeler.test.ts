@@ -901,6 +901,26 @@ test("fitToView on a narrow canvas centres the diagram below the 120px palette s
   expect((top + bottom) / 2).toBeCloseTo((120 + (900 - 56)) / 2, 0);
 });
 
+test("fitToView never zooms a small diagram past 100 %", () => {
+  const host = document.createElement("div");
+  document.body.appendChild(host);
+  const modeler = new Modeler({ container: host, width: 1100, height: 900 });
+  try {
+    const team = SAMPLE_DOCUMENT.nodes.find((node) => node.id === "team_fraud");
+    if (!team) throw new Error("The sample has no team_fraud.");
+    modeler.importDocument({ ...emptyDocument(), nodes: [team] });
+    const { canvas } = services(modeler);
+    canvas.zoom(0.25);
+
+    modeler.fitToView();
+
+    expect(canvas.zoom()).toBeCloseTo(1);
+  } finally {
+    modeler.destroy();
+    host.remove();
+  }
+});
+
 // --- palette and context pad by keyboard --------------------------------------
 
 /** The click the host chrome dispatches for Enter or Space on a palette entry (detail 0). */
