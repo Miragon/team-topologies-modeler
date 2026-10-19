@@ -5,9 +5,14 @@
  * text never shows twice. Enter (or clicking elsewhere) commits through
  * `ttModeling.updateLabel` — one undo step; Shift+Enter inserts a line break;
  * Escape discards. Double-click any element to edit its label.
+ *
+ * An import replaces every element, so an edit open while one runs is taken down without a commit
+ * and reopened, with what was typed, on the element with the same id (hosts re-import remote
+ * states while the user types). Under the read-only lock no editor opens.
  */
 
 import type Canvas from "diagram-js/lib/core/Canvas";
+import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
 import type EventBus from "diagram-js/lib/core/EventBus";
 import {
   isTtAnnotation,
@@ -17,6 +22,7 @@ import {
   type TtElement,
 } from "../model/di-types.js";
 import type TtModeling from "../modeling/TtModeling.js";
+import { READ_ONLY_CHANGED_EVENT, type TtReadOnly } from "../read-only/index.js";
 import { LINE_HEIGHT, labelLayout } from "../draw/label-layout.js";
 import { FONT } from "../draw/styles.js";
 
@@ -36,18 +42,33 @@ function editorName(element: TtElement): string {
 interface ActiveEdit {
   commit: () => void;
   cleanup: () => void;
+  /** The element and what was typed so far, to reopen the edit after an import. */
+  snapshot: () => SuspendedEdit;
+}
+
+interface SuspendedEdit {
+  elementId: string;
+  value: string;
+  selectionStart: number;
+  selectionEnd: number;
 }
 
 export default class TtLabelEditing {
-  static $inject = ["eventBus", "canvas", "ttModeling"];
+  static $inject = ["eventBus", "canvas", "ttModeling", "elementRegistry", "injector"];
 
   private active: ActiveEdit | null = null;
+  private suspended: SuspendedEdit | null = null;
+  private resumeTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly readOnly: TtReadOnly | null;
 
   constructor(
     eventBus: EventBus,
     private readonly canvas: Canvas,
     private readonly modeling: TtModeling,
+    private readonly elementRegistry: ElementRegistry,
+    injector: { get<T>(name: string, strict?: boolean): T | null },
   ) {
+    this.readOnly = injector.get<TtReadOnly>("ttReadOnly", false);
     eventBus.on("element.dblclick", (event: { element?: unknown }) => {
       if (isTtElement(event.element)) this.activate(event.element);
     });
@@ -55,12 +76,60 @@ export default class TtLabelEditing {
     eventBus.on(["element.mousedown", "drag.init", "canvas.viewbox.changing"], () =>
       this.active?.commit(),
     );
-    // A re-import replaces every element, so a pending edit has nothing left to apply to.
+    // An import that bypasses suspend() still must not apply a pending edit to a removed element.
     eventBus.on("import.render.start", () => this.cancel());
+    eventBus.on(READ_ONLY_CHANGED_EVENT, (event: { readOnly?: boolean }) => {
+      if (event.readOnly) this.cancel();
+    });
+    // Before the canvas tears down: a field still open would blur, commit onto the destroyed
+    // diagram and queue a focus on it.
+    eventBus.on("diagram.destroy", () => {
+      clearTimeout(this.resumeTimer);
+      this.suspended = null;
+      this.cancel();
+    });
   }
 
-  activate(element: TtElement): void {
+  /**
+   * Takes an open edit down WITHOUT committing it, for an import that replaces the diagram: its
+   * element is about to go, so a commit would land on a removed shape. `resumeAfterImport` brings
+   * the editor back with the typed text.
+   */
+  suspend(): void {
+    clearTimeout(this.resumeTimer);
+    if (!this.active) return;
+    this.suspended = this.active.snapshot();
+    this.active.cleanup();
+  }
+
+  /**
+   * Reopens a suspended edit on the element with the same id, if the imported diagram still has
+   * it. Deferred to the next task, after the host restored its viewbox around the import (a
+   * viewbox change commits an open editor).
+   */
+  resumeAfterImport(): void {
+    clearTimeout(this.resumeTimer);
+    if (!this.suspended) return;
+    this.resumeTimer = setTimeout(() => {
+      const edit = this.suspended;
+      this.suspended = null;
+      if (!edit || this.active) return;
+      const element = this.elementRegistry.get(edit.elementId);
+      if (!isTtElement(element)) return;
+      this.activate(element, edit);
+    }, 0);
+  }
+
+  /** The edit open right now (its element and the uncommitted text), for hosts and tests. */
+  openEdit(): { elementId: string; value: string } | undefined {
+    if (!this.active) return undefined;
+    const { elementId, value } = this.active.snapshot();
+    return { elementId, value };
+  }
+
+  activate(element: TtElement, resumed?: SuspendedEdit): void {
     this.active?.commit();
+    if (this.readOnly?.isReadOnly()) return;
 
     const layout = labelLayout(element);
     const centred = layout.align === "center";
@@ -74,7 +143,7 @@ export default class TtLabelEditing {
 
     const editor = document.createElement("textarea");
     editor.className = "tt-label-editor";
-    editor.value = element.ttLabel ?? "";
+    editor.value = resumed ? resumed.value : (element.ttLabel ?? "");
     editor.rows = 1;
     editor.setAttribute("aria-label", editorName(element));
     Object.assign(editor.style, {
@@ -101,7 +170,8 @@ export default class TtLabelEditing {
     this.canvas.addMarker(element, EDITING_MARKER);
     fitToContent();
     editor.focus();
-    editor.select();
+    if (resumed) editor.setSelectionRange(resumed.selectionStart, resumed.selectionEnd);
+    else editor.select();
 
     let done = false;
     const cleanup = () => {
@@ -111,8 +181,12 @@ export default class TtLabelEditing {
       editor.removeEventListener("input", fitToContent);
       editor.removeEventListener("blur", onBlur);
       editor.remove();
-      this.canvas.removeMarker(element, EDITING_MARKER);
+      if (this.elementRegistry.get(element.id) === element) {
+        this.canvas.removeMarker(element, EDITING_MARKER);
+      }
       this.active = null;
+      // Removing the focused field drops the focus to the page; the canvas takes it back.
+      this.canvas.restoreFocus();
     };
     const commit = () => {
       if (done) return;
@@ -138,7 +212,13 @@ export default class TtLabelEditing {
     editor.addEventListener("input", fitToContent);
     editor.addEventListener("blur", onBlur);
 
-    this.active = { commit, cleanup };
+    const snapshot = (): SuspendedEdit => ({
+      elementId: element.id,
+      value: editor.value,
+      selectionStart: editor.selectionStart,
+      selectionEnd: editor.selectionEnd,
+    });
+    this.active = { commit, cleanup, snapshot };
   }
 
   cancel(): void {

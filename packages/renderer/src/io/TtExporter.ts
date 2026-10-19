@@ -8,7 +8,15 @@
 import type Canvas from "diagram-js/lib/core/Canvas";
 import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
 import type { Root } from "diagram-js/lib/model/Types";
-import { DOCUMENT_VERSION } from "@miragon/team-topologies-schema-model";
+import {
+  ANNOTATION_FIELDS,
+  DOCUMENT_FIELDS,
+  DOCUMENT_VERSION,
+  FLOW_FIELDS,
+  INTERACTION_FIELDS,
+  TEAM_NODE_FIELDS,
+  withForeignFields,
+} from "@miragon/team-topologies-schema-model";
 import type {
   FlowShape,
   InteractionShape,
@@ -57,53 +65,81 @@ export default class TtExporter {
       const size = { width: geom.width, height: geom.height };
 
       if (isTtTeam(el)) {
-        nodes.push({
-          id: el.id,
-          type: el.teamType,
-          label: el.ttLabel ?? "",
-          position,
-          size,
-          ...(el.description ? { description: el.description } : {}),
-          ...(el.fill ? { fill: el.fill } : {}),
-          ...(el.stroke ? { stroke: el.stroke } : {}),
-        });
+        nodes.push(
+          withForeignFields(
+            {
+              id: el.id,
+              type: el.teamType,
+              label: el.ttLabel ?? "",
+              position,
+              size,
+              ...(el.description ? { description: el.description } : {}),
+              ...(el.fill ? { fill: el.fill } : {}),
+              ...(el.stroke ? { stroke: el.stroke } : {}),
+            },
+            el.ttForeign,
+            TEAM_NODE_FIELDS,
+          ),
+        );
       } else if (isTtInteraction(el)) {
-        interactions.push({
-          id: el.id,
-          mode: el.mode,
-          position,
-          size,
-          ...(el.ttLabel ? { label: el.ttLabel } : {}),
-          ...(el.fill ? { fill: el.fill } : {}),
-          ...(el.stroke ? { stroke: el.stroke } : {}),
-        });
+        interactions.push(
+          withForeignFields(
+            {
+              id: el.id,
+              mode: el.mode,
+              position,
+              size,
+              ...(el.ttLabel ? { label: el.ttLabel } : {}),
+              ...(el.fill ? { fill: el.fill } : {}),
+              ...(el.stroke ? { stroke: el.stroke } : {}),
+            },
+            el.ttForeign,
+            INTERACTION_FIELDS,
+          ),
+        );
       } else if (isTtFlow(el)) {
-        flows.push({
-          id: el.id,
-          position,
-          size,
-          ...(el.ttLabel ? { label: el.ttLabel } : {}),
-        });
+        flows.push(
+          withForeignFields(
+            {
+              id: el.id,
+              position,
+              size,
+              ...(el.ttLabel ? { label: el.ttLabel } : {}),
+            },
+            el.ttForeign,
+            FLOW_FIELDS,
+          ),
+        );
       } else if (isTtAnnotation(el)) {
         const attachedTo = attachedElementId(el);
-        annotations.push({
-          id: el.id,
-          text: el.ttLabel ?? "",
-          position,
-          size,
-          ...(attachedTo ? { attachedTo } : {}),
-        });
+        annotations.push(
+          withForeignFields(
+            {
+              id: el.id,
+              text: el.ttLabel ?? "",
+              position,
+              size,
+              ...(attachedTo ? { attachedTo } : {}),
+            },
+            el.ttForeign,
+            ANNOTATION_FIELDS,
+          ),
+        );
       }
     }
 
-    return {
-      version: DOCUMENT_VERSION,
-      title: meta?.title ?? "Untitled team topology",
-      nodes,
-      interactions,
-      flows,
-      annotations,
-    };
+    return withForeignFields(
+      {
+        version: DOCUMENT_VERSION,
+        title: meta?.title ?? "Untitled team topology",
+        nodes,
+        interactions,
+        flows,
+        annotations,
+      },
+      meta?.foreign,
+      DOCUMENT_FIELDS,
+    );
   }
 }
 

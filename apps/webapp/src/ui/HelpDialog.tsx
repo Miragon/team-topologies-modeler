@@ -85,10 +85,10 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
         action: "Pan the canvas",
       },
       { inputs: [gesture("scroll", MOD), gesture("pinch")], action: "Zoom" },
-      { inputs: [keys("+")], action: "Zoom in" },
-      { inputs: [keys("-")], action: "Zoom out" },
+      { inputs: [keys(MOD, "+")], action: "Zoom in" },
+      { inputs: [keys(MOD, "−")], action: "Zoom out" },
       { inputs: [keys(SHIFT, "1")], action: "Fit the diagram to the window" },
-      { inputs: [keys(SHIFT, "0")], action: "Zoom to 100%" },
+      { inputs: [keys(MOD, "0")], action: "Zoom to 100%" },
     ],
   },
   {

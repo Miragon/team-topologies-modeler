@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Modeler } from "@miragon/team-topologies-renderer";
+import { Modeler, type TtModeling } from "@miragon/team-topologies-renderer";
 import { useModelerSelection } from "@miragon/team-topologies-ui";
 import { saveToStorage } from "./persistence";
 import { writeDocumentToLocation } from "@/io/url";
@@ -60,6 +60,8 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
 
     const onCommandStack = () => {
       syncHistory();
+      // The title is undoable like any other change.
+      syncTitle();
       persist();
     };
     const onImport = () => {
@@ -95,9 +97,7 @@ export function ModelerProvider({ children }: { children: ReactNode }) {
   }, [modeler]);
 
   const setTitle = (next: string) => {
-    modeler.setMeta({ title: next });
-    setTitleState(next);
-    persist();
+    modeler.get<TtModeling>("ttModeling").setTitle(next);
   };
 
   useEffect(() => {

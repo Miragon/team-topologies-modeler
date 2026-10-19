@@ -13,8 +13,11 @@ import {
 import type { InteractionMode, TeamType } from "@miragon/team-topologies-schema-model";
 import { ICON_SQUARE_DASHED_MOUSE_POINTER, iconMarkup } from "./icons.js";
 
-/** The lasso is a tool, not notation, so it is a Lucide icon sized to sit beside the previews. */
-const LASSO_ICON_SIZE = 20;
+/**
+ * The lasso is a tool, not notation: a Lucide icon at the guide's tool size (§5.14, 20px with a
+ * stroke of 2, which renders as heavy as the 16px chrome icons).
+ */
+const PALETTE_TOOL_ICON = { size: 20, strokeWidth: 2 } as const;
 
 function svg(inner: string): string {
   return `<svg class="tt-palette-svg" width="24" height="24" viewBox="0 0 26 26" aria-hidden="true">${inner}</svg>`;
@@ -57,7 +60,7 @@ export function annotationIconSvg(): string {
 /** The lasso (multi-select) tool: Lucide square-dashed-mouse-pointer. */
 export function lassoIconSvg(): string {
   return iconMarkup(ICON_SQUARE_DASHED_MOUSE_POINTER, {
-    size: LASSO_ICON_SIZE,
+    ...PALETTE_TOOL_ICON,
     className: "tt-palette-svg",
   });
 }

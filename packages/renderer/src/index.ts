@@ -12,7 +12,19 @@ export { Viewer } from "./Viewer.js";
 export { NavigatedViewer } from "./NavigatedViewer.js";
 export { Modeler } from "./Modeler.js";
 export { TtBaseViewer } from "./TtBaseViewer.js";
-export type { TtViewerOptions, EventCallback } from "./TtBaseViewer.js";
+export type { TtViewerOptions, ImportOptions, EventCallback } from "./TtBaseViewer.js";
+
+// The collaborative-modeler contract of @miragon/modeler-api
+export {
+  TEAM_TOPOLOGIES_NOTATION,
+  createCollaborativeModeler,
+  createCollaborativeViewer,
+  parseDocumentText,
+} from "./collaborative/index.js";
+export type {
+  CollaborativeTeamTopologiesModeler,
+  CollaborativeTeamTopologiesOptions,
+} from "./collaborative/index.js";
 
 // Modules (for additionalModules / extension) + their services
 export { ttModelModule, TtElementFactory } from "./model/index.js";
@@ -26,9 +38,12 @@ export {
   TtAssociationBehavior,
 } from "./behaviors/index.js";
 export { ttPaletteModule, TtPaletteProvider } from "./palette/index.js";
+export type { TtPaletteConfig, Point } from "./palette/TtPaletteProvider.js";
 export { ttContextPadModule, TtContextPadProvider } from "./context-pad/index.js";
 export { ttLabelEditingModule, TtLabelEditing } from "./label-editing/index.js";
 export { ttKeyboardModule, TtKeyboard } from "./keyboard/index.js";
+export type { TtKeyboardConfig } from "./keyboard/index.js";
+export { ttReadOnlyModule, TtReadOnly, READ_ONLY_CHANGED_EVENT } from "./read-only/index.js";
 export { ttZOrderModule, TtZOrder } from "./zorder/index.js";
 
 // Runtime types & guards
@@ -57,7 +72,7 @@ export type { GeistFontDataUrls } from "./io/index.js";
 // Miragon design tokens (pure data) — for host code that paints outside CSS, e.g. canvas exports.
 export { MIRAGON, CD_TOKENS } from "./theme/index.js";
 
-// Functional icons as SVG markup — for host chrome that has no icon library (the VS Code webview).
+// Functional icons as SVG markup (context pad, palette tools).
 export * from "./draw/icons.js";
 
 // Palette glyphs — reusable for host chrome (e.g. the legend).

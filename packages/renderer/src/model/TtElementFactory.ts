@@ -8,10 +8,16 @@
 import type ElementFactory from "diagram-js/lib/core/ElementFactory";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
 import {
+  ANNOTATION_FIELDS,
   ANNOTATION_SPEC,
+  FLOW_FIELDS,
   FLOW_SPEC,
+  INTERACTION_FIELDS,
   INTERACTION_MODE_SPECS,
+  TEAM_NODE_FIELDS,
   TEAM_TYPE_SPECS,
+  associationId,
+  foreignFields,
   newId,
 } from "@miragon/team-topologies-schema-model";
 import type {
@@ -36,6 +42,12 @@ export default class TtElementFactory {
 
   constructor(private readonly elementFactory: ElementFactory) {}
 
+  /** A field the modeler does not know rides along on the shape, so the export writes it back. */
+  private foreign(source: object, knownFields: readonly string[]): { ttForeign?: object } {
+    const ttForeign = foreignFields(source, knownFields);
+    return ttForeign ? { ttForeign } : {};
+  }
+
   // --- from canonical document elements (import) -------------------------
 
   createTeam(node: TeamNode): TtTeam {
@@ -51,6 +63,7 @@ export default class TtElementFactory {
       ...(node.description ? { description: node.description } : {}),
       ...(node.fill ? { fill: node.fill } : {}),
       ...(node.stroke ? { stroke: node.stroke } : {}),
+      ...this.foreign(node, TEAM_NODE_FIELDS),
     } as Partial<TtTeam>) as unknown as TtTeam;
   }
 
@@ -66,6 +79,7 @@ export default class TtElementFactory {
       ...(shape.label ? { ttLabel: shape.label } : {}),
       ...(shape.fill ? { fill: shape.fill } : {}),
       ...(shape.stroke ? { stroke: shape.stroke } : {}),
+      ...this.foreign(shape, INTERACTION_FIELDS),
     } as Partial<TtInteraction>) as unknown as TtInteraction;
   }
 
@@ -78,6 +92,7 @@ export default class TtElementFactory {
       height: shape.size.height,
       ttKind: "flow",
       ...(shape.label ? { ttLabel: shape.label } : {}),
+      ...this.foreign(shape, FLOW_FIELDS),
     } as Partial<TtFlow>) as unknown as TtFlow;
   }
 
@@ -90,6 +105,7 @@ export default class TtElementFactory {
       height: annotation.size.height,
       ttKind: "annotation",
       ...(annotation.text ? { ttLabel: annotation.text } : {}),
+      ...this.foreign(annotation, ANNOTATION_FIELDS),
     } as Partial<TtAnnotation>) as unknown as TtAnnotation;
   }
 
@@ -100,7 +116,7 @@ export default class TtElementFactory {
    */
   createAssociation(annotation: TtAnnotation, target: TtElement): TtAssociation {
     return this.elementFactory.createConnection({
-      id: `assoc_${annotation.id}`,
+      id: associationId(annotation.id),
       ttKind: "association",
       source: annotation,
       target,

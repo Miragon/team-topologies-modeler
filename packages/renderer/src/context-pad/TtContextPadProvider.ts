@@ -6,9 +6,12 @@
  * Entries are focusable buttons; Enter or Space runs their keyboard action.
  * Connecting has none, because it is a pointer gesture that needs a drop target,
  * so Tab skips it. "Add annotation" on the element attaches one by keyboard.
+ *
+ * Every entry changes the diagram, so under the read-only lock there is no context pad at all.
  */
 
 import type Canvas from "diagram-js/lib/core/Canvas";
+import type EventBus from "diagram-js/lib/core/EventBus";
 import type ContextPad from "diagram-js/lib/features/context-pad/ContextPad";
 import type Modeling from "diagram-js/lib/features/modeling/Modeling";
 import type Connect from "diagram-js/lib/features/connect/Connect";
@@ -29,6 +32,7 @@ import {
 } from "../model/di-types.js";
 import type TtLabelEditing from "../label-editing/TtLabelEditing.js";
 import type TtModeling from "../modeling/TtModeling.js";
+import { READ_ONLY_CHANGED_EVENT, type TtReadOnly } from "../read-only/index.js";
 import {
   ICON_LINK,
   ICON_MESSAGE_SQUARE_PLUS,
@@ -59,7 +63,11 @@ export default class TtContextPadProvider implements ContextPadProvider {
     "connect",
     "selection",
     "canvas",
+    "eventBus",
+    "injector",
   ];
+
+  private readonly readOnly: TtReadOnly | null;
 
   constructor(
     private readonly contextPad: ContextPad,
@@ -69,14 +77,22 @@ export default class TtContextPadProvider implements ContextPadProvider {
     private readonly connect: Connect,
     private readonly selection: Selection,
     private readonly canvas: Canvas,
+    eventBus: EventBus,
+    injector: { get<T>(name: string, strict?: boolean): T | null },
   ) {
+    this.readOnly = injector.get<TtReadOnly>("ttReadOnly", false);
     contextPad.registerProvider(this);
+    eventBus.on("contextPad.open.allowed", () => (this.readOnly?.isReadOnly() ? false : undefined));
+    eventBus.on(READ_ONLY_CHANGED_EVENT, (event: { readOnly?: boolean }) => {
+      if (event.readOnly) contextPad.close();
+    });
     canvas
       .getContainer()
       .addEventListener("keydown", (keyboardEvent) => this.onEntryKeyDown(keyboardEvent));
   }
 
   getContextPadEntries(element: Element): ContextPadEntries {
+    if (this.readOnly?.isReadOnly()) return {};
     if (isTtAssociation(element))
       return { delete: this.deleteEntry([element], "Delete connector") };
     if (!isTtElement(element)) return {};
@@ -113,6 +129,7 @@ export default class TtContextPadProvider implements ContextPadProvider {
   }
 
   getMultiElementContextPadEntries(elements: Element[]): ContextPadEntries {
+    if (this.readOnly?.isReadOnly()) return {};
     return { delete: this.deleteEntry(elements, `Delete ${elements.length} elements`) };
   }
 

@@ -1,17 +1,18 @@
 /**
- * Keyboard shortcuts: undo / redo / select all / delete-selection / copy /
- * paste / nudge the selection with the arrow keys / clear the selection
- * (Escape) / zoom in and out (+, -) / fit to view (Shift+1) / 100 % (Shift+0).
+ * Keyboard shortcuts of the canvas: undo / redo / select all / delete-selection / copy / paste /
+ * nudge the selection with the arrow keys / clear the selection (Escape).
  *
- * Bound to the document so they work right after a click on the canvas, but
- * they only act when the key press targets the page itself or the canvas
- * (diagram-js focuses its SVG on mouse-down). Key presses in host chrome, open
- * dialogs, form fields and the inline label editor stay with those controls,
- * and an `inert` canvas takes no keys at all. The zoom keys take no Ctrl/Cmd,
- * so the browser's own page zoom stays intact.
+ * Bound to the document so they work right after a click on the canvas, but they only act when the
+ * key press targets the page itself or the canvas (diagram-js focuses its SVG on mouse-down). Key
+ * presses in host chrome, open dialogs, form fields and the inline label editor stay with those
+ * controls, a key a closer listener already handled (`defaultPrevented`) is left alone, and an
+ * `inert` canvas takes no keys at all.
+ *
+ * Zoom and fit keys are the host chrome's (guide §5.8: only Cmd/Ctrl + `+` `-` `0` and Shift+1,
+ * each acting exactly once), so the canvas binds none. A host that owns the history (the VS Code
+ * document) turns the undo and redo keys off with `undoRedoKeys: false`, so they reach it.
  */
 
-import type { Injector } from "didi";
 import type Canvas from "diagram-js/lib/core/Canvas";
 import type EventBus from "diagram-js/lib/core/EventBus";
 import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
@@ -21,14 +22,12 @@ import type Modeling from "diagram-js/lib/features/modeling/Modeling";
 import type CopyPaste from "diagram-js/lib/features/copy-paste/CopyPaste";
 import type Dragging from "diagram-js/lib/features/dragging/Dragging";
 import type Rules from "diagram-js/lib/features/rules/Rules";
-import type ZoomScroll from "diagram-js/lib/navigation/zoomscroll/ZoomScroll";
+import type { Injector } from "didi";
 import type { Element, Shape } from "diagram-js/lib/model/Types";
-import type TtViewport from "../io/TtViewport.js";
+import type TtReadOnly from "../read-only/TtReadOnly.js";
 
 const NUDGE_STEP = 1;
 const NUDGE_STEP_FAST = 10;
-/** Zoom factor per key press when diagram-js zoomScroll (with its stepped levels) is absent. */
-const FALLBACK_ZOOM_FACTOR = 1.2;
 
 const ARROW_DIRECTIONS: Record<string, { x: number; y: number }> = {
   ArrowLeft: { x: -1, y: 0 },
@@ -38,6 +37,14 @@ const ARROW_DIRECTIONS: Record<string, { x: number; y: number }> = {
 };
 
 const MODAL_SELECTOR = '[aria-modal="true"], dialog[open]';
+
+export interface TtKeyboardConfig {
+  /**
+   * Bind Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z and Cmd/Ctrl+Y to the canvas command stack (default true).
+   * A host that owns the history (the VS Code document) passes false so the keys reach it.
+   */
+  undoRedoKeys?: boolean | undefined;
+}
 
 function isTypingTarget(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
@@ -70,6 +77,7 @@ function isShape(element: Element): element is Shape {
 
 export default class TtKeyboard {
   static $inject = [
+    "config.ttKeyboard",
     "eventBus",
     "canvas",
     "elementRegistry",
@@ -82,6 +90,7 @@ export default class TtKeyboard {
   ];
 
   constructor(
+    config: TtKeyboardConfig | undefined,
     eventBus: EventBus,
     canvas: Canvas,
     elementRegistry: ElementRegistry,
@@ -94,76 +103,65 @@ export default class TtKeyboard {
   ) {
     const container = canvas.getContainer();
     const doc = container.ownerDocument ?? document;
-    const zoomScroll = injector.get<ZoomScroll>("zoomScroll", false);
-    const viewport = injector.get<TtViewport>("ttViewport", false);
+    const undoRedoKeys = config?.undoRedoKeys ?? true;
     const dragging = injector.get<Dragging>("dragging", false);
+    const readOnly = injector.get<TtReadOnly>("ttReadOnly", false);
 
-    const stepZoom = (direction: 1 | -1) => {
-      if (zoomScroll) zoomScroll.stepZoom(direction);
-      else canvas.zoom(canvas.zoom() * FALLBACK_ZOOM_FACTOR ** direction);
+    /** Keys that only read the diagram; they stay under the read-only lock. */
+    const handleReadingKey = (e: KeyboardEvent, cmd: boolean, key: string): boolean => {
+      if (cmd && key === "a" && !e.shiftKey) {
+        e.preventDefault();
+        selection.select(elementRegistry.filter((element) => Boolean(element.parent)));
+      } else if (cmd && key === "c" && !e.shiftKey) {
+        const sel = selection.get() as Element[];
+        if (!sel.length) return true;
+        e.preventDefault();
+        copyPaste.copy(sel);
+      } else if (!cmd && key === "escape") {
+        if (dragging?.context() || !selection.get().length) return true;
+        e.preventDefault();
+        selection.select(null);
+      } else {
+        return false;
+      }
+      return true;
     };
 
-    const fitToView = () => {
-      if (viewport) viewport.fit();
-      else canvas.zoom("fit-viewport");
-    };
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || isTypingTarget(e.target)) return;
-      if (!isCanvasScope(e.target, container) || doc.querySelector(MODAL_SELECTOR)) return;
-      const cmd = e.ctrlKey || e.metaKey;
-      const key = e.key.toLowerCase();
-
-      if (cmd && key === "z" && !e.shiftKey) {
+    const handleEditingKey = (e: KeyboardEvent, cmd: boolean, key: string): void => {
+      const undo = cmd && key === "z" && !e.shiftKey;
+      const redo = (cmd && key === "z" && e.shiftKey) || (cmd && key === "y" && !e.shiftKey);
+      if (undo || redo) {
+        if (!undoRedoKeys) return;
         e.preventDefault();
-        if (commandStack.canUndo()) commandStack.undo();
-      } else if ((cmd && key === "z" && e.shiftKey) || (cmd && key === "y")) {
-        e.preventDefault();
-        if (commandStack.canRedo()) commandStack.redo();
+        if (undo && commandStack.canUndo()) commandStack.undo();
+        if (redo && commandStack.canRedo()) commandStack.redo();
       } else if (key === "delete" || key === "backspace") {
         const sel = selection.get() as Element[];
         if (sel.length) {
           e.preventDefault();
           modeling.removeElements([...sel]);
         }
-      } else if (cmd && key === "c") {
-        const sel = selection.get() as Element[];
-        if (sel.length) {
-          e.preventDefault();
-          copyPaste.copy(sel);
-        }
-      } else if (cmd && key === "v") {
+      } else if (cmd && key === "v" && !e.shiftKey) {
         e.preventDefault();
         copyPaste.paste();
-      } else if (cmd && key === "a") {
-        e.preventDefault();
-        selection.select(elementRegistry.filter((element) => Boolean(element.parent)));
-      } else if (cmd || e.altKey) {
-        return;
-      } else if (key === "escape") {
-        if (dragging?.context() || !selection.get().length) return;
-        e.preventDefault();
-        selection.select(null);
-      } else if (e.shiftKey && e.code === "Digit1") {
-        e.preventDefault();
-        fitToView();
-      } else if (e.shiftKey && e.code === "Digit0") {
-        e.preventDefault();
-        canvas.zoom(1);
-      } else if (key === "+" || key === "=") {
-        e.preventDefault();
-        stepZoom(1);
-      } else if (key === "-") {
-        e.preventDefault();
-        stepZoom(-1);
-      } else if (Object.hasOwn(ARROW_DIRECTIONS, e.key)) {
+      } else if (!cmd && Object.hasOwn(ARROW_DIRECTIONS, e.key)) {
         const shapes = (selection.get() as Element[]).filter(isShape);
         if (!shapes.length || !rules.allowed("elements.move", { shapes })) return;
         e.preventDefault();
-        const direction = ARROW_DIRECTIONS[e.key];
+        const direction = ARROW_DIRECTIONS[e.key]!;
         const step = e.shiftKey ? NUDGE_STEP_FAST : NUDGE_STEP;
         modeling.moveElements(shapes, { x: direction.x * step, y: direction.y * step });
       }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.altKey || e.isComposing || isTypingTarget(e.target)) return;
+      if (!isCanvasScope(e.target, container) || doc.querySelector(MODAL_SELECTOR)) return;
+      const cmd = e.ctrlKey || e.metaKey;
+      const key = e.key.toLowerCase();
+      if (handleReadingKey(e, cmd, key)) return;
+      if (readOnly?.isReadOnly()) return;
+      handleEditingKey(e, cmd, key);
     };
 
     doc.addEventListener("keydown", onKeyDown);

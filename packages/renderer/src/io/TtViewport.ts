@@ -1,6 +1,9 @@
 /**
  * Fits the diagram into the visible canvas. Unlike diagram-js `fit-viewport`, it keeps the
  * strip under the floating palette free, so no element starts hidden behind it.
+ *
+ * @deprecated Host chrome fits the diagram (the modeler shell's viewport, with the insets of the
+ * chrome that is open and never above 100 %); kept for hosts without it.
  */
 
 import type Canvas from "diagram-js/lib/core/Canvas";

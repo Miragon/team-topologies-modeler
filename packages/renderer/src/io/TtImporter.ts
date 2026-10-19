@@ -11,7 +11,11 @@ import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
 import type EventBus from "diagram-js/lib/core/EventBus";
 import type ConnectionDocking from "diagram-js/lib/layout/ConnectionDocking";
 import type { Root } from "diagram-js/lib/model/Types";
-import type { TtDocument } from "@miragon/team-topologies-schema-model";
+import {
+  DOCUMENT_FIELDS,
+  foreignFields,
+  type TtDocument,
+} from "@miragon/team-topologies-schema-model";
 import { isTtAnnotation, isTtElement, type TtAnnotation } from "../model/di-types.js";
 import type TtElementFactory from "../model/TtElementFactory.js";
 import { ROOT_ID, type ImportWarning, type RootBusinessObject } from "./types.js";
@@ -54,7 +58,8 @@ export default class TtImporter {
       root = this.elementFactory.createRoot({ id: ROOT_ID }) as RootWithMeta;
       this.canvas.setRootElement(root);
     }
-    root.businessObject = { title: doc.title };
+    const foreign = foreignFields(doc, DOCUMENT_FIELDS);
+    root.businessObject = { title: doc.title, ...(foreign ? { foreign } : {}) };
 
     // Back → front: flows, teams, interactions, annotations.
     for (const flow of doc.flows) {
@@ -89,9 +94,12 @@ export default class TtImporter {
     return warnings;
   }
 
-  /** Removes every element (for re-import). */
+  /**
+   * Removes every element (for re-import). Roots stay: besides the diagram's own root, diagram-js
+   * creates an implicit one when something asks for a root before the first import.
+   */
   clear(): void {
-    const elements = this.elementRegistry.getAll().filter((el) => el.id !== ROOT_ID);
+    const elements = this.elementRegistry.getAll().filter((el) => Boolean(el.parent));
     const connections = elements.filter((el) => "waypoints" in el);
     const shapes = elements.filter((el) => !("waypoints" in el));
     for (const connection of connections) this.canvas.removeConnection(connection.id);
