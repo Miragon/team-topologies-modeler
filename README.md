@@ -46,16 +46,18 @@ is distinguished by shape as well as colour, so diagrams stay readable with colo
   canvas, palette, inspector, PNG/SVG export and a shareable, self-contained URL (LZ-compressed, no
   backend). Deployed on Netlify.
 - **VS Code extension** ([`apps/vscode`](apps/vscode/README.md)) — a custom editor for `.tt` /
-  `.ttm.json` files with the same inspector and legend as the web app: the JSON file stays the
-  source of truth (save, Git and diff keep working), and editable embedded-PNG diagrams (`*.tt.png`)
-  let you drop a diagram into a wiki or README and still edit it graphically.
+  `.ttm.json` files with the same inspector and legend as the web app, inside the shared chrome of
+  the Miragon modelers ([`@miragon/modeler-shell`](https://www.npmjs.com/package/@miragon/modeler-shell)):
+  the JSON file stays the source of truth (save, Git, diff and undo keep working), its problems show
+  in the Problems view, and editable embedded-PNG diagrams (`*.tt.png`) let you drop a diagram into a
+  wiki or README and still edit it graphically.
 
 Both targets share two published packages:
 
-| Package                                                                    | Purpose                                                                          | DOM |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --- |
-| [`@miragon/team-topologies-schema-model`](packages/schema-model/README.md) | Types, the notation spec, Zod validation, migrations, deterministic JSON         | no  |
-| [`@miragon/team-topologies-renderer`](packages/renderer/README.md)         | diagram-js viewer/modeler, custom rendering, palette, context pad, import/export | yes |
+| Package                                                                    | Purpose                                                                                                               | DOM |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --- |
+| [`@miragon/team-topologies-schema-model`](packages/schema-model/README.md) | Types, the notation spec, Zod validation, migrations, deterministic JSON                                              | no  |
+| [`@miragon/team-topologies-renderer`](packages/renderer/README.md)         | diagram-js viewer/modeler, custom rendering, palette, context pad, import/export, the `@miragon/modeler-api` contract | yes |
 
 ## Getting started
 
@@ -80,12 +82,14 @@ packages/
                                             deterministic JSON, migrations, factory, the example.
   renderer/      @miragon/team-topologies-renderer     — diagram-js bootstrap: viewer/modeler, renderer, palette,
                                             context-pad, label editing, import/export, CSS.
-  ui/            @miragon/team-topologies-ui           — private: the React inspector and legend shared by
-                                            the webapp and the VS Code webview.
+  ui/            @miragon/team-topologies-ui           — private: what the modeler puts into the chrome (the
+                                            React inspector, legend rows, shortcuts dialog, menu
+                                            entries), shared by the webapp and the VS Code webview.
 apps/
   webapp/        @miragon/team-topologies-webapp       — Vite + React editor application.
   vscode/        team-topologies-modeler  — VS Code custom editor for .tt / .ttm.json.
-e2e/                                       — Playwright end-to-end tests for the webapp.
+e2e/                                       — Playwright end-to-end tests: the webapp, and the VS Code
+                                            webview inside the modeler shell's VS Code stub.
 ```
 
 The `schema-model` package compiles **without the DOM lib**, so a stray browser import fails

@@ -16,12 +16,23 @@ plugin is installed; otherwise read the guide directly:
 Install the plugin with `/plugin marketplace add Miragon/corporate-identity` +
 `/plugin install miragon-brand@miragon`.
 
-The brand tokens are **vendored** from that skill as
-[`packages/renderer/src/theme/cd-tokens.generated.css`](packages/renderer/src/theme/cd-tokens.generated.css)
-— do **not** fork the hex values; re-copy the file from the skill to update. The pure-TS mirror in
-[`packages/renderer/src/theme/palette.ts`](packages/renderer/src/theme/palette.ts) is the single
-source for canvas colours; a drift test (`packages/renderer/src/theme/theme.sync.test.ts`) fails if the
-two diverge. The four Team Topologies team-type / interaction colours in
+The design system **1.13.0** is **vendored** from that skill, byte-identical:
+[`packages/renderer/src/theme/cd-tokens.generated.css`](packages/renderer/src/theme/cd-tokens.generated.css),
+`cd-tokens.generated.json` and `cd-canvas.css` — do **not** fork or reformat them; re-copy all three
+from the skill to update and update their hashes in the drift test
+(`packages/renderer/src/theme/theme.sync.test.ts`), which also checks that
+[`palette.ts`](packages/renderer/src/theme/palette.ts) (the pure-TS mirror for canvas colours) and the
+vendored files agree and that `team-topologies.css` reads only `--cd-ui-*` roles.
+`apps/vscode/src/tokens.sync.test.ts` pins the shell's sizes (`SHELL`) to the JSON's `shell` group.
+
+**Chrome:** the VS Code webview runs on [`@miragon/modeler-shell`](https://www.npmjs.com/package/@miragon/modeler-shell)
+(IDE host): menu, palette skin, zoom panel and keys, fit, problems pill, status box, empty-file hint,
+legend and inspector slots, theme bridge (`themes: ["light"]` until the shared dark mode). The
+renderer implements the canvas rules it asks for (keyboard creation, the `ttReadOnly` lock, no zoom
+keys, `undoRedoKeys: false` in VS Code) and the `@miragon/modeler-api` contract
+(`createCollaborativeModeler`, its conformance kit in `npm run test:browser`). The shell's own
+conformance kit runs in the e2e project `vscode-webview`. The web app moves onto the shell's web
+host next. The four Team Topologies team-type / interaction colours in
 [`packages/schema-model/src/notation.ts`](packages/schema-model/src/notation.ts) are the **official
 notation** (Team-Shape-Templates) and are serialized into documents — they stay as-is; the CI applies
 to everything else (chrome, typography, accent/selection, neutrals, the app icon).
@@ -38,7 +49,7 @@ sets `save-exact=true`) — including internal `@miragon/team-topologies-*` deps
 | --------------------------------------- | ------------------------------------------------------------------------ | --- |
 | `@miragon/team-topologies-schema-model` | Types, the notation spec, Zod validation, migrations, JSON serialization | no  |
 | `@miragon/team-topologies-renderer`     | diagram-js bootstrap, renderer, viewer/modeler, import/export, CSS       | yes |
-| `@miragon/team-topologies-ui` (private) | shared React chrome (Inspector, Legend) for webapp and VS Code webview   | yes |
+| `@miragon/team-topologies-ui` (private) | chrome content (inspector, legend rows, shortcuts dialog, menu entries)  | yes |
 | `apps/webapp`                           | Vite + React demo editor                                                 | yes |
 | `apps/vscode`                           | VS Code extension: custom editor for `.tt`/`.ttm.json`                   | yes |
 
@@ -47,10 +58,13 @@ libraries (`tiny-svg`, `min-dom`) or use the DOM (`window`/`document`). Enforced
 (`no-restricted-imports`/`no-restricted-globals`) **and** `dependency-cruiser` — so a violating import
 fails `npm run lint` and `npm run depcruise`.
 
-The `ui` package is consumed from source only (no build, not published). It takes the modeler and
-host state as props, ships its styles as `@miragon/team-topologies-ui/ui.css` (token aliases, buttons,
-fields, focus, motion, inspector, legend), and must never import from `apps/**`; `schema-model` and
-`renderer` must never import it (both enforced by `dependency-cruiser`).
+The `ui` package is consumed from source only (no build, not published). It holds what the modeler
+puts into a host's chrome — the inspector (mounted into the shell's inspector slot, or the web app's
+own panel), the legend rows, the "Keyboard shortcuts…" dialog and the menu entries — ships its styles
+as `@miragon/team-topologies-ui/ui.css` (role aliases, buttons, fields, the content of inspector,
+legend and dialog; where they sit is the host's), and must never import from `apps/**`;
+`schema-model` and `renderer` must never import it, nor `@miragon/modeler-shell` (all enforced by
+`dependency-cruiser`; `schema-model` takes only types from `@miragon/modeler-api`).
 
 ## Commands
 
@@ -61,7 +75,9 @@ fields, focus, motion, inspector, legend), and must never import from `apps/**`;
   from the git worktree; config in [`apps/webapp/portless.json`](apps/webapp/portless.json); needs
   Node ≥ 24 + a one-time `npx portless service install` — see [`CONTRIBUTING.md`](CONTRIBUTING.md)).
   `npm run dev:webapp:plain` for plain Vite on `:5181`. · `npm run dev:vscode`
-- `npm test` — Vitest (unit) · `npm run test:browser` — renderer in Chromium · `npm run test:e2e`
+- `npm test` — Vitest (unit) · `npm run test:browser` — renderer and the contract kit in Chromium ·
+  `npm run test:e2e` — Playwright, projects `webapp` and `vscode-webview` (ports `E2E_PORT`,
+  `E2E_WEBVIEW_PORT`)
 - `npm run typecheck` · `npm run lint` (ESLint + typecheck)
 - `npm run format` — Prettier · `npm run depcruise` — check the module graph
 
