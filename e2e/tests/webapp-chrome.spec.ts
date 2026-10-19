@@ -30,6 +30,7 @@ import {
 const APP_NAME = "Miragon Modeler for Team Topologies";
 const SAMPLE_TITLE = sampleDocument().title;
 const AUTOSAVE_KEY = "tt-modeler:document:v1";
+const PREVIOUS_KEY = `${AUTOSAVE_KEY}:previous`;
 
 function fileInput(page: Page) {
   return page.locator('body > input[type="file"]');
@@ -106,11 +107,15 @@ async function canonicalDocument(page: Page): Promise<TtDoc> {
   };
 }
 
-function storedTitle(page: Page): Promise<string | undefined> {
-  return page.evaluate((key) => {
-    const raw = localStorage.getItem(key);
+function storedTitle(page: Page, key = AUTOSAVE_KEY): Promise<string | undefined> {
+  return page.evaluate((slot) => {
+    const raw = localStorage.getItem(slot);
     return raw ? (JSON.parse(raw) as { title: string }).title : undefined;
-  }, AUTOSAVE_KEY);
+  }, key);
+}
+
+function previousTitle(page: Page): Promise<string | undefined> {
+  return storedTitle(page, PREVIOUS_KEY);
 }
 
 test.describe("webapp: the shell web chrome and the app behind it", () => {
@@ -492,6 +497,52 @@ test.describe("webapp: the shell web chrome and the app behind it", () => {
     await expect.poll(async () => (await exportDocument(visit)).title).toBe("Own diagram");
   });
 
+  test("the first edit of a shared diagram keeps the own one, which the menu restores", async ({
+    page,
+    context,
+  }) => {
+    await gotoApp(page);
+    await loadExample(page);
+    await renameDiagram(page, "Own diagram");
+    await expect.poll(() => storedTitle(page)).toBe("Own diagram");
+
+    const visit = await context.newPage();
+    await gotoApp(visit, diagramLink({ ...sampleDocument(), title: "Colleague" }));
+    await addTeamByKeyboard(visit);
+
+    await expect(toast(visit, "Diagram replaced")).toBeHidden();
+    await expect.poll(() => storedTitle(visit)).toBe("Colleague");
+    expect(await previousTitle(visit)).toBe("Own diagram");
+
+    // The copy outlives the tab: a later visit still offers it.
+    await visit.close();
+    const later = await context.newPage();
+    await gotoApp(later, "/");
+    expect((await exportDocument(later)).title).toBe("Colleague");
+    expect(await menuLayout(later)).toEqual([
+      "new-diagram",
+      "open",
+      "show-example",
+      "|",
+      "restore-previous",
+      "diagram-title",
+      "legend",
+      "|",
+      "export-png",
+      "export-svg",
+      "export-json",
+      "|",
+      "keyboard-shortcuts",
+    ]);
+    await later.keyboard.press("Escape");
+
+    await chooseMenuEntry(later, "restore-previous");
+    await expect.poll(async () => (await exportDocument(later)).title).toBe("Own diagram");
+    await expect(toast(later, "Diagram replaced")).toBeVisible();
+    await expect.poll(() => storedTitle(later)).toBe("Own diagram");
+    expect(await previousTitle(later)).toBe("Colleague");
+  });
+
   test("a link pasted into the open tab replaces the diagram the same way", async ({ page }) => {
     await gotoApp(page);
     await loadExample(page);
@@ -510,5 +561,23 @@ test.describe("webapp: the shell web chrome and the app behind it", () => {
 
     await addTeamByKeyboard(page);
     await expect.poll(() => storedTitle(page)).toBe("Shared diagram");
+    expect(await previousTitle(page)).toBe("Own diagram");
+  });
+
+  test("a replaced diagram stays restorable after the edit, and restoring swaps the two", async ({
+    page,
+  }) => {
+    await gotoApp(page);
+    await loadExample(page);
+    expect(await menuLayout(page)).not.toContain("restore-previous");
+    await page.keyboard.press("Escape");
+
+    await chooseMenuEntry(page, "new-diagram");
+    await addTeamByKeyboard(page);
+
+    await expect.poll(() => previousTitle(page)).toBe(SAMPLE_TITLE);
+    await chooseMenuEntry(page, "restore-previous");
+    await expect.poll(async () => (await exportDocument(page)).title).toBe(SAMPLE_TITLE);
+    await expect.poll(() => previousTitle(page)).toBe("Untitled team topology");
   });
 });

@@ -1,6 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { SAMPLE_DOCUMENT, serializeDocument } from "@miragon/team-topologies-schema-model";
-import { loadFromStorage, readLegendOpen, saveToStorage, writeLegendOpen } from "./persistence";
+import {
+  SAMPLE_DOCUMENT,
+  emptyDocument,
+  serializeDocument,
+  type TtDocument,
+} from "@miragon/team-topologies-schema-model";
+import {
+  autosave,
+  loadFromStorage,
+  loadPrevious,
+  readLegendOpen,
+  saveToStorage,
+  writeLegendOpen,
+} from "./persistence";
+
+const OWN_DIAGRAM: TtDocument = { ...SAMPLE_DOCUMENT, title: "Own diagram" };
+const SHARED_DIAGRAM: TtDocument = { ...SAMPLE_DOCUMENT, title: "Shared diagram" };
+
+function storedTitle(key: string): string | undefined {
+  const raw = window.localStorage.getItem(key);
+  return raw ? (JSON.parse(raw) as { title: string }).title : undefined;
+}
 
 beforeEach(() => window.localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
@@ -33,6 +53,54 @@ describe("the autosave", () => {
       throw new DOMException("Blocked", "SecurityError");
     });
     expect(saveToStorage(SAMPLE_DOCUMENT)).toBe("unavailable");
+  });
+});
+
+describe("the previous diagram", () => {
+  it("receives the stored diagram of another document before the autosave writes over it", () => {
+    saveToStorage(OWN_DIAGRAM);
+
+    expect(autosave(SHARED_DIAGRAM, false)).toEqual({ outcome: "saved", keptPrevious: true });
+
+    expect(storedTitle("tt-modeler:document:v1")).toBe("Shared diagram");
+    const previous = loadPrevious();
+    expect(previous.status === "ok" && previous.document.title).toBe("Own diagram");
+  });
+
+  it("is left alone while the autosave follows the same document", () => {
+    saveToStorage(OWN_DIAGRAM);
+
+    expect(autosave({ ...OWN_DIAGRAM, title: "Own, renamed" }, true)).toEqual({
+      outcome: "saved",
+      keptPrevious: false,
+    });
+    expect(loadPrevious()).toEqual({ status: "absent" });
+  });
+
+  it("keeps no empty or identical stored diagram", () => {
+    saveToStorage(emptyDocument("Draft"));
+    expect(autosave(SHARED_DIAGRAM, false).keptPrevious).toBe(false);
+    expect(autosave(SHARED_DIAGRAM, false).keptPrevious).toBe(false);
+    expect(loadPrevious()).toEqual({ status: "absent" });
+  });
+
+  it("writes nothing when the storage has no room for the copy", () => {
+    saveToStorage(OWN_DIAGRAM);
+    vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new DOMException("Quota exceeded", "QuotaExceededError");
+    });
+
+    expect(autosave(SHARED_DIAGRAM, false)).toEqual({ outcome: "full", keptPrevious: false });
+    expect(storedTitle("tt-modeler:document:v1")).toBe("Own diagram");
+  });
+
+  it("reads the copy 0.10 kept for Restore previous diagram", () => {
+    window.localStorage.setItem(
+      "tt-modeler:document:v1:previous",
+      serializeDocument(OWN_DIAGRAM, false),
+    );
+    const previous = loadPrevious();
+    expect(previous.status === "ok" && previous.document.title).toBe("Own diagram");
   });
 });
 

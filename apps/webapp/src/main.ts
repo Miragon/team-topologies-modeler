@@ -37,6 +37,7 @@ import {
   isUndoRedoKey,
   mountShell,
   problemSummary,
+  type MenuGroups,
   type ShellHandle,
   type ToastHandle,
 } from "@miragon/modeler-shell";
@@ -54,7 +55,13 @@ import {
   readDocumentFromLocation,
   writeDocumentToLocation,
 } from "./io/url";
-import { loadFromStorage, readLegendOpen, saveToStorage, writeLegendOpen } from "./persistence";
+import {
+  autosave,
+  loadFromStorage,
+  loadPrevious,
+  readLegendOpen,
+  writeLegendOpen,
+} from "./persistence";
 import { importWarningsText, problemItems } from "./problems";
 import { planStart } from "./start";
 import { THEMES } from "./themes";
@@ -105,6 +112,9 @@ const registry = modeler.get<ElementRegistryLike>("elementRegistry");
 const selection = modeler.get<SelectionLike>("selection");
 const canvas = modeler.get<CanvasLike>("canvas");
 
+/** Whether the browser keeps a diagram the autosave wrote over (see `autosave`). */
+let previousAvailable = hasPreviousDiagram();
+
 const platform = detectPlatform(navigator);
 const openKey = commandKeyLabel("O", platform, defaultMessages.keyNames);
 const saveKey = commandKeyLabel("S", platform, defaultMessages.keyNames);
@@ -124,17 +134,7 @@ const shell: ShellHandle = mountShell(app, {
     open: { onSelect: () => pickFile(), shortcut: openKey },
     showExample: { onSelect: () => showExample() },
   },
-  // Model (Diagram title…; the shell adds Legend), Export and Help: the webview's entries plus
-  // what only the web app has.
-  menu: diagramMenu({
-    editTitle: () => titleDialog.open(),
-    exportPng: () => void exportImage("png"),
-    exportSvg: () => void exportImage("svg"),
-    exportJson: () => exportJsonFile(),
-    exportJsonShortcut: saveKey,
-    showKeyboardShortcuts: () => shortcutsDialog.open(),
-    keyboardShortcutsKey: SHORTCUTS_DIALOG_KEY,
-  }),
+  menu: menuGroups(),
   legend: {
     render: renderLegendRows,
     open: readLegendOpen(),
@@ -175,6 +175,36 @@ modeler.on("diagram.destroy", () => {
   titleDialog.destroy();
   inspector.destroy();
 });
+
+/**
+ * Model (Diagram title…; the shell adds Legend), Export and Help: the webview's entries plus what
+ * only the web app has. The shell's File group takes no entries of a modeler's own, so "Restore
+ * previous diagram" leads the Model group, next to File, while the browser keeps one.
+ */
+function menuGroups(): MenuGroups {
+  const groups = diagramMenu({
+    editTitle: () => titleDialog.open(),
+    exportPng: () => void exportImage("png"),
+    exportSvg: () => void exportImage("svg"),
+    exportJson: () => exportJsonFile(),
+    exportJsonShortcut: saveKey,
+    showKeyboardShortcuts: () => shortcutsDialog.open(),
+    keyboardShortcutsKey: SHORTCUTS_DIALOG_KEY,
+  });
+  if (!previousAvailable) return groups;
+  return {
+    ...groups,
+    model: [
+      {
+        kind: "action",
+        id: "restore-previous",
+        label: "Restore previous diagram",
+        onSelect: () => restorePreviousDiagram(),
+      },
+      ...(groups.model ?? []),
+    ],
+  };
+}
 
 // 3. Viewport, palette skin, keys. Cheap tests only: the chrome asks on every content change.
 const diagramElements = (): TtElement[] => registry.getAll().filter(isTtElement);
@@ -218,17 +248,35 @@ function diagramTitle(): string {
 /**
  * While a shared link shows a diagram that displaced the browser's own one (on a visit or pasted
  * into the open tab), the autosave keeps the own one until the shared one is edited: closing the
- * tab after a look at a colleague's link must not cost the own work.
+ * tab after a look at a colleague's link leaves the own work where it was.
  */
 let keepStoredDiagram = false;
 let storageFullAnnounced = false;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
+/**
+ * Counts the documents the canvas showed (each import starts one). The autosave writes over the
+ * stored diagram freely only while it holds an earlier state of the shown document; a stored
+ * diagram of another document becomes the previous diagram first.
+ */
+let shownDocument = 0;
+let storedDocument: number | undefined;
 
-function persistNow(): void {
-  clearTimeout(saveTimer);
-  saveTimer = undefined;
-  const doc = currentDocument();
-  if (!keepStoredDiagram && saveToStorage(doc) === "full" && !storageFullAnnounced) {
+function hasPreviousDiagram(): boolean {
+  const previous = loadPrevious();
+  return previous.status === "ok" && !isEmptyDocument(previous.document);
+}
+
+function setPreviousAvailable(available: boolean): void {
+  if (previousAvailable === available) return;
+  previousAvailable = available;
+  shell.menu.setGroups(menuGroups());
+}
+
+function persistToStorage(doc: TtDocument): void {
+  const { outcome, keptPrevious } = autosave(doc, storedDocument === shownDocument);
+  if (keptPrevious) setPreviousAvailable(true);
+  if (outcome === "saved") storedDocument = shownDocument;
+  if (outcome === "full" && !storageFullAnnounced) {
     storageFullAnnounced = true;
     shell.toast({
       status: "danger",
@@ -236,6 +284,13 @@ function persistNow(): void {
       action: { label: "Export JSON", onSelect: () => exportJsonFile() },
     });
   }
+}
+
+function persistNow(): void {
+  clearTimeout(saveTimer);
+  saveTimer = undefined;
+  const doc = currentDocument();
+  if (!keepStoredDiagram) persistToStorage(doc);
   // An empty diagram keeps a clean URL; a link too long for the address bar is dropped from it.
   if (shell.isEmptyStateShown() || isEmptyDocument(doc)) clearLocationHash();
   else writeDocumentToLocation(doc);
@@ -302,6 +357,7 @@ function openDocument(doc: TtDocument, options: OpenOptions): boolean {
   } finally {
     viewport.afterImport();
   }
+  shownDocument += 1;
   keepStoredDiagram = options.keepStoredDiagram ?? false;
   shell.setEmptyState(false);
   shell.menu.refresh();
@@ -345,7 +401,7 @@ function replaceDiagram(next: TtDocument, options: ReplaceOptions): void {
   } catch (error) {
     console.error("[tt-modeler] Could not display the diagram:", error);
     try {
-      openDocument(previous, { announce: false });
+      openDocument(previous, { announce: false, keepStoredDiagram });
     } catch (restoreError) {
       console.error("[tt-modeler] Could not display the previous diagram:", restoreError);
     }
@@ -387,6 +443,23 @@ function replaceDiagram(next: TtDocument, options: ReplaceOptions): void {
 
 function newDiagram(): void {
   replaceDiagram(emptyDocument(), { announce: false });
+}
+
+/** Swaps the shown diagram and the previous one, so a second restore takes it back. */
+function restorePreviousDiagram(): void {
+  const previous = loadPrevious();
+  if (previous.status !== "ok") {
+    if (previous.status === "corrupt") {
+      console.warn("[tt-modeler] Ignoring a damaged previous diagram:", previous.detail);
+    }
+    setPreviousAvailable(false);
+    shell.toast({
+      status: "danger",
+      text: "The previous diagram is no longer stored in this browser, so it can't be restored.",
+    });
+    return;
+  }
+  replaceDiagram(previous.document, { announce: true });
 }
 
 function showExample(): void {
@@ -660,6 +733,7 @@ document.addEventListener("visibilitychange", onVisibilityChange);
 function showStartScreen(doc: TtDocument): void {
   modeler.importDocument(doc, { fit: false });
   viewport.afterImport(); // an empty diagram at 100 %
+  shownDocument += 1;
   shell.setEmptyState(true);
   updateDocumentTitle();
 }

@@ -22,7 +22,8 @@ and a diagram is shared by encoding it into the URL.
   visit shows a **start screen** (New diagram, Show example, or open a file) instead of the work
   chrome.
 - **Menu:** File (**New diagram**, **Open…** `Cmd/Ctrl+O` for `.tt`, `.ttm.json` and `.json`,
-  **Show example**), Model (**Diagram title…**, the **Legend** checkbox), Export (**PNG** at 2×,
+  **Show example**), Model (**Restore previous diagram** while the browser keeps one, **Diagram
+  title…**, the **Legend** checkbox), Export (**PNG** at 2×,
   **SVG**, **JSON** `Cmd/Ctrl+S`) and Help (**Keyboard shortcuts…**, also on `?`). Undo and redo stay
   on the keys, also while a chrome control has the focus.
 - **Edit by direct manipulation.** Drag from the palette to create, move, resize (resize a team to
@@ -35,7 +36,9 @@ and a diagram is shared by encoding it into the URL.
   custom fill and outline colours (with a reset), detach an annotation, or delete.
 - **Drop a file** anywhere on the page: a `.tt`, `.ttm.json` or `.json` file opens. Replacing a
   diagram (New diagram, Show example, a file, a shared link) offers **Undo** in a toast (and on
-  `Cmd/Ctrl+Z` while the canvas has nothing else to undo) instead of asking first.
+  `Cmd/Ctrl+Z` while the canvas has nothing else to undo) instead of asking first. The replaced
+  diagram stays in the browser as the previous diagram, so **Restore previous diagram** brings it
+  back after the first edit too (and swaps the two again).
 - **Problems.** What the import could not take (an annotation attached to an element that is gone)
   shows in the problems pill; its list selects the annotation.
 - **Share via URL, no server.** **Share** copies a self-contained link: the whole diagram is
@@ -43,7 +46,8 @@ and a diagram is shared by encoding it into the URL.
   pasted into an open tab; a damaged link says so.
 - **Autosave.** Every change goes to `localStorage` and into the address bar, so a reload brings the
   diagram back; the legend remembers whether it is open. A shared link that replaces your own
-  diagram leaves that one in the browser's copy until you edit the shared one.
+  diagram leaves that one in the browser's copy until you edit the shared one; then it becomes the
+  previous diagram. The autosave never writes over a diagram it has no room to keep.
 - **Offline-friendly.** No CDN calls; Geist and Geist Mono are bundled.
 
 ## Run it
@@ -89,7 +93,9 @@ shell's inspector slot:
   high-contrast line) in place of `<!-- miragon-mode -->`.
 - **Sharing and autosave:** `serializeDocument()` → `LZString.compressToEncodedURIComponent` →
   `#d=…`, written about 600 ms after a change (at once when the tab is hidden or closed); very large
-  diagrams skip the hash and rely on `localStorage`.
+  diagrams skip the hash and rely on `localStorage`. The autosave (`tt-modeler:document:v1`) moves a
+  stored diagram of another document to `tt-modeler:document:v1:previous` before it writes over it,
+  the slot 0.10's "Restore previous diagram" used, so its copies stay reachable.
 - **Export:** JSON is the canonical `.ttm.json` text, SVG via `modeler.saveSVG()`, PNG by rasterising
   that SVG on a canvas with Geist embedded. Downloads are named after the diagram's title.
 
