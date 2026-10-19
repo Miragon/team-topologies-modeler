@@ -38,6 +38,7 @@ import {
   mountShell,
   problemSummary,
   type MenuGroups,
+  type ProblemItem,
   type ShellHandle,
   type ToastHandle,
 } from "@miragon/modeler-shell";
@@ -62,7 +63,7 @@ import {
   readLegendOpen,
   writeLegendOpen,
 } from "./persistence";
-import { importWarningsText, problemItems } from "./problems";
+import { importWarningsText, problemItems, remainingWarnings } from "./problems";
 import { planStart } from "./start";
 import { THEMES } from "./themes";
 
@@ -320,16 +321,39 @@ function updateDocumentTitle(): void {
   document.title = title ? `${title} · ${APP_NAME}` : APP_NAME;
 }
 
+let importWarnings: readonly ImportWarning[] = [];
+/** The elements the import's warnings named and the diagram had then. */
+let warnedElements: ReadonlySet<string> = new Set();
+
+function diagramElement(id: string): TtElement | undefined {
+  const element = registry.get(id);
+  return isTtElement(element) ? element : undefined;
+}
+
+function showProblems(): ProblemItem[] {
+  const warnings = remainingWarnings(importWarnings, warnedElements, (id) =>
+    Boolean(diagramElement(id)),
+  );
+  const items = problemItems(warnings, (id) => {
+    const element = diagramElement(id);
+    return element ? { label: element.ttLabel } : undefined;
+  });
+  shell.setProblems(problemSummary(items));
+  return items;
+}
+
 /**
  * Import warnings go to the problems pill and its list. A toast points at them after an import the
  * visitor started (open, drop, example, link), never after one that restores a diagram (guide §9).
  */
 function reportWarnings(warnings: readonly ImportWarning[], announce: boolean): boolean {
-  const items = problemItems(warnings, (id) => {
-    const element = registry.get(id);
-    return isTtElement(element) ? { label: element.ttLabel } : undefined;
-  });
-  shell.setProblems(problemSummary(items));
+  importWarnings = warnings;
+  warnedElements = new Set(
+    warnings.flatMap(({ elementId }) =>
+      elementId && diagramElement(elementId) ? [elementId] : [],
+    ),
+  );
+  const items = showProblems();
   for (const warning of warnings) console.warn("[tt-modeler] Import warning:", warning.message);
   if (!announce || items.length === 0) return false;
   const pill = shell.messages.problems(items.length, formatNumber(items.length, shell.lang));
@@ -703,6 +727,7 @@ modeler.on<{ trigger?: string }>("commandStack.changed", (event) => {
     shell.setEmptyState(false);
     withdrawReplaceUndo();
     keepStoredDiagram = false;
+    if (importWarnings.length > 0) showProblems();
   }
   shell.menu.refresh();
   updateDocumentTitle();

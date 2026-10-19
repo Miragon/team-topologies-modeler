@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { importWarningsText, problemItems } from "./problems";
+import { importWarningsText, problemItems, remainingWarnings } from "./problems";
 
 describe("problemItems", () => {
   it("places a warning on its element and lets the row select it", () => {
@@ -30,6 +30,27 @@ describe("problemItems", () => {
       { severity: "warning", message: "Gone." },
       { severity: "warning", message: "Unlabelled.", elementId: "ann_blank" },
       { severity: "warning", message: "Nowhere." },
+    ]);
+  });
+});
+
+describe("remainingWarnings", () => {
+  it("drops the warning of an element deleted since the import, and keeps the rest", () => {
+    const warnings = [
+      { message: "Deleted since.", elementId: "ann_deleted" },
+      { message: "Still there.", elementId: "ann_kept" },
+      { message: "Never found.", elementId: "ann_unknown" },
+      { message: "Nowhere." },
+    ];
+    const remaining = remainingWarnings(
+      warnings,
+      new Set(["ann_deleted", "ann_kept"]),
+      (id) => id === "ann_kept",
+    );
+    expect(remaining.map((warning) => warning.message)).toEqual([
+      "Still there.",
+      "Never found.",
+      "Nowhere.",
     ]);
   });
 });

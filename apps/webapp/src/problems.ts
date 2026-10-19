@@ -26,6 +26,20 @@ export function problemItems(
   });
 }
 
+/**
+ * The import's warnings that still hold: one whose element an edit has removed since goes with it,
+ * so the pill never counts a problem the diagram no longer has.
+ */
+export function remainingWarnings(
+  warnings: readonly ImportWarning[],
+  locatedAtImport: ReadonlySet<string>,
+  exists: (id: string) => boolean,
+): ImportWarning[] {
+  return warnings.filter(
+    ({ elementId }) => !elementId || !locatedAtImport.has(elementId) || exists(elementId),
+  );
+}
+
 /** The toast after an import with warnings points at the pill (guide §9). */
 export function importWarningsText(count: number, pillLabel: string): string {
   const warnings = count === 1 ? "1 warning" : `${count} warnings`;

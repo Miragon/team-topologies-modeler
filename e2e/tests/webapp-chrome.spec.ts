@@ -8,6 +8,7 @@ import {
 } from "./support/app.js";
 import {
   CANVAS,
+  deleteElement,
   exportDocument,
   gotoApp,
   loadExample,
@@ -429,6 +430,20 @@ test.describe("webapp: the shell web chrome and the app behind it", () => {
 
     await expect(list).toBeHidden();
     expect(await selectedIds(page)).toEqual(["ann_orphan_2"]);
+  });
+
+  test("a problem goes with the element it was about", async ({ page }) => {
+    await gotoApp(page, diagramLink(documentWithWarnings()));
+    const pill = page.locator('[data-chrome="problems"]');
+    await expect(pill).toHaveText("2 problems");
+
+    await deleteElement(page, "ann_orphan_1");
+    await expect(pill).toHaveText("1 problem");
+    await deleteElement(page, "ann_orphan_2");
+    await expect(pill).toBeHidden();
+
+    await page.keyboard.press("ControlOrMeta+Z");
+    await expect(pill).toHaveText("1 problem");
   });
 
   test("the inspector edits the selection in the shell's panel", async ({ page }) => {

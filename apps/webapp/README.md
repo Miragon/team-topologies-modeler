@@ -40,7 +40,8 @@ and a diagram is shared by encoding it into the URL.
   diagram stays in the browser as the previous diagram, so **Restore previous diagram** brings it
   back after the first edit too (and swaps the two again).
 - **Problems.** What the import could not take (an annotation attached to an element that is gone)
-  shows in the problems pill; its list selects the annotation.
+  shows in the problems pill; its list selects the annotation, and deleting the annotation removes
+  its problem.
 - **Share via URL, no server.** **Share** copies a self-contained link: the whole diagram is
   LZ-compressed into the URL hash (`#d=…`). Opening that link restores the diagram, also when it is
   pasted into an open tab; a damaged link says so.
