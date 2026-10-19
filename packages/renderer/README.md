@@ -11,7 +11,7 @@ It renders the canonical document from
 [`@miragon/team-topologies-schema-model`](../schema-model) and gives you palette, move, resize,
 connect-by-overlap, multi-selection (lasso, select all) with group move, text annotations, context
 pad, in-place label editing and undo/redo — with no UI framework required.
-Mount it into any `<div>`; the web app (React) and the VS Code extension both wrap this exact package.
+Mount it into any `<div>`; the web app and the VS Code extension both wrap this exact package.
 
 ## Install
 

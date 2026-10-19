@@ -25,14 +25,15 @@ from the skill to update and update their hashes in the drift test
 vendored files agree and that `team-topologies.css` reads only `--cd-ui-*` roles.
 `apps/vscode/src/tokens.sync.test.ts` pins the shell's sizes (`SHELL`) to the JSON's `shell` group.
 
-**Chrome:** the VS Code webview runs on [`@miragon/modeler-shell`](https://www.npmjs.com/package/@miragon/modeler-shell)
-(IDE host): menu, palette skin, zoom panel and keys, fit, problems pill, status box, empty-file hint,
-legend and inspector slots, theme bridge (`themes: ["light"]` until the shared dark mode). The
+**Chrome:** both apps run on [`@miragon/modeler-shell`](https://www.npmjs.com/package/@miragon/modeler-shell):
+the VS Code webview on its IDE host, the web app on its web host. Shared: menu, palette skin, zoom
+panel and keys, fit, problems pill, status box, legend and inspector slots, `themes: ["light"]` until
+the shared dark mode (VS Code: theme bridge and empty-file hint; web: Share as primary action, legal
+line, toasts, problems list, start screen, drop zone and the head markup from `vite.config.ts`). The
 renderer implements the canvas rules it asks for (keyboard creation, the `ttReadOnly` lock, no zoom
 keys, `undoRedoKeys: false` in VS Code) and the `@miragon/modeler-api` contract
 (`createCollaborativeModeler`, its conformance kit in `npm run test:browser`). The shell's own
-conformance kit runs in the e2e project `vscode-webview`. The web app moves onto the shell's web
-host next. The four Team Topologies team-type / interaction colours in
+conformance kit runs in both e2e projects, `webapp` and `vscode-webview`. The four Team Topologies team-type / interaction colours in
 [`packages/schema-model/src/notation.ts`](packages/schema-model/src/notation.ts) are the **official
 notation** (Team-Shape-Templates) and are serialized into documents — they stay as-is; the CI applies
 to everything else (chrome, typography, accent/selection, neutrals, the app icon).
@@ -49,8 +50,8 @@ sets `save-exact=true`) — including internal `@miragon/team-topologies-*` deps
 | --------------------------------------- | ------------------------------------------------------------------------ | --- |
 | `@miragon/team-topologies-schema-model` | Types, the notation spec, Zod validation, migrations, JSON serialization | no  |
 | `@miragon/team-topologies-renderer`     | diagram-js bootstrap, renderer, viewer/modeler, import/export, CSS       | yes |
-| `@miragon/team-topologies-ui` (private) | chrome content (inspector, legend rows, shortcuts dialog, menu entries)  | yes |
-| `apps/webapp`                           | Vite + React demo editor                                                 | yes |
+| `@miragon/team-topologies-ui` (private) | chrome content (inspector, legend rows, dialogs, menu entries)           | yes |
+| `apps/webapp`                           | Vite demo editor on the modeler shell's web host                         | yes |
 | `apps/vscode`                           | VS Code extension: custom editor for `.tt`/`.ttm.json`                   | yes |
 
 **P1 — DOM boundary:** the DOM-free package (`schema-model`) must **never** import `diagram-js`/DOM
@@ -59,8 +60,8 @@ libraries (`tiny-svg`, `min-dom`) or use the DOM (`window`/`document`). Enforced
 fails `npm run lint` and `npm run depcruise`.
 
 The `ui` package is consumed from source only (no build, not published). It holds what the modeler
-puts into a host's chrome — the inspector (mounted into the shell's inspector slot, or the web app's
-own panel), the legend rows, the "Keyboard shortcuts…" dialog and the menu entries — ships its styles
+puts into a host's chrome — the inspector (React, mounted into the shell's inspector slot), the legend
+rows, the "Keyboard shortcuts…" and "Diagram title…" dialogs and the menu entries — ships its styles
 as `@miragon/team-topologies-ui/ui.css` (role aliases, buttons, fields, the content of inspector,
 legend and dialog; where they sit is the host's), and must never import from `apps/**`;
 `schema-model` and `renderer` must never import it, nor `@miragon/modeler-shell` (all enforced by

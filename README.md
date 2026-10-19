@@ -42,12 +42,13 @@ is distinguished by shape as well as colour, so diagrams stay readable with colo
 
 ## Targets
 
-- **Web app** ([`apps/webapp`](apps/webapp/README.md)) — a Vite + React editor with a full-bleed
-  canvas, palette, inspector, PNG/SVG export and a shareable, self-contained URL (LZ-compressed, no
-  backend). Deployed on Netlify.
+- **Web app** ([`apps/webapp`](apps/webapp/README.md)) — a Vite editor with a full-bleed canvas,
+  palette, inspector, legend, PNG/SVG/JSON export and a shareable, self-contained URL (LZ-compressed,
+  no backend), inside the shared chrome of the Miragon modelers
+  ([`@miragon/modeler-shell`](https://www.npmjs.com/package/@miragon/modeler-shell), web host).
+  Deployed on Netlify.
 - **VS Code extension** ([`apps/vscode`](apps/vscode/README.md)) — a custom editor for `.tt` /
-  `.ttm.json` files with the same inspector and legend as the web app, inside the shared chrome of
-  the Miragon modelers ([`@miragon/modeler-shell`](https://www.npmjs.com/package/@miragon/modeler-shell)):
+  `.ttm.json` files with the same chrome, inspector and legend as the web app (the shell's IDE host):
   the JSON file stays the source of truth (save, Git, diff and undo keep working), its problems show
   in the Problems view, and editable embedded-PNG diagrams (`*.tt.png`) let you drop a diagram into a
   wiki or README and still edit it graphically.
@@ -83,13 +84,15 @@ packages/
   renderer/      @miragon/team-topologies-renderer     — diagram-js bootstrap: viewer/modeler, renderer, palette,
                                             context-pad, label editing, import/export, CSS.
   ui/            @miragon/team-topologies-ui           — private: what the modeler puts into the chrome (the
-                                            React inspector, legend rows, shortcuts dialog, menu
-                                            entries), shared by the webapp and the VS Code webview.
+                                            React inspector, legend rows, shortcuts and title
+                                            dialogs, menu entries), shared by the webapp and the
+                                            VS Code webview.
 apps/
-  webapp/        @miragon/team-topologies-webapp       — Vite + React editor application.
+  webapp/        @miragon/team-topologies-webapp       — Vite editor on the modeler shell's web host.
   vscode/        team-topologies-modeler  — VS Code custom editor for .tt / .ttm.json.
 e2e/                                       — Playwright end-to-end tests: the webapp, and the VS Code
-                                            webview inside the modeler shell's VS Code stub.
+                                            webview inside the modeler shell's VS Code stub, each
+                                            held to the shell's conformance kit.
 ```
 
 The `schema-model` package compiles **without the DOM lib**, so a stray browser import fails
