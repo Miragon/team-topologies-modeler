@@ -4,7 +4,14 @@
   "compilerOptions": {
     "noEmit": true,
     "types": ["node"],
-    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@miragon/team-topologies-schema-model": ["../packages/schema-model/src/index.ts"],
+      "@miragon/team-topologies-renderer": ["../packages/renderer/src/index.ts"],
+      "@miragon/team-topologies-ui": ["../packages/ui/src/index.ts"]
+    }
   },
-  "include": ["tests/**/*.ts", "playwright.config.ts"]
+  "include": ["tests/**/*.ts", "webview/**/*.ts", "playwright.config.ts"]
 }
