@@ -1,6 +1,7 @@
 // Checks what the production build must carry and the dev server never shows: the mode markup
 // written into index.html by the Vite plugin (guide §13.3) and the shell's Lucide/Feather licence
-// comment in the bundle (THIRD_PARTY_NOTICES of @miragon/modeler-shell).
+// comment in the bundle (THIRD_PARTY_NOTICES of @miragon/modeler-shell). And what it must not
+// carry: the debug globals the e2e suite reads on the dev server.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -25,8 +26,12 @@ if (!scripts.some((source) => /@license[\s\S]{0,400}Lucide/.test(source))) {
   problems.push("no bundle keeps the shell’s @license comment naming Lucide");
 }
 
+if (scripts.some((source) => /__ttApp|__ttModeler/.test(source))) {
+  problems.push("a bundle still publishes the debug globals __ttApp or __ttModeler");
+}
+
 if (problems.length > 0) {
   console.error(`apps/webapp build check failed:\n- ${problems.join("\n- ")}`);
   process.exit(1);
 }
-console.log("apps/webapp build check: mode markup and licence comment present");
+console.log("apps/webapp build check: mode markup and licence comment present, no debug globals");
