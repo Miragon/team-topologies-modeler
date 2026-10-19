@@ -2,8 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { Modeler } from "@miragon/team-topologies-renderer";
-import { useModelerSelection } from "../useModelerSelection";
-import { Inspector, InspectorSlotContent } from "./Inspector";
+import { InspectorSlotContent } from "./Inspector";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -80,11 +79,11 @@ const interaction = { ...shape, id: "interaction_a", ttKind: "interaction", mode
 const flow = { ...shape, id: "flow_a", ttKind: "flow" };
 const annotation = { ...shape, id: "annotation_a", ttKind: "annotation", ttLabel: "Why" };
 
+/** The inspector in a host's panel that the host opens and closes on the content's request. */
 function Host({ modeler, readOnly }: { modeler: Modeler; readOnly?: boolean }) {
-  const { selected, revision } = useModelerSelection(modeler);
-  return (
-    <Inspector modeler={modeler} selected={selected} revision={revision} readOnly={readOnly} />
-  );
+  const element = document.querySelector<HTMLElement>("[data-inspector-host]")!;
+  const slot = { element, open: () => undefined, close: () => undefined };
+  return <InspectorSlotContent modeler={modeler} slot={slot} readOnly={readOnly} />;
 }
 
 function typeInto(field: HTMLInputElement | HTMLTextAreaElement, value: string) {
@@ -97,17 +96,18 @@ function press(target: Element, key: string) {
   target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
 }
 
-describe("Inspector", () => {
+describe("the inspector's content", () => {
   let host: HTMLElement;
   let root: Root;
 
-  const panel = () => host.querySelector(".tt-inspector");
+  const panel = () => host.querySelector(".tt-inspector__content");
   const header = () => host.querySelector(".tt-inspector__header")?.textContent;
   const button = (name: string) =>
     [...host.querySelectorAll("button")].find((candidate) => candidate.textContent === name);
 
   beforeEach(() => {
-    host = document.createElement("div");
+    host = document.createElement("aside");
+    host.dataset.inspectorHost = "";
     document.body.append(host);
     root = createRoot(host);
   });

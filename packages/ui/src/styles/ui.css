@@ -2,11 +2,11 @@
    Team Topologies shared chrome content: styles of @miragon/team-topologies-ui
 
    What the Team Topologies modeler puts into a host's chrome: the inspector's
-   fields, the legend's rows, the "Keyboard shortcuts…" dialog, and the button,
-   field, focus and motion system they are built from. Where they sit on the
-   screen is the host's (the modeler shell's inspector and legend slots, or the
-   web app's own placement). A host loads the renderer stylesheet (it brings the
-   tokens) and this file, then its own chrome.
+   fields, the legend's rows, the "Keyboard shortcuts…" and "Diagram title…"
+   dialogs, and the button, field, focus and motion system they are built from.
+   Where they sit on the screen is the host's (the modeler shell's inspector and
+   legend slots, its root for the dialogs). A host loads the renderer stylesheet
+   (it brings the tokens) and this file, then the chrome's.
    ========================================================================== */
 
 /* ---- Tokens ---------------------------------------------------------------
@@ -60,7 +60,6 @@
    Set on the content itself, so it looks the same whatever the host's body says. */
 
 .tt-inspector__content,
-.tt-legend,
 .tt-dialog {
   font-family: var(--font-sans);
   line-height: 1.5;
@@ -69,8 +68,8 @@
   text-rendering: optimizeLegibility;
 }
 
-:where(.tt-inspector__content, .tt-legend, .tt-dialog),
-:where(.tt-inspector__content, .tt-legend, .tt-dialog) * {
+:where(.tt-inspector__content, .tt-dialog),
+:where(.tt-inspector__content, .tt-dialog) * {
   box-sizing: border-box;
 }
 
@@ -83,7 +82,7 @@
    Every interactive element gets the same visible ring (guide §8, §12). Text fields
    use the input pattern further down instead. */
 
-:where(.tt-inspector__content, .tt-legend, .tt-dialog)
+:where(.tt-inspector__content, .tt-dialog)
   :where(button, a[href], summary, [role="button"], [tabindex]):focus-visible,
 :where(.tt-inspector__content) input[type="color"]:focus-visible {
   outline: 2px solid var(--focus);
@@ -91,15 +90,14 @@
 }
 
 :where([data-cd-kontrast="hoch"])
-  :where(.tt-inspector__content, .tt-legend, .tt-dialog)
+  :where(.tt-inspector__content, .tt-dialog)
   :where(button, a[href], summary, [role="button"], [tabindex], input):focus-visible {
   outline-width: 3px;
 }
 
 /* ---- Buttons (panels, dialogs) -------------------------------------------------------
-   One system (guide §8): secondary is the default, plus primary, danger (inline
-   destructive action, outline) and destructive (confirm, filled). Disabled is opaque
-   and neutral, never faded. */
+   One system (guide §8): secondary is the default, plus primary and danger (inline
+   destructive action, outline). Disabled is opaque and neutral, never faded. */
 
 .tt-btn {
   display: inline-flex;
@@ -168,8 +166,7 @@
   transform: translateY(0);
 }
 
-.tt-btn--primary:disabled,
-.tt-btn--destructive:disabled {
+.tt-btn--primary:disabled {
   color: var(--ink-muted);
   border-color: var(--line);
   background: var(--hover);
@@ -186,20 +183,6 @@
   border-color: var(--danger);
   background: var(--danger-soft);
   color: var(--danger);
-}
-
-.tt-btn--destructive {
-  border-color: var(--cd-danger);
-  background: var(--cd-danger);
-  color: var(--cd-weiss);
-  box-shadow: var(--shadow-1);
-}
-
-.tt-btn--destructive:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--cd-danger) 85%, var(--cd-schwarz));
-  background: color-mix(in srgb, var(--cd-danger) 85%, var(--cd-schwarz));
-  color: var(--cd-weiss);
-  box-shadow: var(--shadow-2);
 }
 
 .tt-btn--sm {
@@ -231,11 +214,6 @@
   transition:
     background-color var(--cd-motion-fast) var(--cd-ease),
     color var(--cd-motion-fast) var(--cd-ease);
-}
-
-.tt-closebtn--sm {
-  width: 28px;
-  height: 28px;
 }
 
 .tt-closebtn:hover {
@@ -586,35 +564,6 @@ select.tt-field__control {
   }
 }
 
-/* ---- Motion ---------------------------------------------------------------------------- */
-
-@keyframes tt-pop-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-}
-
-@keyframes tt-rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
-
-@keyframes tt-sink-out {
-  to {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
-
-@keyframes tt-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
 /* ---- Narrow screens and touch ------------------------------------------------------------ */
 
 /* 16px keeps iOS Safari from zooming the page when a field gets focus. */
@@ -627,8 +576,8 @@ select.tt-field__control {
 /* ---- Reduced motion (guide §7) ---------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
-  :is(.tt-inspector__content, .tt-legend, .tt-dialog),
-  :is(.tt-inspector__content, .tt-legend, .tt-dialog) * {
+  :is(.tt-inspector__content, .tt-dialog),
+  :is(.tt-inspector__content, .tt-dialog) * {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;

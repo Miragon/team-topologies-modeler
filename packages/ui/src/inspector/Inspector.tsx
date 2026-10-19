@@ -413,7 +413,7 @@ function useCanvasCatchesDroppedFocus(modeler: Modeler, contentKey: string | nul
   }, [modeler, contentKey]);
 }
 
-export interface InspectorProps {
+interface InspectorProps {
   /** The modeler whose selection the panel edits. */
   modeler: Modeler;
   /** The one selected element; null for none or several (a multi-selection is read from the modeler). */
@@ -468,18 +468,6 @@ function useInspectorContent(
   };
 
   return { body, onKeyDown };
-}
-
-/** The inspector as a panel of its own, placed by the host's stylesheet (`.tt-inspector`). */
-export function Inspector(props: InspectorProps) {
-  const panelRef = useRef<HTMLElement>(null);
-  const { body, onKeyDown } = useInspectorContent(props, panelRef);
-  if (!body) return null;
-  return (
-    <aside className="tt-inspector" aria-label="Properties" ref={panelRef} onKeyDown={onKeyDown}>
-      {body}
-    </aside>
-  );
 }
 
 /** A panel the host's chrome owns, such as the modeler shell's inspector `<aside>`. */
