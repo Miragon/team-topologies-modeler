@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { Modeler } from "@miragon/team-topologies-renderer";
 import { useModelerSelection } from "../useModelerSelection";
-import { Inspector } from "./Inspector";
+import { Inspector, InspectorSlotContent } from "./Inspector";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -249,5 +249,47 @@ describe("Inspector", () => {
     fake.select();
 
     expect(fake.canvas.restoreFocus).not.toHaveBeenCalled();
+  });
+});
+
+describe("InspectorSlotContent", () => {
+  let host: HTMLElement;
+  let root: Root;
+
+  beforeEach(() => {
+    host = document.createElement("aside");
+    document.body.appendChild(host);
+    root = createRoot(host);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("opens the host's panel for a selection and closes it again", () => {
+    const { modeler, select, selection } = fakeModeler();
+    const slot = { element: host, open: vi.fn(), close: vi.fn() };
+    act(() => root.render(<InspectorSlotContent modeler={modeler} slot={slot} />));
+    expect(slot.close).toHaveBeenCalled();
+    expect(host.querySelector(".tt-inspector__content")).toBeNull();
+
+    select(team);
+    expect(slot.open).toHaveBeenCalled();
+    expect(host.querySelector(".tt-inspector__header")?.textContent).toBe("Team");
+    expect(host.querySelector("aside")).toBeNull();
+
+    slot.close.mockClear();
+    act(() => selection.select(null));
+    expect(slot.close).toHaveBeenCalled();
+    expect(host.querySelector(".tt-inspector__content")).toBeNull();
+  });
+
+  it("disables the fields while the host can't save", () => {
+    const { modeler, select } = fakeModeler();
+    const slot = { element: host, open: vi.fn(), close: vi.fn() };
+    act(() => root.render(<InspectorSlotContent modeler={modeler} slot={slot} readOnly />));
+    select(team);
+    expect(host.querySelector<HTMLFieldSetElement>("fieldset")?.disabled).toBe(true);
   });
 });

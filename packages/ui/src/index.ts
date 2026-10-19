@@ -1,12 +1,26 @@
 // Bundled with the components, so a host that renders a panel can't end up without its styles.
 import "./styles/ui.css";
 
-export { Inspector } from "./inspector/Inspector";
-export type { InspectorProps } from "./inspector/Inspector";
+export { Inspector, InspectorSlotContent } from "./inspector/Inspector";
+export type {
+  InspectorProps,
+  InspectorSlot,
+  InspectorSlotContentProps,
+} from "./inspector/Inspector";
+export { mountInspector } from "./inspector/mountInspector";
+export type { MountedInspector } from "./inspector/mountInspector";
 export { Legend } from "./legend/Legend";
 export type { LegendProps } from "./legend/Legend";
+export { legendGroups, renderLegendRows } from "./legend/legendRows";
+export type { LegendGroup, LegendRow } from "./legend/legendRows";
 export { legendCrowdsCanvas } from "./legend/legendCrowdsCanvas";
 export { makeRoomForLegend } from "./legend/makeRoomForLegend";
 export { useModelerSelection } from "./useModelerSelection";
 export { Icon } from "./Icon";
 export type { IconComponent } from "./Icon";
+export { diagramMenu } from "./chrome/menu";
+export type { DiagramMenuActions } from "./chrome/menu";
+export { createShortcutsDialog } from "./shortcuts/shortcutsDialog";
+export type { ShortcutsChrome, ShortcutsDialog } from "./shortcuts/shortcutsDialog";
+export { keyboardShortcuts } from "./shortcuts/shortcuts";
+export type { ShortcutGroup, ShortcutOptions, ShortcutRow } from "./shortcuts/shortcuts";
