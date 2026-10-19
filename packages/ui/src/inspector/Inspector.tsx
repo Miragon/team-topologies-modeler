@@ -96,7 +96,7 @@ function PanelHeader({
         type="button"
         className="tt-closebtn"
         aria-label="Close"
-        title="Close (Esc)"
+        aria-keyshortcuts="Escape"
         onClick={onClose}
       >
         <Icon icon={X} />
