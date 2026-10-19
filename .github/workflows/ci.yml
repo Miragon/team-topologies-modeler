@@ -70,6 +70,7 @@ jobs:
       - uses: ./.github/actions/setup
       - run: npm run build
       - run: npm run build:webapp
+      - run: npm run check:build -w apps/webapp
       - run: npm run build:vscode
 
   format-check:
