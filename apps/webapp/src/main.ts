@@ -87,6 +87,8 @@ interface Bounds {
 
 /** Matches the static <title> in index.html. */
 const APP_NAME = "Miragon Modeler for Team Topologies";
+/** One line on the start card, as the other modelers' cards read. */
+const START_TITLE = "Team Topologies Modeler";
 const DIAGRAM_NAME = "Team Topologies diagram";
 const REPOSITORY_URL = "https://github.com/Miragon/team-topologies-modeler";
 /** Extensions for the drop; the MIME type decides while a file is dragged (guide §9). */
@@ -148,7 +150,7 @@ const shell: ShellHandle = mountShell(app, {
   inspector: { label: "Properties" },
   problems: { onSelectItem: (item) => selectElement(item.elementId) },
   emptyState: {
-    title: APP_NAME,
+    title: START_TITLE,
     text: "Start a new diagram, or explore the example.",
     komet: `${import.meta.env.BASE_URL}miragon-komet-blau.svg`,
     onNewDiagram: () => newDiagram(),

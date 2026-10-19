@@ -29,6 +29,7 @@ import {
  */
 
 const APP_NAME = "Miragon Modeler for Team Topologies";
+const START_TITLE = "Team Topologies Modeler";
 const SAMPLE_TITLE = sampleDocument().title;
 const AUTOSAVE_KEY = "tt-modeler:document:v1";
 const PREVIOUS_KEY = `${AUTOSAVE_KEY}:previous`;
@@ -128,7 +129,7 @@ test.describe("webapp: the shell web chrome and the app behind it", () => {
     await gotoApp(page);
 
     await expect(startScreen(page)).toBeVisible();
-    await expect(startScreen(page).getByRole("heading", { level: 1 })).toHaveText(APP_NAME);
+    await expect(startScreen(page).getByRole("heading", { level: 1 })).toHaveText(START_TITLE);
     await expect(startScreen(page)).toContainText("Or drop a .tt, .ttm.json, or .json file here");
     await expect(page).toHaveTitle(APP_NAME);
     for (const island of ["menu", "primary", "palette", "zoom"]) {
