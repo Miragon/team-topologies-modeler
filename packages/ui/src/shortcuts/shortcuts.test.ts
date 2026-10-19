@@ -32,4 +32,20 @@ describe("keyboardShortcuts", () => {
     const web = keyboardShortcuts("mac", defaultMessages, "en", { fileKeys: true });
     expect(web.map((group) => group.title)).toEqual(["File", "View", "Edit", "Tools"]);
   });
+
+  it("names the File rows as the menu does and lists the web app's dialog key under View", () => {
+    const [file, view] = keyboardShortcuts(
+      "other",
+      { ...defaultMessages, openFile: "Öffnen…" },
+      "en",
+      { fileKeys: true },
+    );
+    expect(file?.rows).toEqual([
+      { action: "Öffnen…", keys: ["Ctrl+O"] },
+      { action: "Export as JSON", keys: ["Ctrl+S"] },
+    ]);
+    expect(view?.rows.at(-1)).toEqual({ action: "Keyboard shortcuts", keys: ["?"] });
+    const [ide] = keyboardShortcuts("other", defaultMessages, "en");
+    expect(ide?.rows.some((row) => row.keys.includes("?"))).toBe(false);
+  });
 });

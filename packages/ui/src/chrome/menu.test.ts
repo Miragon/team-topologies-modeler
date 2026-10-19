@@ -25,4 +25,31 @@ describe("diagramMenu", () => {
     if (help?.kind === "dialog") help.onSelect();
     expect(showKeyboardShortcuts).toHaveBeenCalledOnce();
   });
+
+  it('puts "Diagram title…" into the Model group where the host renames the diagram', () => {
+    const editTitle = vi.fn();
+    const menu = diagramMenu({
+      editTitle,
+      exportPng: vi.fn(),
+      exportSvg: vi.fn(),
+      showKeyboardShortcuts: vi.fn(),
+    });
+    const [entry] = menu.model ?? [];
+    expect(entry).toMatchObject({ kind: "dialog", id: "diagram-title", label: "Diagram title…" });
+    expect(entry && "keepEnabledWhenReadOnly" in entry).toBe(false);
+    if (entry?.kind === "dialog") entry.onSelect();
+    expect(editTitle).toHaveBeenCalledOnce();
+  });
+
+  it("announces the host's key for the shortcuts dialog without a chip after its …", () => {
+    const menu = diagramMenu({
+      exportPng: vi.fn(),
+      exportSvg: vi.fn(),
+      showKeyboardShortcuts: vi.fn(),
+      keyboardShortcutsKey: "?",
+    });
+    const [help] = menu.help ?? [];
+    expect(help).toMatchObject({ kind: "dialog", ariaKeyShortcuts: "?" });
+    expect(help && "shortcut" in help && help.shortcut).toBeFalsy();
+  });
 });

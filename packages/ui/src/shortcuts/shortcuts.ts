@@ -23,9 +23,14 @@ export interface ShortcutGroup {
 }
 
 export interface ShortcutOptions {
-  /** The web app's own file keys (Open, Save as JSON) and its key for this dialog. */
+  /** The web app's own keys: Open…, Export as JSON and "?" for this dialog. */
   fileKeys?: boolean | undefined;
 }
+
+/** The label of the Export group's JSON entry, which the File keys' row repeats. */
+export const JSON_EXPORT_LABEL = "Export as JSON";
+/** The key the web app binds to this dialog. */
+export const SHORTCUTS_DIALOG_KEY = "?";
 
 const ARROWS = ["←", "↑", "→", "↓"] as const;
 
@@ -81,6 +86,9 @@ export function keyboardShortcuts(
         { action: messages.zoomOut, keys: view("zoomOut") },
         { action: messages.zoomToActual(formatPercent(1, lang)), keys: view("zoomToActual") },
         { action: messages.fit, keys: view("fit") },
+        ...(options.fileKeys
+          ? [{ action: "Keyboard shortcuts", keys: [SHORTCUTS_DIALOG_KEY] }]
+          : []),
       ],
     },
     {
@@ -114,9 +122,8 @@ export function keyboardShortcuts(
     groups.unshift({
       title: "File",
       rows: [
-        { action: "Open a file", keys: keys.open },
-        { action: "Export as JSON", keys: keys.save },
-        { action: "Keyboard shortcuts", keys: ["?"] },
+        { action: messages.openFile, keys: keys.open },
+        { action: JSON_EXPORT_LABEL, keys: keys.save },
       ],
     });
   }

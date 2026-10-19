@@ -1,12 +1,16 @@
 /**
- * The diagram's entries of the chrome menu (guide §5.4), the same in every host: the Export group
- * (PNG first, the more frequent target, then SVG, then further formats) and Help. The Model group
- * holds only the legend checkbox, which the modeler shell adds itself.
+ * The diagram's entries of the chrome menu (guide §5.4), the same in every host: the Model group
+ * ("Diagram title…" where the host renames the diagram; the legend checkbox comes from the modeler
+ * shell), the Export group (PNG first, the more frequent target, then SVG, then further formats)
+ * and Help.
  */
 
 import type { MenuGroups } from "@miragon/modeler-shell";
+import { JSON_EXPORT_LABEL } from "../shortcuts/shortcuts";
 
 export interface DiagramMenuActions {
+  /** Opens the "Diagram title…" dialog; without it the Model group has no entry of its own. */
+  editTitle?: (() => void) | undefined;
   exportPng(): void;
   exportSvg(): void;
   /** Only where the file is not the document already (the web app). */
@@ -14,12 +18,30 @@ export interface DiagramMenuActions {
   /** The chip of an app key that runs the JSON export, e.g. "⌘S". */
   exportJsonShortcut?: string | undefined;
   showKeyboardShortcuts(): void;
-  /** The chip of the key that opens the shortcuts dialog, where the host binds one ("?"). */
+  /**
+   * The key that opens the shortcuts dialog, where the host binds one ("?"). It is announced
+   * (`aria-keyshortcuts`) but shows no chip: modeler-shell 0.2 counts a chip into the entry's
+   * name, and a dialog entry's name must end with "…" (its conformance kit checks it). The dialog
+   * itself lists the key.
+   */
   keyboardShortcutsKey?: string | undefined;
 }
 
 export function diagramMenu(actions: DiagramMenuActions): MenuGroups {
+  const editTitle = actions.editTitle;
   return {
+    ...(editTitle
+      ? {
+          model: [
+            {
+              kind: "dialog" as const,
+              id: "diagram-title",
+              label: "Diagram title…",
+              onSelect: () => editTitle(),
+            },
+          ],
+        }
+      : {}),
     export: [
       {
         kind: "action",
@@ -40,7 +62,7 @@ export function diagramMenu(actions: DiagramMenuActions): MenuGroups {
             {
               kind: "action" as const,
               id: "export-json",
-              label: "Export as JSON",
+              label: JSON_EXPORT_LABEL,
               shortcut: actions.exportJsonShortcut,
               onSelect: () => actions.exportJson?.(),
             },
@@ -53,7 +75,7 @@ export function diagramMenu(actions: DiagramMenuActions): MenuGroups {
         id: "keyboard-shortcuts",
         label: "Keyboard shortcuts…",
         icon: "keyboard",
-        shortcut: actions.keyboardShortcutsKey,
+        ariaKeyShortcuts: actions.keyboardShortcutsKey,
         onSelect: () => actions.showKeyboardShortcuts(),
       },
     ],
