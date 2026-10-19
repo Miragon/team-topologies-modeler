@@ -3,10 +3,13 @@
  *
  * Anything entering the app from the outside world (imported files, share
  * URLs, localStorage) is parsed through {@link parseDocument} so malformed or
- * tampered data can never corrupt the editor state.
+ * tampered data can never corrupt the editor state. Fields the schema does not
+ * know pass through untouched (see `foreign.ts`), so another tool's data
+ * survives a save.
  */
 
 import { z } from "zod";
+import { documentIdProblems } from "./ids";
 import { DOCUMENT_VERSION, INTERACTION_MODES, TEAM_TYPES } from "./types";
 import type { TtDocument } from "./types";
 
@@ -25,7 +28,7 @@ const positionSchema = z.object({
 
 const hexColor = z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "expected a hex colour");
 
-export const teamNodeSchema = z.object({
+export const teamNodeSchema = z.looseObject({
   id: z.string().min(1),
   type: teamTypeSchema,
   label: z.string(),
@@ -36,7 +39,7 @@ export const teamNodeSchema = z.object({
   stroke: hexColor.optional(),
 });
 
-export const interactionSchema = z.object({
+export const interactionSchema = z.looseObject({
   id: z.string().min(1),
   mode: interactionModeSchema,
   label: z.string().optional(),
@@ -46,14 +49,14 @@ export const interactionSchema = z.object({
   stroke: hexColor.optional(),
 });
 
-export const flowSchema = z.object({
+export const flowSchema = z.looseObject({
   id: z.string().min(1),
   label: z.string().optional(),
   position: positionSchema,
   size: sizeSchema,
 });
 
-export const annotationSchema = z.object({
+export const annotationSchema = z.looseObject({
   id: z.string().min(1),
   text: z.string(),
   position: positionSchema,
@@ -61,14 +64,20 @@ export const annotationSchema = z.object({
   attachedTo: z.string().min(1).optional(),
 });
 
-export const documentSchema = z.object({
-  version: z.literal(DOCUMENT_VERSION),
-  title: z.string(),
-  nodes: z.array(teamNodeSchema),
-  interactions: z.array(interactionSchema),
-  flows: z.array(flowSchema),
-  annotations: z.array(annotationSchema),
-});
+export const documentSchema = z
+  .looseObject({
+    version: z.literal(DOCUMENT_VERSION),
+    title: z.string(),
+    nodes: z.array(teamNodeSchema),
+    interactions: z.array(interactionSchema),
+    flows: z.array(flowSchema),
+    annotations: z.array(annotationSchema),
+  })
+  .superRefine((document, context) => {
+    for (const { path, message } of documentIdProblems(document)) {
+      context.addIssue({ code: "custom", path, message });
+    }
+  });
 
 export type ParseResult = { ok: true; document: TtDocument } | { ok: false; error: string };
 

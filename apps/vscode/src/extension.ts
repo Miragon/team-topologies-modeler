@@ -7,10 +7,10 @@ import {
 import { TtEditorProvider } from "./TtEditorProvider.js";
 import { TtPngEditorProvider } from "./TtPngEditorProvider.js";
 
-const EMPTY_MAP = serializeDocument(emptyDocument("New team topology"), true) + "\n";
+const EMPTY_MAP = serializeDocument(emptyDocument("New team topology"));
 
 /** The bundled example diagram (identical to the demo webapp), as a starting point. */
-const EXAMPLE_MAP = serializeDocument(SAMPLE_DOCUMENT, true) + "\n";
+const EXAMPLE_MAP = serializeDocument(SAMPLE_DOCUMENT);
 
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(

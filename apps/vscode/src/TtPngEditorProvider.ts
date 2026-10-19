@@ -5,7 +5,7 @@ import { exportImageToFile } from "./exportImage.js";
 import { EMBED_KEYWORD, decodeDoc, pngExtractText } from "./png.js";
 import type { HostToWebview, WebviewToHost } from "./protocol.js";
 
-const EMPTY_MAP = serializeDocument(emptyDocument("New team topology"), true) + "\n";
+const EMPTY_MAP = serializeDocument(emptyDocument("New team topology"));
 
 /**
  * How long to wait for the webview's rasterized PNG before the save aborts. Generously sized:
