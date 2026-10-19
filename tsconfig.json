@@ -11,8 +11,7 @@
     "paths": {
       "@miragon/team-topologies-schema-model": ["packages/schema-model/src/index.ts"],
       "@miragon/team-topologies-renderer": ["packages/renderer/src/index.ts"],
-      "@miragon/team-topologies-ui": ["packages/ui/src/index.ts"],
-      "@/*": ["apps/webapp/src/*"]
+      "@miragon/team-topologies-ui": ["packages/ui/src/index.ts"]
     }
   },
   "include": ["packages/*/src", "packages/renderer/test", "apps/webapp/src"],

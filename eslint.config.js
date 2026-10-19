@@ -61,7 +61,7 @@ export default tseslint.config(
     files: [
       "packages/renderer/**/*.ts",
       "packages/ui/**/*.{ts,tsx}",
-      "apps/webapp/**/*.{ts,tsx}",
+      "apps/webapp/**/*.ts",
       "e2e/**/*.ts",
     ],
     languageOptions: {
@@ -75,16 +75,16 @@ export default tseslint.config(
       globals: { ...globals.node, ...globals.browser },
     },
   },
-  // Claude Code plugin scripts and the extension's build scripts run as plain Node CLIs.
+  // Claude Code plugin scripts and the apps' build scripts run as plain Node CLIs.
   {
-    files: ["plugins/**/*.mjs", "apps/vscode/scripts/**/*.mjs"],
+    files: ["plugins/**/*.mjs", "apps/vscode/scripts/**/*.mjs", "apps/webapp/scripts/**/*.mjs"],
     languageOptions: {
       globals: { ...globals.node },
     },
   },
-  // React code (the webapp and the shared chrome package): hooks + fast-refresh hygiene.
+  // React code (the shared chrome package): hooks + fast-refresh hygiene.
   {
-    files: ["packages/ui/**/*.{ts,tsx}", "apps/webapp/**/*.{ts,tsx}"],
+    files: ["packages/ui/**/*.{ts,tsx}"],
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,

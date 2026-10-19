@@ -13,7 +13,6 @@ const alias = {
   "@miragon/team-topologies-schema-model": fileURLToPath(
     new URL("./packages/schema-model/src/index.ts", import.meta.url),
   ),
-  "@": fileURLToPath(new URL("./apps/webapp/src", import.meta.url)),
 };
 
 export default defineConfig({
