@@ -1,12 +1,10 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
  * Shared gesture + assertion helpers for the webapp e2e specs. Kept deliberately
  * free of any `@miragon/team-topologies-*` import: the modeler's debug surface
- * (exposed on `window.__ttModeler` in apps/webapp/src/ui/DiagramCanvas.tsx) is
- * described here only by the structural shape the specs call into, and read via a
- * local cast — never a global `Window` augmentation, so each spec stays
- * independent (mirrors the copy-paste spec's pattern).
+ * (exposed on `window.__ttModeler` in apps/webapp/src/main.ts) is described here
+ * only by the structural shape the specs call into, and read via a local cast.
  */
 
 /** The subset of the exported document the specs assert against. */
@@ -46,24 +44,50 @@ export interface CanvasFraction {
   y: number;
 }
 
-/** Navigate to the app and wait until the modeler debug surface is attached. */
-export async function gotoApp(page: Page): Promise<void> {
-  await page.goto("/");
+/** The canvas slot of the modeler shell, diagram-js's container. */
+export const CANVAS = ".cd-shell-canvas";
+
+/** Waits until the app has started: its first diagram (the link's, the autosave's or an empty one) is in place. */
+export async function waitForApp(page: Page): Promise<void> {
   await page.waitForFunction(
-    () => typeof (window as { __ttModeler?: unknown }).__ttModeler !== "undefined",
+    () => (window as { __ttApp?: { ready?: boolean } }).__ttApp?.ready === true,
   );
 }
 
-/** Dismiss the welcome card onto a blank canvas so modelling can begin. */
-export async function startBlankCanvas(page: Page): Promise<void> {
-  await page.locator(".tt-empty__new").click();
-  await expect(page.locator(".tt-empty")).toHaveCount(0);
+/** Navigate to the app and wait until it has started. */
+export async function gotoApp(page: Page, path = "/"): Promise<void> {
+  await page.goto(path);
+  await waitForApp(page);
 }
 
-/** Load the bundled example topology (stable ids) via the welcome card. */
+/** The start screen's card (the shell's empty state). */
+export function startScreen(page: Page): Locator {
+  return page.locator('[data-chrome="empty-state"]');
+}
+
+/** Leave the start screen onto a blank canvas so modelling can begin. */
+export async function startBlankCanvas(page: Page): Promise<void> {
+  await startScreen(page).getByRole("button", { name: "New diagram" }).click();
+  await expect(startScreen(page)).toBeHidden();
+}
+
+/** Load the bundled example topology (stable ids) from the start screen. */
 export async function loadExample(page: Page): Promise<void> {
-  await page.locator(".tt-empty__example").click();
-  await expect(page.locator(".tt-canvas .djs-element").first()).toBeVisible();
+  await startScreen(page).getByRole("button", { name: "Show example" }).click();
+  await expect(page.locator(`${CANVAS} .djs-element`).first()).toBeVisible();
+}
+
+/** Opens the chrome menu and returns its dropdown. */
+export async function openMenu(page: Page): Promise<Locator> {
+  await page.locator('[data-chrome="menu"]').click();
+  const dropdown = page.locator(".cd-shell-menu[role='menu']");
+  await expect(dropdown).toBeVisible();
+  return dropdown;
+}
+
+/** The toast that shows `text`. */
+export function toast(page: Page, text: string): Locator {
+  return page.locator(".cd-shell-toast").filter({ hasText: text });
 }
 
 /** Read the current document from the modeler debug surface. */
@@ -84,7 +108,7 @@ export async function elementCount(page: Page): Promise<number> {
 /** Ids of the currently selected canvas elements. */
 export function selectedIds(page: Page): Promise<string[]> {
   return page
-    .locator(".tt-canvas .djs-element.selected")
+    .locator(`${CANVAS} .djs-element.selected`)
     .evaluateAll((elements) =>
       elements.map((element) => element.getAttribute("data-element-id") ?? "").sort(),
     );
@@ -138,7 +162,7 @@ export async function createFromPalette(
 
   await page.locator(`.djs-palette [data-action="${action}"]`).click();
 
-  const box = (await page.locator(".tt-canvas").boundingBox())!;
+  const box = (await page.locator(CANVAS).boundingBox())!;
   const x = box.x + box.width * at.x;
   const y = box.y + box.height * at.y;
   await page.mouse.move(x, y, { steps: 4 });

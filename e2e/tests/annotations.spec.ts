@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
+  CANVAS,
   centreOf,
   createFromPalette,
   drag,
@@ -7,6 +8,7 @@ import {
   gotoApp,
   loadExample,
   startBlankCanvas,
+  waitForApp,
 } from "./support/modeler";
 
 /**
@@ -42,7 +44,7 @@ test.describe("annotations", () => {
     await gotoApp(page);
     await loadExample(page);
 
-    const connectors = page.locator(".tt-canvas .djs-connection");
+    const connectors = page.locator(`${CANVAS} .djs-connection`);
     const connectorsBefore = await connectors.count();
     await page.locator('[data-element-id="team_fraud"]').click();
     await page.locator('.djs-context-pad [data-action="append-annotation"]').click();
@@ -67,9 +69,7 @@ test.describe("annotations", () => {
     // The autosave is debounced; wait until the address bar carries the change.
     await page.waitForTimeout(900);
     await page.reload();
-    await page.waitForFunction(
-      () => typeof (window as { __ttModeler?: unknown }).__ttModeler !== "undefined",
-    );
+    await waitForApp(page);
     expect((await exportDocument(page)).annotations).toContainEqual(
       expect.objectContaining({ id: created!.id, attachedTo: "team_fraud" }),
     );
@@ -83,7 +83,7 @@ test.describe("annotations", () => {
 
     await page.locator('[data-element-id="ann_fraud_handover"]').click();
     await page.getByRole("button", { name: "Detach" }).click();
-    await expect(page.locator(".tt-canvas .djs-connection")).toHaveCount(0);
+    await expect(page.locator(`${CANVAS} .djs-connection`)).toHaveCount(0);
     expect(
       (await exportDocument(page)).annotations.find((a) => a.id === "ann_fraud_handover"),
     ).not.toHaveProperty("attachedTo");
@@ -94,7 +94,7 @@ test.describe("annotations", () => {
     await page.mouse.move(target.x, target.y, { steps: 8 });
     await page.mouse.click(target.x, target.y);
 
-    await expect(page.locator(".tt-canvas .djs-connection")).toHaveCount(1);
+    await expect(page.locator(`${CANVAS} .djs-connection`)).toHaveCount(1);
     expect((await exportDocument(page)).annotations).toContainEqual(
       expect.objectContaining({ id: "ann_fraud_handover", attachedTo: "team_platform" }),
     );
