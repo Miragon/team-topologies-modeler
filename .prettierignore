@@ -10,3 +10,6 @@ package-lock.json
 **/cd-tokens.generated.css
 **/cd-tokens.generated.json
 **/cd-canvas.css
+
+# Generated from the bundled packages' licenses (npm run notices -w apps/vscode)
+**/THIRD_PARTY_NOTICES.md

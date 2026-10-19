@@ -75,9 +75,9 @@ export default tseslint.config(
       globals: { ...globals.node, ...globals.browser },
     },
   },
-  // Claude Code plugin scripts run as plain Node CLIs, outside the workspaces.
+  // Claude Code plugin scripts and the extension's build scripts run as plain Node CLIs.
   {
-    files: ["plugins/**/*.mjs"],
+    files: ["plugins/**/*.mjs", "apps/vscode/scripts/**/*.mjs"],
     languageOptions: {
       globals: { ...globals.node },
     },

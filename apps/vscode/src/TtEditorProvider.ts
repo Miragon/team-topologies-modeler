@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
-import { getWebviewHtml } from "./webviewHtml.js";
+import { DIAGRAM_VIEW_TYPE } from "./commands.js";
+import { documentDiagnostics, problemCounts } from "./diagnostics.js";
+import type { DiagramPanels } from "./diagramPanels.js";
+import { withExampleInserted } from "./examples.js";
 import { exportImageToFile } from "./exportImage.js";
 import type { HostToWebview, WebviewToHost } from "./protocol.js";
 
@@ -12,24 +15,31 @@ const FLUSH_TIMEOUT_MS = 1000;
 /**
  * CustomTextEditor for `.tt` / `.ttm.json`. The document (native JSON) remains the source of truth —
  * VS Code handles dirty state, saving, Git, diff, and file undo "for free". The webview renders the
- * diagram (diagram-js modeler) and mirrors graphical changes back into the document via WorkspaceEdit.
+ * diagram (the diagram-js modeler inside the shared modeler shell) and mirrors graphical changes
+ * back into the document via WorkspaceEdit. The document's problems go to the Problems view.
  */
 export class TtEditorProvider implements vscode.CustomTextEditorProvider {
-  public static readonly viewType = "teamTopologies.editor";
+  public static readonly viewType = DIAGRAM_VIEW_TYPE;
 
-  public static register(context: vscode.ExtensionContext): vscode.Disposable {
+  public static register(
+    panels: DiagramPanels,
+    diagnostics: vscode.DiagnosticCollection,
+  ): vscode.Disposable {
     return vscode.window.registerCustomEditorProvider(
       TtEditorProvider.viewType,
-      new TtEditorProvider(context),
+      new TtEditorProvider(panels, diagnostics),
       {
-        // Diagram editor: preserve state (zoom/selection) across tab switches.
+        // A hidden tab keeps document, view and selection (and reports 0 × 0 meanwhile).
         webviewOptions: { retainContextWhenHidden: true },
         supportsMultipleEditorsPerDocument: false,
       },
     );
   }
 
-  private constructor(private readonly context: vscode.ExtensionContext) {}
+  private constructor(
+    private readonly panels: DiagramPanels,
+    private readonly diagnostics: vscode.DiagnosticCollection,
+  ) {}
 
   public async resolveCustomTextEditor(
     document: vscode.TextDocument,
@@ -37,13 +47,23 @@ export class TtEditorProvider implements vscode.CustomTextEditorProvider {
     _token: vscode.CancellationToken,
   ): Promise<void> {
     const webview = webviewPanel.webview;
-    webview.options = {
-      enableScripts: true,
-      localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, "dist")],
-    };
-    webview.html = getWebviewHtml(webview, this.context.extensionUri);
+    this.panels.show(webviewPanel, document.uri, { text: true });
 
     const post = (msg: HostToWebview): Thenable<boolean> => webview.postMessage(msg);
+
+    // The pill shows what the Problems view shows; posted once the webview is ready, then on
+    // every change of the summary.
+    let postedProblems: string | undefined;
+    const refreshDiagnostics = (): void => {
+      const diagnostics = documentDiagnostics(document.getText(), document);
+      this.diagnostics.set(document.uri, diagnostics);
+      const counts = problemCounts(diagnostics);
+      const summary = JSON.stringify(counts);
+      if (postedProblems === undefined || postedProblems === summary) return;
+      postedProblems = summary;
+      void post({ type: "problems", ...counts });
+    };
+    refreshDiagnostics();
 
     // Texts the webview itself produced — to suppress the echo (an own change comes back as
     // onDidChangeTextDocument) and NOT reset the canvas. A SET (not a single value): for edits A,B
@@ -54,6 +74,13 @@ export class TtEditorProvider implements vscode.CustomTextEditorProvider {
     // Edits apply one after another, so a save that waits for the webview's flush also waits for
     // the edit that flush produced.
     let appliedEdits: Promise<void> = Promise.resolve();
+    const applyInOrder = (text: string, { echo }: { echo: boolean }): Promise<void> => {
+      const applying = appliedEdits.then(() =>
+        this.replaceWholeDocument(document, text, echo ? undefined : suppressEcho),
+      );
+      appliedEdits = applying.catch(() => undefined);
+      return applying;
+    };
     const pendingFlushes = new Map<number, () => void>();
     let nextFlushId = 1;
 
@@ -82,6 +109,10 @@ export class TtEditorProvider implements vscode.CustomTextEditorProvider {
 
     const changeSub = vscode.workspace.onDidChangeTextDocument((e) => {
       if (e.document.uri.toString() !== document.uri.toString()) return;
+      // A save or a dirty-state change fires without a content change: nothing to sync.
+      if (e.contentChanges.length === 0) return;
+      // Echoes too: an edit on the canvas can add or remove a finding.
+      refreshDiagnostics();
       const text = document.getText();
       if (suppressEcho.has(text)) {
         suppressEcho.delete(text);
@@ -92,15 +123,26 @@ export class TtEditorProvider implements vscode.CustomTextEditorProvider {
 
     const messageSub = webview.onDidReceiveMessage(async (msg: WebviewToHost) => {
       switch (msg.type) {
-        case "ready":
+        case "ready": {
           await post({ type: "init", text: document.getText() });
+          const counts = problemCounts(this.diagnostics.get(document.uri) ?? []);
+          postedProblems = JSON.stringify(counts);
+          await post({ type: "problems", ...counts });
           break;
-        case "edit": {
-          const applying = appliedEdits.then(() =>
-            this.replaceWholeDocument(document, msg.text, suppressEcho),
-          );
-          appliedEdits = applying.catch(() => undefined);
-          await applying;
+        }
+        case "edit":
+          await applyInOrder(msg.text, { echo: false });
+          break;
+        case "insertExample": {
+          // Not echo-suppressed: the webview imports the example like any outside change.
+          const text = withExampleInserted(document.getText());
+          if (text === undefined) {
+            void vscode.window.showErrorMessage(
+              "Couldn't insert the example: fix the problems of this file first.",
+            );
+            break;
+          }
+          await applyInOrder(text, { echo: true });
           break;
         }
         case "flushed":
@@ -109,8 +151,8 @@ export class TtEditorProvider implements vscode.CustomTextEditorProvider {
         case "export":
           await exportImageToFile(document.uri, msg.format, msg.data);
           break;
-        case "info":
-          void vscode.window.showInformationMessage(msg.message);
+        case "showProblems":
+          void vscode.commands.executeCommand("workbench.actions.view.problems");
           break;
         case "error":
           void vscode.window.showErrorMessage(msg.message);
@@ -122,20 +164,25 @@ export class TtEditorProvider implements vscode.CustomTextEditorProvider {
       changeSub.dispose();
       messageSub.dispose();
       saveSub.dispose();
+      this.diagnostics.delete(document.uri);
       for (const finish of [...pendingFlushes.values()]) finish();
     });
   }
 
+  /**
+   * Replaces the document's text as one edit, one undo step. With `suppressEcho` the change it
+   * causes is not sent back to the webview, which already shows it.
+   */
   private async replaceWholeDocument(
     document: vscode.TextDocument,
     text: string,
-    suppressEcho: Set<string>,
+    suppressEcho: Set<string> | undefined,
   ): Promise<void> {
     if (document.getText() === text) return;
     // Register first (synchronously, before applyEdit), so the resulting change event is reliably
     // recognized as an echo. Only add when a write actually happens (not a no-op above) -> no
     // orphaned set entries.
-    suppressEcho.add(text);
+    suppressEcho?.add(text);
     const edit = new vscode.WorkspaceEdit();
     const fullRange = new vscode.Range(
       document.positionAt(0),
@@ -143,6 +190,6 @@ export class TtEditorProvider implements vscode.CustomTextEditorProvider {
     );
     edit.replace(document.uri, fullRange, text);
     const ok = await vscode.workspace.applyEdit(edit);
-    if (!ok) suppressEcho.delete(text); // write failed (e.g. read-only) -> no echo
+    if (!ok) suppressEcho?.delete(text); // write failed (e.g. read-only) -> no echo
   }
 }
