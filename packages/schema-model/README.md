@@ -146,19 +146,19 @@ console.log(SAMPLE_DOCUMENT.title);
 
 ### API surface
 
-| Export                                                                                                                      | Purpose                                                              |
-| --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `TtDocument`, `TeamNode`, `InteractionShape`, `FlowShape`, `TextAnnotation`, `Position`, `Size`                             | The document model types.                                            |
-| `TeamType`, `InteractionMode`, `TEAM_TYPES`, `INTERACTION_MODES`                                                            | The notation's discriminator unions + their value lists.             |
-| `TEAM_TYPE_SPECS`, `INTERACTION_MODE_SPECS`, `FLOW_SPEC`, `ANNOTATION_SPEC`, `dashArray()`                                  | The visual notation spec (shapes, colours, strokes) as data.         |
-| `documentSchema`, `teamNodeSchema`, `interactionSchema`, `flowSchema`, `annotationSchema`                                   | Zod schemas for each shape.                                          |
-| `parseDocument()`, `ParseResult`                                                                                            | Validate **and migrate** unknown input into a `TtDocument`.          |
-| `serializeDocument()`, `canonicalize()`                                                                                     | Deterministic JSON serialization (sorted, rounded, fixed key order). |
-| `foreignFields()`, `withForeignFields()`, `DOCUMENT_FIELDS`, `TEAM_NODE_FIELDS`, …                                          | The fields a document carries beyond the known ones.                 |
-| `documentIdProblems()`, `DIAGRAM_ROOT_ID`, `associationId()`                                                                | The id rules (unique, not reserved).                                 |
-| `emptyDocument()`, `createTeamNode()`, `createInteractionShape()`, `createFlowShape()`, `createTextAnnotation()`, `newId()` | Factories with notation defaults + id generation.                    |
-| `SAMPLE_DOCUMENT`                                                                                                           | A complete example topology.                                         |
-| `DOCUMENT_VERSION`                                                                                                          | The current document version (`3`).                                  |
+| Export                                                                                                                      | Purpose                                                                                               |
+| --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `TtDocument`, `TeamNode`, `InteractionShape`, `FlowShape`, `TextAnnotation`, `Position`, `Size`                             | The document model types.                                                                             |
+| `TeamType`, `InteractionMode`, `TEAM_TYPES`, `INTERACTION_MODES`                                                            | The notation's discriminator unions + their value lists.                                              |
+| `TEAM_TYPE_SPECS`, `INTERACTION_MODE_SPECS`, `FLOW_SPEC`, `ANNOTATION_SPEC`, `dashArray()`                                  | The visual notation spec (shapes, colours, strokes) as data.                                          |
+| `documentSchema`, `teamNodeSchema`, `interactionSchema`, `flowSchema`, `annotationSchema`                                   | Zod schemas for each shape.                                                                           |
+| `parseDocument()`, `ParseResult`, `DocumentIssue`                                                                           | Validate **and migrate** unknown input into a `TtDocument`; a failure lists each issue with its path. |
+| `serializeDocument()`, `canonicalize()`                                                                                     | Deterministic JSON serialization (sorted, rounded, fixed key order).                                  |
+| `foreignFields()`, `withForeignFields()`, `DOCUMENT_FIELDS`, `TEAM_NODE_FIELDS`, …                                          | The fields a document carries beyond the known ones.                                                  |
+| `documentIdProblems()`, `DIAGRAM_ROOT_ID`, `associationId()`                                                                | The id rules (unique, not reserved).                                                                  |
+| `emptyDocument()`, `createTeamNode()`, `createInteractionShape()`, `createFlowShape()`, `createTextAnnotation()`, `newId()` | Factories with notation defaults + id generation.                                                     |
+| `SAMPLE_DOCUMENT`                                                                                                           | A complete example topology.                                                                          |
+| `DOCUMENT_VERSION`                                                                                                          | The current document version (`3`).                                                                   |
 
 ## Determinism & migrations
 

@@ -79,22 +79,32 @@ export const documentSchema = z
     }
   });
 
-export type ParseResult = { ok: true; document: TtDocument } | { ok: false; error: string };
+/** One reason a document is invalid, at the path of the offending value. */
+export interface DocumentIssue {
+  path: (string | number)[];
+  message: string;
+}
+
+export type ParseResult =
+  { ok: true; document: TtDocument } | { ok: false; error: string; issues: DocumentIssue[] };
 
 /**
  * Validates and (if necessary) migrates unknown data into a {@link TtDocument}.
  * Returns a discriminated result rather than throwing so callers can show a
- * friendly message.
+ * friendly message, or point at each offending value (`issues`).
  */
 export function parseDocument(input: unknown): ParseResult {
   const migrated = migrate(input);
   const result = documentSchema.safeParse(migrated);
   if (!result.success) {
+    const issues = result.error.issues.map((issue) => ({
+      path: issue.path.filter((key): key is string | number => typeof key !== "symbol"),
+      message: issue.message,
+    }));
     return {
       ok: false,
-      error: result.error.issues
-        .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)
-        .join("; "),
+      error: issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`).join("; "),
+      issues,
     };
   }
   return { ok: true, document: result.data as TtDocument };

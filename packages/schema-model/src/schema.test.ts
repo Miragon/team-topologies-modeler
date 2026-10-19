@@ -195,7 +195,12 @@ describe("parseDocument: ids", () => {
   it("rejects an id used twice, across collections too", () => {
     const result = parseDocument(documentWith([team("a")], [note("a")]));
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toMatch(/annotations\.0\.id: duplicate id "a"/);
+    if (!result.ok) {
+      expect(result.error).toMatch(/annotations\.0\.id: duplicate id "a"/);
+      expect(result.issues).toEqual([
+        { path: ["annotations", 0, "id"], message: expect.stringMatching(/^duplicate id "a"/) },
+      ]);
+    }
   });
 
   it("rejects the diagram's own id and diagram-js root ids", () => {
