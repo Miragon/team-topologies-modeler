@@ -820,4 +820,7 @@ const ttApp: {
     shell.destroy();
   },
 };
-Object.assign(globalThis as Record<string, unknown>, { __ttModeler: modeler, __ttApp: ttApp });
+// The dev server only: the e2e suite runs against it, and a production page keeps its teardown private.
+if (import.meta.env.DEV) {
+  Object.assign(globalThis as Record<string, unknown>, { __ttModeler: modeler, __ttApp: ttApp });
+}
