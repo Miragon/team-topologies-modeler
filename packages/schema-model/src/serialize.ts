@@ -6,6 +6,14 @@
  * stable share URLs / embedded payloads.
  */
 
+import {
+  ANNOTATION_FIELDS,
+  DOCUMENT_FIELDS,
+  FLOW_FIELDS,
+  INTERACTION_FIELDS,
+  TEAM_NODE_FIELDS,
+  withForeignFields,
+} from "./foreign";
 import { DOCUMENT_VERSION } from "./types";
 import type {
   FlowShape,
@@ -42,7 +50,7 @@ function normNode(n: TeamNode): TeamNode {
   if (n.description) out.description = n.description;
   if (n.fill) out.fill = n.fill;
   if (n.stroke) out.stroke = n.stroke;
-  return out;
+  return withForeignFields(out, n, TEAM_NODE_FIELDS);
 }
 
 function normInteraction(e: InteractionShape): InteractionShape {
@@ -55,7 +63,7 @@ function normInteraction(e: InteractionShape): InteractionShape {
   if (e.label) out.label = e.label;
   if (e.fill) out.fill = e.fill;
   if (e.stroke) out.stroke = e.stroke;
-  return out;
+  return withForeignFields(out, e, INTERACTION_FIELDS);
 }
 
 function normFlow(f: FlowShape): FlowShape {
@@ -65,7 +73,7 @@ function normFlow(f: FlowShape): FlowShape {
     size: normSize(f.size),
   };
   if (f.label) out.label = f.label;
-  return out;
+  return withForeignFields(out, f, FLOW_FIELDS);
 }
 
 function normAnnotation(a: TextAnnotation): TextAnnotation {
@@ -76,31 +84,42 @@ function normAnnotation(a: TextAnnotation): TextAnnotation {
     size: normSize(a.size),
   };
   if (a.attachedTo) out.attachedTo = a.attachedTo;
-  return out;
+  return withForeignFields(out, a, ANNOTATION_FIELDS);
 }
 
 const byId = (a: { id: string }, b: { id: string }): number =>
   a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 
-/** Returns a canonicalised copy of a document (sorted, rounded, version-stamped). */
+/**
+ * Returns a canonicalised copy of a document (sorted, rounded, version-stamped). Fields the
+ * modeler does not know follow the known ones, sorted by name.
+ */
 export function canonicalize(doc: TtDocument): TtDocument {
-  return {
-    version: DOCUMENT_VERSION,
-    title: doc.title,
-    nodes: [...doc.nodes].map(normNode).sort(byId),
-    interactions: [...doc.interactions].map(normInteraction).sort(byId),
-    flows: [...doc.flows].map(normFlow).sort(byId),
-    annotations: [...doc.annotations].map(normAnnotation).sort(byId),
-  };
+  return withForeignFields(
+    {
+      version: DOCUMENT_VERSION,
+      title: doc.title,
+      nodes: [...doc.nodes].map(normNode).sort(byId),
+      interactions: [...doc.interactions].map(normInteraction).sort(byId),
+      flows: [...doc.flows].map(normFlow).sort(byId),
+      annotations: [...doc.annotations].map(normAnnotation).sort(byId),
+    },
+    doc,
+    DOCUMENT_FIELDS,
+  );
 }
 
 /**
- * Serialises a document to deterministic, pretty-printed JSON. An empty
- * `annotations` list is left out, so re-saving a model that has no annotations
- * changes nothing but its version stamp.
+ * Serialises a document to deterministic JSON. An empty `annotations` list is left out, so
+ * re-saving a model that has no annotations changes nothing but its version stamp. The pretty
+ * form is the file on disk and ends with a line break, like the files editors and Git expect;
+ * the compact form (share links, local storage) has none.
  */
 export function serializeDocument(doc: TtDocument, pretty = true): string {
-  const { annotations, ...canonical } = canonicalize(doc);
-  const output = annotations.length > 0 ? { ...canonical, annotations } : canonical;
-  return JSON.stringify(output, null, pretty ? 2 : 0);
+  const canonical = canonicalize(doc);
+  const output =
+    canonical.annotations.length > 0
+      ? canonical
+      : Object.fromEntries(Object.entries(canonical).filter(([key]) => key !== "annotations"));
+  return pretty ? `${JSON.stringify(output, null, 2)}\n` : JSON.stringify(output);
 }

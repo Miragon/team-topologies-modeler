@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DIAGRAM_ROOT_ID, associationId, documentIdProblems } from "./ids";
 import { parseDocument } from "./schema";
 import { SAMPLE_DOCUMENT } from "./sample";
 import { DOCUMENT_VERSION } from "./types";
@@ -149,5 +150,67 @@ describe("parseDocument", () => {
   it("rejects a non-object", () => {
     expect(parseDocument(42).ok).toBe(false);
     expect(parseDocument(null).ok).toBe(false);
+  });
+
+  it("keeps fields it does not know, on the document and on its elements", () => {
+    const result = parseDocument({
+      ...SAMPLE_DOCUMENT,
+      "x-vendor": { keep: "me" },
+      nodes: [{ ...SAMPLE_DOCUMENT.nodes[0], "x-owner": "team-a" }],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect((result.document as unknown as Record<string, unknown>)["x-vendor"]).toEqual({
+      keep: "me",
+    });
+    expect((result.document.nodes[0] as unknown as Record<string, unknown>)["x-owner"]).toBe(
+      "team-a",
+    );
+  });
+});
+
+describe("parseDocument: ids", () => {
+  const team = (id: string) => ({
+    id,
+    type: "platform",
+    label: id,
+    position: { x: 0, y: 0 },
+    size: { width: 10, height: 10 },
+  });
+  const note = (id: string) => ({
+    id,
+    text: id,
+    position: { x: 0, y: 0 },
+    size: { width: 10, height: 10 },
+  });
+  const documentWith = (nodes: { id: string }[], annotations: { id: string }[] = []) => ({
+    version: DOCUMENT_VERSION,
+    title: "x",
+    nodes,
+    interactions: [],
+    flows: [],
+    annotations,
+  });
+
+  it("rejects an id used twice, across collections too", () => {
+    const result = parseDocument(documentWith([team("a")], [note("a")]));
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatch(/annotations\.0\.id: duplicate id "a"/);
+      expect(result.issues).toEqual([
+        { path: ["annotations", 0, "id"], message: expect.stringMatching(/^duplicate id "a"/) },
+      ]);
+    }
+  });
+
+  it("rejects the diagram's own id and diagram-js root ids", () => {
+    expect(parseDocument(documentWith([team(DIAGRAM_ROOT_ID)])).ok).toBe(false);
+    expect(parseDocument(documentWith([team("__implicitroot_0")])).ok).toBe(false);
+  });
+
+  it("rejects the id an annotation's connector takes", () => {
+    const result = parseDocument(documentWith([team(associationId("ann_1"))], [note("ann_1")]));
+    expect(result.ok).toBe(false);
+    expect(documentIdProblems(documentWith([team("a")], [note("b")]))).toEqual([]);
   });
 });

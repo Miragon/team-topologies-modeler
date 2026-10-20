@@ -15,6 +15,7 @@ const EXTERNAL = [
   "inherits-browser",
   "path-intersection",
   "@miragon/team-topologies-schema-model",
+  "@miragon/modeler-api",
 ];
 
 export default defineConfig({

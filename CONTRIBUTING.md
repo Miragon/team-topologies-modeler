@@ -47,8 +47,13 @@ Prefer a plain Vite server with no proxy? `npm run dev:webapp:plain` (or
 
 ## Browser & e2e tests
 
-`npm run test:browser` (Vitest browser mode) and `npm run test:e2e` (Playwright, in `e2e/`) need a
-Chromium browser. Locally, run `npx playwright install chromium` once. In CI these two jobs run inside
+`npm run test:browser` (Vitest browser mode, including the `@miragon/modeler-api` conformance kit)
+and `npm run test:e2e` (Playwright, in `e2e/`) need a Chromium browser. The e2e suite has two
+projects: `webapp` (the web app's dev server, port `E2E_PORT`, default 5180, with the shell's
+conformance kit on its web host) and `vscode-webview`
+(the VS Code webview inside the modeler shell's VS Code stub, port `E2E_WEBVIEW_PORT`, default 5190,
+with the shell's conformance kit and a CSP smoke test of the production bundle); set both ports when
+several worktrees run the suite at once. Locally, run `npx playwright install chromium` once. In CI these two jobs run inside
 the official Playwright container (`mcr.microsoft.com/playwright`), which ships the browser + system
 libs pre-installed — so **when you bump `playwright`/`@playwright/test`, bump the matching image tag
 in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) too** (the version pin-check does not catch
@@ -78,8 +83,8 @@ docs: add contributing guide
 | --------------------------------------- | ----------------------------------------------------- | -------- |
 | `@miragon/team-topologies-schema-model` | Types, notation spec, Zod validation, serialization   | DOM-free |
 | `@miragon/team-topologies-renderer`     | diagram-js bootstrap, renderer, viewer, import/export | DOM      |
-| `@miragon/team-topologies-ui` (private) | Shared React chrome: Inspector, Legend                | DOM      |
-| `apps/webapp`                           | Vite + React demo editor                              | DOM      |
+| `@miragon/team-topologies-ui` (private) | Chrome content: inspector, legend rows, dialogs, menu | DOM      |
+| `apps/webapp`                           | Vite demo editor on the modeler shell's web host      | DOM      |
 | `apps/vscode`                           | VS Code custom editor for `.tt`/`.ttm.json`           | DOM      |
 
 **P1 — the DOM boundary:** the DOM-free package (`schema-model`) must **never** import

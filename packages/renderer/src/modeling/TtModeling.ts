@@ -17,8 +17,10 @@ import {
 } from "../model/di-types.js";
 import type TtElementFactory from "../model/TtElementFactory.js";
 import UpdatePropertiesHandler from "./cmd/UpdatePropertiesHandler.js";
+import UpdateTitleHandler from "./cmd/UpdateTitleHandler.js";
 
 const UPDATE_PROPERTIES = "element.updateProperties";
+const UPDATE_TITLE = "tt.title.update";
 
 /** Gap between an element and an annotation appended to it. */
 const ANNOTATION_GAP = 40;
@@ -33,6 +35,12 @@ export default class TtModeling {
     private readonly canvas: Canvas,
   ) {
     commandStack.registerHandler(UPDATE_PROPERTIES, UpdatePropertiesHandler);
+    commandStack.registerHandler(UPDATE_TITLE, UpdateTitleHandler);
+  }
+
+  /** Renames the diagram, as one undo step. */
+  setTitle(title: string): void {
+    this.commandStack.execute(UPDATE_TITLE, { title });
   }
 
   updateProperties(element: TtElement, properties: Record<string, unknown>): void {

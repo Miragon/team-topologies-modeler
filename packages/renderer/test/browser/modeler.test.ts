@@ -3,6 +3,7 @@ import {
   Modeler,
   isTtAnnotation,
   isTtAssociation,
+  isTtElement,
   isTtTeam,
 } from "@miragon/team-topologies-renderer";
 import type {
@@ -765,25 +766,70 @@ test("Escape clears the selection", () => {
   }
 });
 
-test("+ and - zoom in steps, Shift+0 shows 100 %, Shift+1 fits the diagram", () => {
+test("plain + and -, Shift+0 and Shift+1 are the host chrome's, not the canvas's", () => {
   const { modeler, container } = mountModeler();
   try {
     modeler.importDocument(SAMPLE_DOCUMENT);
     const { canvas } = services(modeler);
     canvas.zoom(1);
 
-    press("+");
-    const zoomedIn = canvas.zoom();
-    expect(zoomedIn).toBeGreaterThan(1);
-    press("-");
-    press("-");
-    expect(canvas.zoom()).toBeLessThan(1);
-
-    press(")", { shiftKey: true, code: "Digit0" });
+    for (const [key, init] of [
+      ["+", {}],
+      ["=", {}],
+      ["-", {}],
+      [")", { shiftKey: true, code: "Digit0" }],
+      ["!", { shiftKey: true, code: "Digit1" }],
+    ] as const) {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...init });
+      document.dispatchEvent(event);
+      expect(event.defaultPrevented, key).toBe(false);
+    }
     expect(canvas.zoom()).toBeCloseTo(1);
+  } finally {
+    modeler.destroy();
+    container.remove();
+  }
+});
 
-    press("!", { shiftKey: true, code: "Digit1" });
-    expect(canvas.zoom()).toBeLessThan(1);
+test("undo keys reach the host when it owns the history (undoRedoKeys: false)", () => {
+  const container = document.createElement("div");
+  container.style.width = "900px";
+  container.style.height = "640px";
+  document.body.appendChild(container);
+  const modeler = new Modeler({ container, undoRedoKeys: false });
+  try {
+    modeler.importDocument(SAMPLE_DOCUMENT);
+    const { registry, modeling } = services(modeler);
+    modeling.moveElements([registry.get("team_checkout")], { x: 20, y: 0 });
+
+    for (const init of [
+      { key: "z", ctrlKey: true },
+      { key: "z", metaKey: true, shiftKey: true },
+      { key: "y", ctrlKey: true },
+    ]) {
+      const event = new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init });
+      document.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+    }
+    expect(modeler.canUndo()).toBe(true);
+  } finally {
+    modeler.destroy();
+    container.remove();
+  }
+});
+
+test("a key a closer listener already handled is left alone", () => {
+  const { modeler, container } = mountModeler();
+  try {
+    modeler.importDocument(SAMPLE_DOCUMENT);
+    const { registry, selection } = services(modeler);
+    selection.select(registry.get("team_checkout"));
+    const event = new KeyboardEvent("keydown", { key: "Delete", bubbles: true, cancelable: true });
+    event.preventDefault();
+
+    document.dispatchEvent(event);
+
+    expect(registry.get("team_checkout")).toBeDefined();
   } finally {
     modeler.destroy();
     container.remove();
@@ -855,9 +901,47 @@ test("fitToView on a narrow canvas centres the diagram below the 120px palette s
   expect((top + bottom) / 2).toBeCloseTo((120 + (900 - 56)) / 2, 0);
 });
 
+test("fitToView never zooms a small diagram past 100 %", () => {
+  const host = document.createElement("div");
+  document.body.appendChild(host);
+  const modeler = new Modeler({ container: host, width: 1100, height: 900 });
+  try {
+    const team = SAMPLE_DOCUMENT.nodes.find((node) => node.id === "team_fraud");
+    if (!team) throw new Error("The sample has no team_fraud.");
+    modeler.importDocument({ ...emptyDocument(), nodes: [team] });
+    const { canvas } = services(modeler);
+    canvas.zoom(0.25);
+
+    modeler.fitToView();
+
+    expect(canvas.zoom()).toBeCloseTo(1);
+  } finally {
+    modeler.destroy();
+    host.remove();
+  }
+});
+
 // --- palette and context pad by keyboard --------------------------------------
 
-test("Enter on a palette entry creates the element in view and selects it", () => {
+/** The click the host chrome dispatches for Enter or Space on a palette entry (detail 0). */
+function keyboardClick(entry: HTMLElement): void {
+  const box = entry.getBoundingClientRect();
+  entry.dispatchEvent(
+    new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
+      detail: 0,
+      clientX: box.left + box.width / 2,
+      clientY: box.top + box.height / 2,
+    }),
+  );
+}
+
+function centreOf(element: TtElement): { x: number; y: number } {
+  return { x: element.x + element.width / 2, y: element.y + element.height / 2 };
+}
+
+test("a keyboard click on a palette entry creates the element in view, selected and named", async () => {
   const { modeler, container } = mountModeler();
   try {
     modeler.importDocument(emptyDocument());
@@ -865,13 +949,9 @@ test("Enter on a palette entry creates the element in view and selects it", () =
     const entry = container.querySelector<HTMLElement>(
       '.djs-palette [data-action="team.platform"]',
     )!;
-    expect(entry.tabIndex).toBe(0);
-    expect(entry.getAttribute("aria-label")).toBe("Platform team");
-    entry.focus();
+    expect(entry.getAttribute("tabindex")).toBeNull();
 
-    entry.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
-    );
+    keyboardClick(entry);
 
     const nodes = modeler.exportDocument().nodes;
     expect(nodes).toEqual([expect.objectContaining({ type: "platform" })]);
@@ -880,13 +960,39 @@ test("Enter on a palette entry creates the element in view and selects it", () =
     const viewbox = (
       canvas as unknown as { viewbox(): { x: number; y: number; width: number; height: number } }
     ).viewbox();
-    const centre = {
-      x: selected[0].x + selected[0].width / 2,
-      y: selected[0].y + selected[0].height / 2,
-    };
+    const centre = centreOf(selected[0]);
     expect(Math.abs(centre.x - (viewbox.x + viewbox.width / 2))).toBeLessThanOrEqual(1);
     expect(Math.abs(centre.y - (viewbox.y + viewbox.height / 2))).toBeLessThanOrEqual(1);
-    expect(document.activeElement).toBe(canvas.getContainer().querySelector(":scope > svg"));
+    expect(document.activeElement).toBe(container.querySelector("textarea.tt-label-editor"));
+  } finally {
+    modeler.destroy();
+    container.remove();
+  }
+});
+
+test("keyboard creation lands on the free centre, 24px further while that spot is taken", () => {
+  const container = document.createElement("div");
+  container.style.width = "900px";
+  container.style.height = "640px";
+  document.body.appendChild(container);
+  const freeCentre = { x: 300, y: 200 };
+  const modeler = new Modeler({ container, freeRectCenter: () => freeCentre });
+  try {
+    modeler.importDocument(emptyDocument());
+    const { registry } = services(modeler);
+    const entry = container.querySelector<HTMLElement>('.djs-palette [data-action="flow"]')!;
+
+    keyboardClick(entry);
+    (document.activeElement as HTMLElement | null)?.blur();
+    keyboardClick(entry);
+
+    const centres = (registry.filter(isTtElement) as TtElement[]).map(centreOf);
+    expect(centres).toEqual(
+      expect.arrayContaining([
+        { x: 300, y: 200 },
+        { x: 324, y: 224 },
+      ]),
+    );
   } finally {
     modeler.destroy();
     container.remove();
@@ -950,12 +1056,12 @@ test("labels stay schwarz on the notation fills and turn weiss on a dark custom 
 
 // --- canvas focus and name ---------------------------------------------------
 
-test("the canvas is a named group that shows a focus ring only when reached by Tab", () => {
+test("the canvas is named, leaves its role to the host and rings only when reached by Tab", () => {
   const { modeler, container } = mountModeler();
   try {
     modeler.importDocument(SAMPLE_DOCUMENT);
     const svg = services(modeler).canvas.getContainer().querySelector(":scope > svg")!;
-    expect(svg.getAttribute("role")).toBe("group");
+    expect(svg.getAttribute("role")).toBeNull();
     expect(svg.getAttribute("aria-label")).toBe("Team Topologies diagram");
 
     press("Tab");

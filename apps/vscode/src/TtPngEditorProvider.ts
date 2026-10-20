@@ -1,11 +1,14 @@
 import * as vscode from "vscode";
-import { emptyDocument, serializeDocument } from "@miragon/team-topologies-schema-model";
-import { getWebviewHtml } from "./webviewHtml.js";
+import { PNG_VIEW_TYPE } from "./commands.js";
+import { documentDiagnostics, problemCounts } from "./diagnostics.js";
+import type { DiagramPanels } from "./diagramPanels.js";
+import { EMPTY_MAP, withExampleInserted } from "./examples.js";
 import { exportImageToFile } from "./exportImage.js";
 import { EMBED_KEYWORD, decodeDoc, pngExtractText } from "./png.js";
 import type { HostToWebview, WebviewToHost } from "./protocol.js";
 
-const EMPTY_MAP = serializeDocument(emptyDocument("New team topology"), true) + "\n";
+/** The embedded document has no text editor; its problems point at the start of the file. */
+const START_OF_FILE = { positionAt: () => new vscode.Position(0, 0) };
 
 /**
  * How long to wait for the webview's rasterized PNG before the save aborts. Generously sized:
@@ -48,6 +51,8 @@ interface PanelBinding {
   readonly webview: vscode.Webview;
   readonly pending: Map<number, PendingPng>;
   nextId: number;
+  /** The webview has its document, so it takes the problems summary. */
+  problemsShown: boolean;
 }
 
 interface PendingPng {
@@ -66,12 +71,15 @@ interface PendingPng {
  * browser, not in the Node host).
  */
 export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDocument> {
-  public static readonly viewType = "teamTopologies.pngEditor";
+  public static readonly viewType = PNG_VIEW_TYPE;
 
-  public static register(context: vscode.ExtensionContext): vscode.Disposable {
+  public static register(
+    panels: DiagramPanels,
+    diagnostics: vscode.DiagnosticCollection,
+  ): vscode.Disposable {
     return vscode.window.registerCustomEditorProvider(
       TtPngEditorProvider.viewType,
-      new TtPngEditorProvider(context),
+      new TtPngEditorProvider(panels, diagnostics),
       {
         // Keep the modeler in memory for as long as the tab exists: needed so `saveCustomDocument`
         // can rasterize the diagram even with a hidden editor (otherwise no canvas -> no save).
@@ -81,7 +89,10 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
     );
   }
 
-  private constructor(private readonly context: vscode.ExtensionContext) {}
+  private constructor(
+    private readonly panels: DiagramPanels,
+    private readonly diagnostics: vscode.DiagnosticCollection,
+  ) {}
 
   private readonly bindings = new Map<TtPngDocument, PanelBinding>();
 
@@ -123,13 +134,9 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
     _token: vscode.CancellationToken,
   ): Promise<void> {
     const webview = webviewPanel.webview;
-    webview.options = {
-      enableScripts: true,
-      localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, "dist")],
-    };
-    webview.html = getWebviewHtml(webview, this.context.extensionUri);
+    this.panels.show(webviewPanel, document.uri, { text: false });
 
-    const binding: PanelBinding = { webview, pending: new Map(), nextId: 1 };
+    const binding: PanelBinding = { webview, pending: new Map(), nextId: 1, problemsShown: false };
     this.bindings.set(document, binding);
 
     const post = (msg: HostToWebview): Thenable<boolean> => webview.postMessage(msg);
@@ -138,6 +145,8 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
       switch (msg.type) {
         case "ready":
           await post({ type: "init", text: document.text });
+          binding.problemsShown = true;
+          this.refreshDiagnostics(document);
           // New (empty) file: set "dirty" once so the first Cmd+S materializes a real PNG
           // (otherwise a 0-byte placeholder file sits there until the first edit).
           if (document.isNew && !document.seededDirty) {
@@ -148,14 +157,22 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
         case "edit":
           this.onWebviewEdit(document, msg.text);
           break;
+        case "insertExample": {
+          const text = withExampleInserted(document.text);
+          if (text === undefined) break;
+          // One edit, one undo step; the webview imports it like an undo would bring it back.
+          this.onWebviewEdit(document, text);
+          await post({ type: "update", text });
+          break;
+        }
+        case "showProblems":
+          void vscode.commands.executeCommand("workbench.actions.view.problems");
+          break;
         case "export":
           await exportImageToFile(document.uri, msg.format, msg.data);
           break;
         case "pngResponse":
           this.resolvePng(binding, msg);
-          break;
-        case "info":
-          void vscode.window.showInformationMessage(msg.message);
           break;
         case "error":
           void vscode.window.showErrorMessage(msg.message);
@@ -165,6 +182,7 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
 
     webviewPanel.onDidDispose(() => {
       messageSub.dispose();
+      this.diagnostics.delete(document.uri);
       if (this.bindings.get(document) === binding) this.bindings.delete(document);
       // Cleanly abort pending save/backup roundtrips of this (now dead) webview. Snapshot first,
       // because reject() deletes from binding.pending (don't mutate the iterator during iteration).
@@ -179,12 +197,26 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
   // Edits / Undo-Redo (dirty state via the edit stack)
   // -------------------------------------------------------------------------
 
+  /** The Problems view and the pill show the problems of the embedded document. */
+  private refreshDiagnostics(document: TtPngDocument): void {
+    const diagnostics = documentDiagnostics(document.text, START_OF_FILE);
+    this.diagnostics.set(document.uri, diagnostics);
+    const binding = this.bindings.get(document);
+    if (binding?.problemsShown) {
+      void binding.webview.postMessage({
+        type: "problems",
+        ...problemCounts(diagnostics),
+      } satisfies HostToWebview);
+    }
+  }
+
   private onWebviewEdit(document: TtPngDocument, text: string): void {
     if (text === document.text) return;
     const before = document.text;
     const after = text;
     document.text = after;
     document.isNew = false;
+    this.refreshDiagnostics(document);
     // Undo/Redo post to the CURRENT webview (via `bindings`), not one captured when the edit was
     // created: if the editor is moved to another group, the original webview is disposed and
     // replaced by a new one — a captured `post` would otherwise go nowhere. Cf. revertCustomDocument.
@@ -193,10 +225,12 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
       label: "Edit diagram",
       undo: () => {
         document.text = before;
+        this.refreshDiagnostics(document);
         void this.bindings.get(document)?.webview.postMessage({ type: "update", text: before });
       },
       redo: () => {
         document.text = after;
+        this.refreshDiagnostics(document);
         void this.bindings.get(document)?.webview.postMessage({ type: "update", text: after });
       },
     });
@@ -265,6 +299,7 @@ export class TtPngEditorProvider implements vscode.CustomEditorProvider<TtPngDoc
     document.text = text;
     document.isNew = false;
     document.seededDirty = false;
+    this.refreshDiagnostics(document);
     await this.bindings.get(document)?.webview.postMessage({ type: "update", text });
   }
 

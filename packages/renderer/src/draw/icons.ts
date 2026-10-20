@@ -1,6 +1,6 @@
 /**
- * Functional icons for the canvas chrome (context pad, palette tools) and for hosts without an
- * icon library of their own (the VS Code webview), returned as inline SVG markup.
+ * Functional icons for the canvas chrome (context pad, palette tools), returned as inline SVG
+ * markup.
  *
  * Lucide icons (ISC licence, © Lucide Icons and Contributors), copied unchanged from
  * lucide-static 1.59.0 and inlined so the published renderer has no icon runtime dependency.
@@ -68,19 +68,35 @@ export const ICON_SQUARE_DASHED_MOUSE_POINTER: IconNode = [
   ["path", { d: "M3 14v1" }],
 ];
 
+/**
+ * @deprecated Host chrome only (menu, zoom panel, dialogs); hosts take their chrome and its icons
+ * from `@miragon/modeler-shell`. Kept for existing consumers, removed in a later release.
+ */
 export const ICON_MENU: IconNode = [
   ["path", { d: "M4 5h16" }],
   ["path", { d: "M4 12h16" }],
   ["path", { d: "M4 19h16" }],
 ];
 
+/**
+ * @deprecated Host chrome only (menu, zoom panel, dialogs); hosts take their chrome and its icons
+ * from `@miragon/modeler-shell`. Kept for existing consumers, removed in a later release.
+ */
 export const ICON_MINUS: IconNode = [["path", { d: "M5 12h14" }]];
 
+/**
+ * @deprecated Host chrome only (menu, zoom panel, dialogs); hosts take their chrome and its icons
+ * from `@miragon/modeler-shell`. Kept for existing consumers, removed in a later release.
+ */
 export const ICON_PLUS: IconNode = [
   ["path", { d: "M5 12h14" }],
   ["path", { d: "M12 5v14" }],
 ];
 
+/**
+ * @deprecated Host chrome only (menu, zoom panel, dialogs); hosts take their chrome and its icons
+ * from `@miragon/modeler-shell`. Kept for existing consumers, removed in a later release.
+ */
 export const ICON_MAXIMIZE: IconNode = [
   ["path", { d: "M8 3H5a2 2 0 0 0-2 2v3" }],
   ["path", { d: "M21 8V5a2 2 0 0 0-2-2h-3" }],
@@ -88,12 +104,20 @@ export const ICON_MAXIMIZE: IconNode = [
   ["path", { d: "M16 21h3a2 2 0 0 0 2-2v-3" }],
 ];
 
+/**
+ * @deprecated Host chrome only (menu, zoom panel, dialogs); hosts take their chrome and its icons
+ * from `@miragon/modeler-shell`. Kept for existing consumers, removed in a later release.
+ */
 export const ICON_DOWNLOAD: IconNode = [
   ["path", { d: "M12 15V3" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }],
   ["path", { d: "m7 10 5 5 5-5" }],
 ];
 
+/**
+ * @deprecated Host chrome only (menu, zoom panel, dialogs); hosts take their chrome and its icons
+ * from `@miragon/modeler-shell`. Kept for existing consumers, removed in a later release.
+ */
 export const ICON_X: IconNode = [
   ["path", { d: "M18 6 6 18" }],
   ["path", { d: "m6 6 12 12" }],

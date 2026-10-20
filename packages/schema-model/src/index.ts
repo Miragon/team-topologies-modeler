@@ -8,5 +8,7 @@ export * from "./types";
 export * from "./notation";
 export * from "./schema";
 export * from "./serialize";
+export * from "./foreign";
+export * from "./ids";
 export * from "./factory";
 export * from "./sample";

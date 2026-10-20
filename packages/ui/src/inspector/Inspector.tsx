@@ -1,11 +1,19 @@
 /**
- * Floating inspector: a panel on the right below the top row (a bottom sheet on narrow screens).
- * It edits the one selected element (a team, an interaction, the flow of change or an annotation)
+ * The inspector: a panel on the right below the top row (a bottom sheet on narrow screens), placed
+ * by the host. It edits the one selected element (a team, an interaction, the flow of change or an annotation)
  * through the modeler's modeling services, so every change is one undo step. A multi-selection
  * gets a short summary with a delete action instead.
  */
 
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { Trash, X } from "lucide-react";
 import {
   INTERACTION_MODES,
@@ -41,6 +49,7 @@ import { Icon } from "../Icon";
 import { AnnotationIcon, FlowIcon, InteractionIcon, TeamIcon } from "../ShapeIcon";
 import { ColorField } from "./ColorField";
 import { useKeepSelectionVisible, type SelectionArea } from "./keepSelectionVisible";
+import { useModelerSelection } from "../useModelerSelection";
 
 interface Modeling {
   removeElements(elements: Element[]): void;
@@ -87,7 +96,7 @@ function PanelHeader({
         type="button"
         className="tt-closebtn"
         aria-label="Close"
-        title="Close (Esc)"
+        aria-keyshortcuts="Escape"
         onClick={onClose}
       >
         <Icon icon={X} />
@@ -404,7 +413,7 @@ function useCanvasCatchesDroppedFocus(modeler: Modeler, contentKey: string | nul
   }, [modeler, contentKey]);
 }
 
-export interface InspectorProps {
+interface InspectorProps {
   /** The modeler whose selection the panel edits. */
   modeler: Modeler;
   /** The one selected element; null for none or several (a multi-selection is read from the modeler). */
@@ -415,11 +424,20 @@ export interface InspectorProps {
   readOnly?: boolean;
 }
 
-export function Inspector({ modeler, selected, revision, readOnly = false }: InspectorProps) {
+interface InspectorContent {
+  /** The panel for the selection, or null when nothing it edits is selected. */
+  body: ReactNode | null;
+  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+}
+
+/** The panel content for the current selection, kept clear of `panel` and its dropped focus. */
+function useInspectorContent(
+  { modeler, selected, revision, readOnly = false }: InspectorProps,
+  panelRef: RefObject<HTMLElement | null>,
+): InspectorContent {
   // `revision` is read so the inspector re-renders when the selected element mutates.
   void revision;
   const selectedElements = useSelectedElements(modeler);
-  const panelRef = useRef<HTMLElement>(null);
   const isMultiSelection = selectedElements.length > 1;
   const services = inspectorServices(modeler);
   const multiSelectionBounds = isMultiSelection ? boundsOf(selectedElements) : null;
@@ -429,7 +447,7 @@ export function Inspector({ modeler, selected, revision, readOnly = false }: Ins
   useCanvasCatchesDroppedFocus(modeler, shownArea?.id ?? null);
 
   const panelProps = { services, readOnly };
-  let body: ReactNode;
+  let body: ReactNode | null = null;
   if (isMultiSelection) {
     body = <MultiInspector elements={selectedElements} {...panelProps} />;
   } else if (isTtTeam(selected)) {
@@ -440,8 +458,6 @@ export function Inspector({ modeler, selected, revision, readOnly = false }: Ins
     body = <FlowInspector flow={selected} {...panelProps} />;
   } else if (isTtAnnotation(selected)) {
     body = <AnnotationInspector annotation={selected} {...panelProps} />;
-  } else {
-    return null;
   }
 
   // Escape that a field didn't use (to undo its draft) closes the panel, like it does on the canvas.
@@ -451,9 +467,46 @@ export function Inspector({ modeler, selected, revision, readOnly = false }: Ins
     services.closeAndFocusCanvas();
   };
 
+  return { body, onKeyDown };
+}
+
+/** A panel the host's chrome owns, such as the modeler shell's inspector `<aside>`. */
+export interface InspectorSlot {
+  readonly element: HTMLElement;
+  open(): void;
+  close(): void;
+}
+
+export interface InspectorSlotContentProps {
+  modeler: Modeler;
+  slot: InspectorSlot;
+  readOnly?: boolean;
+}
+
+/**
+ * The inspector's content inside a host's panel: it opens the panel while the selection has
+ * something to edit and closes it otherwise. The panel's place, surface and name are the host's.
+ */
+export function InspectorSlotContent({
+  modeler,
+  slot,
+  readOnly = false,
+}: InspectorSlotContentProps) {
+  const { selected, revision } = useModelerSelection(modeler);
+  const panelRef = useRef<HTMLElement>(slot.element);
+  const { body, onKeyDown } = useInspectorContent(
+    { modeler, selected, revision, readOnly },
+    panelRef,
+  );
+  const shown = body !== null;
+  useLayoutEffect(() => {
+    if (shown) slot.open();
+    else slot.close();
+  }, [slot, shown]);
+  if (!body) return null;
   return (
-    <aside className="tt-inspector" aria-label="Properties" ref={panelRef} onKeyDown={onKeyDown}>
+    <div className="tt-inspector__slot" onKeyDown={onKeyDown}>
       {body}
-    </aside>
+    </div>
   );
 }

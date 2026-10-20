@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
+  CANVAS,
   centreOf,
   drag,
   elementCount,
@@ -27,7 +28,7 @@ test.describe("multi-selection", () => {
   }) => {
     const before = await exportDocument(page);
     await page.keyboard.press("Control+a");
-    const everything = await page.locator(".tt-canvas .djs-element").count();
+    const everything = await page.locator(`${CANVAS} .djs-element`).count();
     await expect.poll(async () => (await selectedIds(page)).length).toBe(everything);
 
     const from = await centreOf(page, "team_checkout");

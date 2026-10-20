@@ -100,6 +100,13 @@ const INTERACTION_KEYS = ["id", "mode", "label", "position", "size", "fill", "st
 const FLOW_KEYS = ["id", "label", "position", "size"];
 const ANNOTATION_KEYS = ["id", "text", "position", "size", "attachedTo"];
 
+const UNKNOWN_FIELD = "unknown field; the modeler ignores it and keeps it on save";
+
+// Parts of a diagram the file never lists take these ids, so no element may use them.
+const DIAGRAM_ROOT_ID = "tt-root";
+const ENGINE_ROOT_ID_PREFIX = "__implicitroot";
+const associationId = (annotationId) => `assoc_${annotationId}`;
+
 const isPlainObject = (value) =>
   value !== null && typeof value === "object" && !Array.isArray(value);
 const isFiniteNumber = (value) => typeof value === "number" && Number.isFinite(value);
@@ -134,7 +141,7 @@ function validateElement(element, path, allowedKeys, validateFields, findings) {
   }
   for (const key of Object.keys(element)) {
     if (!allowedKeys.includes(key)) {
-      findings.warnings.push({ path: `${path}.${key}`, message: "unknown field, dropped on save" });
+      findings.warnings.push({ path: `${path}.${key}`, message: UNKNOWN_FIELD });
     }
   }
   return findings.errors.length === errorCountBefore;
@@ -642,7 +649,7 @@ export function checkDocument(input) {
   }
   for (const key of Object.keys(input)) {
     if (!DOCUMENT_KEYS.includes(key)) {
-      findings.warnings.push({ path: key, message: "unknown field, dropped on save" });
+      findings.warnings.push({ path: key, message: UNKNOWN_FIELD });
     }
   }
 
@@ -677,6 +684,11 @@ export function checkDocument(input) {
   }
 
   const elementsById = new Map();
+  const connectorIds = new Map(
+    elements
+      .filter((element) => element.kind === "annotation")
+      .map((annotation) => [associationId(annotation.id), annotation.id]),
+  );
   for (const element of elements) {
     if (elementsById.has(element.id)) {
       findings.errors.push({
@@ -686,6 +698,20 @@ export function checkDocument(input) {
       });
     } else {
       elementsById.set(element.id, element);
+    }
+    if (element.id === DIAGRAM_ROOT_ID) {
+      findings.errors.push({ path: element.id, message: "reserved for the diagram itself" });
+    } else if (element.id.startsWith(ENGINE_ROOT_ID_PREFIX)) {
+      findings.errors.push({
+        path: element.id,
+        message: `ids starting with "${ENGINE_ROOT_ID_PREFIX}" are reserved`,
+      });
+    }
+    if (connectorIds.has(element.id)) {
+      findings.errors.push({
+        path: element.id,
+        message: `reserved for the connector of annotation ${connectorIds.get(element.id)}`,
+      });
     }
   }
   if (findings.errors.length > 0) return { ...findings, readings };
@@ -731,74 +757,119 @@ function withOptional(target, source, fields) {
   return target;
 }
 
-export function canonicalize(input) {
-  const list = (key) => (Array.isArray(input[key]) ? input[key] : []);
-  return {
-    version: DOCUMENT_VERSION,
-    title: typeof input.title === "string" ? input.title : "Untitled team topology",
-    nodes: list("nodes")
-      .map((team) =>
-        withOptional(
-          {
-            id: team.id,
-            type: team.type,
-            label: team.label,
-            position: canonicalPosition(team.position),
-            size: canonicalSize(team.size),
-          },
-          team,
-          ["description", "fill", "stroke"],
-        ),
-      )
-      .sort(compareIds),
-    interactions: list("interactions")
-      .map((interaction) =>
-        withOptional(
-          {
-            id: interaction.id,
-            mode: interaction.mode,
-            position: canonicalPosition(interaction.position),
-            size: canonicalSize(interaction.size),
-          },
-          interaction,
-          ["label", "fill", "stroke"],
-        ),
-      )
-      .sort(compareIds),
-    flows: list("flows")
-      .map((flow) =>
-        withOptional(
-          {
-            id: flow.id,
-            position: canonicalPosition(flow.position),
-            size: canonicalSize(flow.size),
-          },
-          flow,
-          ["label"],
-        ),
-      )
-      .sort(compareIds),
-    annotations: list("annotations")
-      .map((annotation) =>
-        withOptional(
-          {
-            id: annotation.id,
-            text: annotation.text,
-            position: canonicalPosition(annotation.position),
-            size: canonicalSize(annotation.size),
-          },
-          annotation,
-          ["attachedTo"],
-        ),
-      )
-      .sort(compareIds),
-  };
+// JSON objects have no key order, so nested keys are sorted too: equal data, equal bytes.
+function canonicalValue(value) {
+  if (Array.isArray(value)) return value.map(canonicalValue);
+  if (value === null || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.keys(value)
+      .filter((key) => value[key] !== undefined)
+      .sort()
+      .map((key) => [key, canonicalValue(value[key])]),
+  );
 }
 
+// Unknown fields follow the known ones, sorted; built from entries so "__proto__" stays a field.
+function withForeign(known, source, knownKeys) {
+  const foreign = Object.keys(source)
+    .filter((key) => !knownKeys.includes(key) && source[key] !== undefined)
+    .sort()
+    .map((key) => [key, canonicalValue(source[key])]);
+  return foreign.length === 0 ? known : Object.fromEntries([...Object.entries(known), ...foreign]);
+}
+
+export function canonicalize(input) {
+  const list = (key) => (Array.isArray(input[key]) ? input[key] : []);
+  return withForeign(
+    {
+      version: DOCUMENT_VERSION,
+      title: typeof input.title === "string" ? input.title : "Untitled team topology",
+      nodes: list("nodes")
+        .map((team) =>
+          withForeign(
+            withOptional(
+              {
+                id: team.id,
+                type: team.type,
+                label: team.label,
+                position: canonicalPosition(team.position),
+                size: canonicalSize(team.size),
+              },
+              team,
+              ["description", "fill", "stroke"],
+            ),
+            team,
+            TEAM_KEYS,
+          ),
+        )
+        .sort(compareIds),
+      interactions: list("interactions")
+        .map((interaction) =>
+          withForeign(
+            withOptional(
+              {
+                id: interaction.id,
+                mode: interaction.mode,
+                position: canonicalPosition(interaction.position),
+                size: canonicalSize(interaction.size),
+              },
+              interaction,
+              ["label", "fill", "stroke"],
+            ),
+            interaction,
+            INTERACTION_KEYS,
+          ),
+        )
+        .sort(compareIds),
+      flows: list("flows")
+        .map((flow) =>
+          withForeign(
+            withOptional(
+              {
+                id: flow.id,
+                position: canonicalPosition(flow.position),
+                size: canonicalSize(flow.size),
+              },
+              flow,
+              ["label"],
+            ),
+            flow,
+            FLOW_KEYS,
+          ),
+        )
+        .sort(compareIds),
+      annotations: list("annotations")
+        .map((annotation) =>
+          withForeign(
+            withOptional(
+              {
+                id: annotation.id,
+                text: annotation.text,
+                position: canonicalPosition(annotation.position),
+                size: canonicalSize(annotation.size),
+              },
+              annotation,
+              ["attachedTo"],
+            ),
+            annotation,
+            ANNOTATION_KEYS,
+          ),
+        )
+        .sort(compareIds),
+    },
+    input,
+    DOCUMENT_KEYS,
+  );
+}
+
+// The file form the modeler saves: an empty annotations list left out, a line break at the end.
 export function formatDocument(document) {
-  const { annotations, ...rest } = canonicalize(document);
-  const output = annotations.length > 0 ? { ...rest, annotations } : rest;
-  return JSON.stringify(output, null, 2);
+  const canonical = canonicalize(document);
+  const output =
+    canonical.annotations.length > 0
+      ? canonical
+      : Object.fromEntries(Object.entries(canonical).filter(([key]) => key !== "annotations"));
+  return `${JSON.stringify(output, null, 2)}\n`;
 }
 
 function checkFile(path, { write }) {
@@ -832,14 +903,14 @@ function checkFile(path, { write }) {
 
   if (result.errors.length === 0) {
     const canonicalText = formatDocument(input);
-    const isCanonical = text.trimEnd() === canonicalText;
+    const isCanonical = text === canonicalText;
     if (!isCanonical && write) {
-      writeFileSync(path, `${canonicalText}\n`);
+      writeFileSync(path, canonicalText);
       lines.push("", "  rewritten in canonical form");
     } else if (!isCanonical) {
       lines.push(
         "",
-        "  note     not in canonical form (key order, id sorting, rounding); --write normalises it",
+        "  note     not in canonical form (key order, id sorting, rounding, final line break); --write normalises it",
       );
     }
   }

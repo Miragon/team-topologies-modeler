@@ -36,6 +36,24 @@ module.exports = {
       to: { path: "^apps/" },
     },
     {
+      name: "packages-no-shell",
+      comment:
+        "The libraries never import @miragon/modeler-shell; only the apps (and the shared ui) mount " +
+        "the chrome (dependency direction of Miragon/modeler-api#4).",
+      severity: "error",
+      from: { path: "^packages/(schema-model|renderer)/" },
+      // Also an unresolved specifier (the shell not installed next to the package) must fail.
+      to: { path: "@miragon/modeler-shell" },
+    },
+    {
+      name: "dom-free-contract-types-only",
+      comment:
+        "The DOM-free package takes only types from @miragon/modeler-api, never runtime code.",
+      severity: "error",
+      from: { path: "^packages/schema-model/" },
+      to: { path: "@miragon/modeler-api", dependencyTypesNot: ["type-only"] },
+    },
+    {
       name: "no-circular",
       comment: "No circular dependencies.",
       severity: "error",

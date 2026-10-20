@@ -1,11 +1,7 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="cd-shell-document" data-cd-theme="light">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <!-- iOS home-screen / Safari pinned icons don't support SVG — one PNG covers that case. -->
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-    <meta name="theme-color" content="#335DE5" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
@@ -24,10 +20,14 @@
       name="twitter:description"
       content="Model team types, interaction modes and the flow of change with the Team Topologies notation, right in your browser."
     />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <!-- iOS home-screen and Safari pinned icons don't support SVG; one PNG covers that case. -->
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <!-- miragon-mode -->
     <title>Miragon Modeler for Team Topologies</title>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

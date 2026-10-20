@@ -1,21 +1,25 @@
 import * as vscode from "vscode";
 import {
-  emptyDocument,
-  serializeDocument,
-  SAMPLE_DOCUMENT,
-} from "@miragon/team-topologies-schema-model";
+  DIAGRAM_VIEW_TYPE,
+  PNG_VIEW_TYPE,
+  registerSideBySideCommands,
+  registerWebviewCommands,
+} from "./commands.js";
+import { DIAGNOSTIC_COLLECTION_NAME } from "./diagnostics.js";
+import { DiagramPanels } from "./diagramPanels.js";
+import { EMPTY_MAP, EXAMPLE_MAP } from "./examples.js";
 import { TtEditorProvider } from "./TtEditorProvider.js";
 import { TtPngEditorProvider } from "./TtPngEditorProvider.js";
 
-const EMPTY_MAP = serializeDocument(emptyDocument("New team topology"), true) + "\n";
-
-/** The bundled example diagram (identical to the demo webapp), as a starting point. */
-const EXAMPLE_MAP = serializeDocument(SAMPLE_DOCUMENT, true) + "\n";
-
 export function activate(context: vscode.ExtensionContext): void {
+  const panels = new DiagramPanels(context.extensionUri);
+  const diagnostics = vscode.languages.createDiagnosticCollection(DIAGNOSTIC_COLLECTION_NAME);
   context.subscriptions.push(
-    TtEditorProvider.register(context),
-    TtPngEditorProvider.register(context),
+    diagnostics,
+    TtEditorProvider.register(panels, diagnostics),
+    TtPngEditorProvider.register(panels, diagnostics),
+    ...registerWebviewCommands((name) => panels.runCommand(name)),
+    ...registerSideBySideCommands(() => panels.activeTextDocumentUri()),
     vscode.commands.registerCommand("teamTopologies.newDiagram", () => createMap(EMPTY_MAP)),
     vscode.commands.registerCommand("teamTopologies.newFromExample", () => createMap(EXAMPLE_MAP)),
     vscode.commands.registerCommand("teamTopologies.newPngDiagram", () => createPngMap()),
@@ -40,7 +44,7 @@ async function createMap(initial: string): Promise<void> {
   if (!target) return;
 
   await vscode.workspace.fs.writeFile(target, new TextEncoder().encode(initial));
-  await vscode.commands.executeCommand("vscode.openWith", target, TtEditorProvider.viewType);
+  await vscode.commands.executeCommand("vscode.openWith", target, DIAGRAM_VIEW_TYPE);
 }
 
 function defaultMapUri(): vscode.Uri | undefined {
@@ -71,5 +75,5 @@ async function createPngMap(): Promise<void> {
     : chosen.with({ path: `${chosen.path.replace(/\.png$/i, "")}.tt.png` });
 
   await vscode.workspace.fs.writeFile(target, new Uint8Array());
-  await vscode.commands.executeCommand("vscode.openWith", target, TtPngEditorProvider.viewType);
+  await vscode.commands.executeCommand("vscode.openWith", target, PNG_VIEW_TYPE);
 }

@@ -11,7 +11,7 @@ It renders the canonical document from
 [`@miragon/team-topologies-schema-model`](../schema-model) and gives you palette, move, resize,
 connect-by-overlap, multi-selection (lasso, select all) with group move, text annotations, context
 pad, in-place label editing and undo/redo — with no UI framework required.
-Mount it into any `<div>`; the web app (React) and the VS Code extension both wrap this exact package.
+Mount it into any `<div>`; the web app and the VS Code extension both wrap this exact package.
 
 ## Install
 
@@ -38,15 +38,26 @@ npm install @miragon/team-topologies-renderer @miragon/team-topologies-schema-mo
 | Drag a selected element              | Move the whole selection as one undo step                               |
 | Arrow keys (Shift: ×10)              | Nudge the selection                                                     |
 | `Ctrl/Cmd+C` / `V`, Delete           | Copy, paste, delete the selection                                       |
-| `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z/Y`   | Undo / redo                                                             |
+| `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z/Y`   | Undo / redo (off with `undoRedoKeys: false`)                            |
 | Esc                                  | Clear the selection                                                     |
-| `+` or `=`, `-`                      | Zoom in, zoom out (no Ctrl/Cmd, so the browser's page zoom stays)       |
-| Shift+1, Shift+0                     | Fit the diagram to the view, zoom to 100 %                              |
-| Enter / Space on a palette entry     | Create that element in the middle of the view (lasso: select all)       |
 | Enter / Space on a context-pad entry | Run it (rename, add annotation, delete)                                 |
 
 The shortcuts act only while the page itself or the canvas has focus, never inside host chrome,
-form fields, the label editor or an open modal dialog.
+form fields, the label editor or an open modal dialog, and never on a key a closer listener already
+handled (`defaultPrevented`). Zoom and fit keys belong to the host's chrome (guide §5.8: only
+Cmd/Ctrl + `+` `-` `0` and Shift+1, each acting exactly once), so the canvas binds none; the
+[`@miragon/modeler-shell`](https://www.npmjs.com/package/@miragon/modeler-shell) chrome provides
+them together with the zoom panel.
+
+**Palette from the keyboard.** A host chrome that makes the palette a toolbar (the modeler shell)
+triggers an entry with a click whose `detail` is 0. On a creating entry that click places the
+element in the centre of the free part of the canvas (`freeRectCenter`, else the centre of the
+view), 24px further diagonally while that spot is taken, selects it and opens its label editor.
+
+**Read-only lock.** `modeler.get("ttReadOnly").setReadOnly(true)` locks the canvas while the
+document behind it cannot be saved from it (an invalid file in an IDE host): no move, resize,
+create, connect, delete, paste, context pad or label editor; selection, zoom, pan, copy and export
+stay. It fires `READ_ONLY_CHANGED_EVENT` on every change.
 
 All three share a common base (`TtBaseViewer`) with the same import/export and lifecycle API.
 
@@ -74,8 +85,9 @@ modeler.redo();
 ```
 
 > **The CSS is required.** Import `@miragon/team-topologies-renderer/assets/team-topologies.css`
-> (it also pulls in `diagram-js`'s own stylesheet and the Miragon `--cd-*` brand tokens) — without it
-> the palette, context pad and label editor are unstyled.
+> (it also pulls in the Miragon design tokens, `diagram-js`'s own stylesheet and `cd-canvas.css`, in
+> that order) — without it the palette, context pad and label editor are unstyled. Every colour is a
+> `--cd-ui-*` role of design system 1.13.0, vendored unchanged under `src/theme/`.
 
 > **Typeface.** The canvas labels are drawn in the Miragon typeface **Geist**. The library does not
 > ship the font; self-host it in the host app (e.g. `@fontsource-variable/geist`) so the on-screen
@@ -94,22 +106,47 @@ new Modeler({
   width?: number | string,           // canvas width  (default "100%")
   height?: number | string,          // canvas height (default "100%", or "600px" with no container)
   additionalModules?: ModuleDeclaration[], // extra diagram-js modules
+  undoRedoKeys?: boolean,            // bind Cmd/Ctrl+Z, Shift+Z, Y (default true; false: the host owns the history)
+  freeRectCenter?: () => Point | undefined, // where keyboard creation places an element (diagram coordinates)
 });
 ```
 
+### The collaborative-modeler contract
+
+`createCollaborativeModeler(options?)` and `createCollaborativeViewer(options?)` wrap the editor and
+the `NavigatedViewer` in the contract of [`@miragon/modeler-api`](https://www.npmjs.com/package/@miragon/modeler-api)
+(notation `team-topologies`): `importText` / `exportText` of the canonical document text,
+`onContentChanged`, view state and the `elements` surface (teams, interactions, flows and
+annotations; their label or text as the name). Hosts that embed the modeler (designIQ, the VS Code
+webview) work against it without knowing the renderer. The conformance kit of
+`@miragon/modeler-api` runs in this package's browser tests (`npm run test:browser`).
+
+```ts
+import { createCollaborativeModeler } from "@miragon/team-topologies-renderer";
+
+const modeler = createCollaborativeModeler();
+modeler.attachTo(host);
+await modeler.importText(text); // silent, fitted; rejects without a trace for an invalid text
+modeler.onContentChanged(() => save(modeler.exportText()));
+```
+
+Options: `additionalModules`, `undoRedoKeys`, `freeRectCenter` and `fitOnImport` (default true: a
+fit of at most 100 % that keeps the palette's strip free; a host whose chrome fits the diagram
+itself passes false). `modeler.diagram` is the wrapped `Modeler`.
+
 ### Shared methods (`Viewer` / `NavigatedViewer` / `Modeler`)
 
-| Method                             | Returns                         | Purpose                                                      |
-| ---------------------------------- | ------------------------------- | ------------------------------------------------------------ |
-| `importDocument(doc)`              | `{ warnings: ImportWarning[] }` | Replace canvas content, reset undo history and auto-fit.     |
-| `fitToView()`                      | `void`                          | Fit every element, keeping the strip under the palette free. |
-| `exportDocument()`                 | `TtDocument`                    | Rebuild the canonical model from the live canvas.            |
-| `saveSVG()`                        | `{ svg: string }`               | Self-contained SVG snapshot (fitted viewBox).                |
-| `setMeta(partial)` / `getMeta()`   | — / `RootBusinessObject`        | Read/write diagram-level metadata (e.g. `title`).            |
-| `attachTo(el)` / `detach()`        | `void`                          | Move the canvas in/out of the DOM (keeps state).             |
-| `clear()` / `destroy()`            | `void`                          | Empty the canvas / tear it down.                             |
-| `on(event, cb)` / `off(event, cb)` | `void`                          | Subscribe to diagram-js events.                              |
-| `get<T>(name)`                     | `T`                             | Resolve a diagram-js service (advanced).                     |
+| Method                             | Returns                         | Purpose                                                                                                                                |
+| ---------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `importDocument(doc, { fit? })`    | `{ warnings: ImportWarning[] }` | Replace canvas content, reset undo history; fit unless `fit: false`. Throws, before anything changes, for ids that would collide.      |
+| `fitToView()`                      | `void`                          | Deprecated: fit every element, keeping the strip under the palette free.                                                               |
+| `exportDocument()`                 | `TtDocument`                    | Rebuild the canonical model from the live canvas.                                                                                      |
+| `saveSVG()`                        | `{ svg: string }`               | Self-contained SVG snapshot (fitted viewBox).                                                                                          |
+| `setMeta(partial)` / `getMeta()`   | — / `RootBusinessObject`        | Read/write diagram-level metadata (`title`); `setMeta` is deprecated, rename with `get("ttModeling").setTitle(title)` (one undo step). |
+| `attachTo(el)` / `detach()`        | `void`                          | Move the canvas in/out of the DOM (keeps state).                                                                                       |
+| `clear()` / `destroy()`            | `void`                          | Empty the canvas / tear it down.                                                                                                       |
+| `on(event, cb)` / `off(event, cb)` | `void`                          | Subscribe to diagram-js events.                                                                                                        |
+| `get<T>(name)`                     | `T`                             | Resolve a diagram-js service (advanced).                                                                                               |
 
 ### Modeler-only
 
@@ -126,15 +163,17 @@ new Modeler({
   strokes in `currentColor`.
 - **Functional icons:** `iconMarkup(icon, { size?, strokeWidth?, className? })` returns inline SVG
   markup (Lucide style: 24 × 24 grid, stroke 2.5, `currentColor`) for the bundled `ICON_*` Lucide
-  nodes (`ICON_MENU`, `ICON_PLUS`, `ICON_MINUS`, `ICON_MAXIMIZE`, `ICON_DOWNLOAD`, `ICON_X`, …), so
-  a host without an icon library can match the canvas chrome.
+  nodes of the canvas chrome (context pad, lasso). `ICON_MENU`, `ICON_PLUS`, `ICON_MINUS`,
+  `ICON_MAXIMIZE`, `ICON_DOWNLOAD` and `ICON_X` served host chrome and are deprecated: hosts take
+  their chrome and its icons from `@miragon/modeler-shell`.
 - **Design tokens:** `MIRAGON` (the Miragon colours by name) and `CD_TOKENS` (the same values keyed
   by their `--cd-*` CSS name), for host code that paints outside CSS, e.g. a PNG background.
 - **Fonts in exports:** `geistFontFaceCss({ latin, latinExt })` builds the Geist `@font-face` rules
   from two `data:` URLs (`GEIST_UNICODE_RANGES` holds their subsets), and `embedSvgStyles(svg, css)`
   puts CSS at the top of a `saveSVG()` result, so a rasterised PNG keeps the canvas typeface.
-- **Other:** `TtViewerOptions`, `ImportWarning`, `RootBusinessObject`, `ROOT_ID`, `saveSVG`,
-  `TtViewport` (the palette-aware fit behind `fitToView()`, DI name `ttViewport`).
+- **Other:** `TtViewerOptions`, `ImportOptions`, `ImportWarning`, `RootBusinessObject`, `ROOT_ID`,
+  `saveSVG`, `TtReadOnly` and `READ_ONLY_CHANGED_EVENT` (the lock, DI name `ttReadOnly`), and the
+  deprecated `TtViewport` (the palette-aware fit behind `fitToView()`, DI name `ttViewport`).
 
 ## How it's built
 
@@ -153,7 +192,8 @@ viewer via `additionalModules`:
 | `ttPaletteModule`      | The lasso tool and the drag-to-create palette.                                         |
 | `ttContextPadModule`   | Per-element actions (rename, add/attach annotation, delete; delete a multi-selection). |
 | `ttLabelEditingModule` | Double-click in-place label editing.                                                   |
-| `ttKeyboardModule`     | Undo / redo / select all / delete / copy / paste / nudge / Esc / zoom shortcuts.       |
+| `ttKeyboardModule`     | Undo / redo / select all / delete / copy / paste / nudge / Esc shortcuts.              |
+| `ttReadOnlyModule`     | The edit lock for a document the canvas cannot save (`ttReadOnly`).                    |
 | `ttZOrderModule`       | Fixed stacking order (flow behind, teams, interactions, annotations on top).           |
 
 ### Rendering

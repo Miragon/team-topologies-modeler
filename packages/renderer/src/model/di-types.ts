@@ -15,11 +15,21 @@
  */
 
 import type { Connection, Shape } from "diagram-js/lib/model/Types";
-import type { InteractionMode, TeamType } from "@miragon/team-topologies-schema-model";
+import type {
+  ForeignFields,
+  InteractionMode,
+  TeamType,
+} from "@miragon/team-topologies-schema-model";
 
 export type TtKind = "team" | "interaction" | "flow" | "annotation";
 
-export interface TtTeam extends Shape {
+/** What every Team Topologies shape carries beyond its geometry. */
+interface TtShape extends Shape {
+  /** Fields of the document element the modeler does not know, written back on export. */
+  ttForeign?: ForeignFields;
+}
+
+export interface TtTeam extends TtShape {
   ttKind: "team";
   teamType: TeamType;
   /** Display name (separate from diagram-js `label`). */
@@ -29,7 +39,7 @@ export interface TtTeam extends Shape {
   stroke?: string;
 }
 
-export interface TtInteraction extends Shape {
+export interface TtInteraction extends TtShape {
   ttKind: "interaction";
   mode: InteractionMode;
   ttLabel?: string;
@@ -37,12 +47,12 @@ export interface TtInteraction extends Shape {
   stroke?: string;
 }
 
-export interface TtFlow extends Shape {
+export interface TtFlow extends TtShape {
   ttKind: "flow";
   ttLabel?: string;
 }
 
-export interface TtAnnotation extends Shape {
+export interface TtAnnotation extends TtShape {
   ttKind: "annotation";
   /** The annotation text (may contain line breaks). */
   ttLabel?: string;

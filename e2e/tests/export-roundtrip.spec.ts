@@ -1,7 +1,8 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
+import { gotoApp, loadExample } from "./support/modeler";
 
 /**
- * Typed handle to the app's debug surface (exposed in apps/webapp/src/ui/DiagramCanvas.tsx). We never
+ * Typed handle to the app's debug surface (exposed in apps/webapp/src/main.ts). We never
  * import the renderer here — only the structural shape we call into. Kept minimal so @miragon/team-topologies-e2e
  * stays free of @miragon/team-topologies-* dependencies.
  */
@@ -21,19 +22,12 @@ declare global {
   }
 }
 
-async function waitForModeler(page: Page): Promise<void> {
-  await page.waitForFunction(() => typeof window.__ttModeler !== "undefined");
-}
-
 test.describe("webapp export round-trip", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    await waitForModeler(page);
-    // The app now boots onto an empty canvas fronted by the EmptyState card;
-    // load the bundled example via its "Show example" button so the round-trip
-    // tests operate on real content.
-    await page.locator(".tt-empty__example").click();
-    await expect(page.locator(".tt-canvas .djs-element").first()).toBeVisible();
+    // A fresh visit starts on the start screen; its "Show example" loads the bundled example, so
+    // the round-trip tests operate on real content.
+    await gotoApp(page);
+    await loadExample(page);
   });
 
   test("loads the example topology and exports stable JSON + SVG", async ({ page }) => {

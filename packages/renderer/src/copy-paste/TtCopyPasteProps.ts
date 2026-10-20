@@ -3,7 +3,7 @@
  * copied element as a plain descriptor whose built-in listener only records
  * geometry (`id/x/y/width/height/…`). Our domain data lives as flat attributes
  * on the shape (not a moddle businessObject), so without this the pasted copy
- * would lose its type, label, description and colours. This listener copies
+ * would lose its type, label, description, colours and the fields of other tools. This listener copies
  * those fields onto the descriptor; they then flow through to the new shape.
  */
 
@@ -19,6 +19,7 @@ const TT_PROPS = [
   "description",
   "fill",
   "stroke",
+  "ttForeign",
 ] as const;
 
 export default class TtCopyPasteProps {
@@ -32,7 +33,7 @@ export default class TtCopyPasteProps {
         if (!isTtElement(element) && !isTtAssociation(element)) return;
         const source = element as Record<string, unknown>;
         for (const prop of TT_PROPS) {
-          if (source[prop] !== undefined) descriptor[prop] = source[prop];
+          if (source[prop] !== undefined) descriptor[prop] = structuredClone(source[prop]);
         }
       },
     );

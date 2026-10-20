@@ -17,11 +17,13 @@ import { ttLabelEditingModule } from "./label-editing/index.js";
 import { ttKeyboardModule } from "./keyboard/index.js";
 import { ttCopyPasteModule } from "./copy-paste/index.js";
 import { ttZOrderModule } from "./zorder/index.js";
+import { ttReadOnlyModule } from "./read-only/index.js";
 
 /**
  * Full Team Topologies editor: palette/create, multi-selection (lasso, select
  * all) and group move, resize, annotations with connectors, context pad,
- * in-place label editing, undo/redo.
+ * in-place label editing, undo/redo, and the edit lock for a document the
+ * canvas cannot save (`ttReadOnly`).
  */
 export class Modeler extends NavigatedViewer {
   protected override _getModules(): ModuleDeclaration[] {
@@ -34,6 +36,7 @@ export class Modeler extends NavigatedViewer {
       OutlineModule,
       ResizeModule,
       // Team Topologies editor
+      ttReadOnlyModule,
       ttModelingModule,
       ttRulesModule,
       ttBehaviorsModule,

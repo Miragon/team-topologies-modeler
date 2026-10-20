@@ -88,6 +88,21 @@ describe("plugin checker ↔ schema-model", () => {
     expect(checker.formatDocument(withoutAnnotations)).toBe(serializeDocument(withoutAnnotations));
   });
 
+  it("keeps unknown fields exactly like serializeDocument", () => {
+    const withForeign = JSON.parse(serializeDocument(SAMPLE_DOCUMENT)) as Record<string, unknown>;
+    withForeign["x-vendor"] = { keep: "me", order: { b: 1, a: 2 } };
+    (withForeign.nodes as Record<string, unknown>[])[0]!["x-owner"] = "team-a";
+    (withForeign.annotations as Record<string, unknown>[])[0]!["x-source"] = ["wiki"];
+    const parsed = parseDocument(withForeign);
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(checker.formatDocument(withForeign)).toBe(serializeDocument(parsed.document));
+    expect(checker.checkDocument(withForeign).warnings.map(({ path }) => path)).toEqual([
+      "x-vendor",
+      "nodes[0] (team_checkout).x-owner",
+      "annotations[0] (ann_fraud_handover).x-source",
+    ]);
+  });
+
   it("accepts the sample without findings", () => {
     const result = checker.checkDocument(JSON.parse(serializeDocument(SAMPLE_DOCUMENT)));
     expect(result.errors).toEqual([]);
@@ -116,6 +131,15 @@ describe("plugin checker ↔ schema-model", () => {
     "a non-string annotation text": (document) => {
       (document.annotations as Record<string, unknown>[])[0]!.text = 42;
     },
+    "a duplicate id": (document) => {
+      (document.flows as Record<string, unknown>[])[0]!.id = "team_checkout";
+    },
+    "the diagram's own id": (document) => {
+      (document.flows as Record<string, unknown>[])[0]!.id = "tt-root";
+    },
+    "the id of an annotation's connector": (document) => {
+      (document.flows as Record<string, unknown>[])[0]!.id = "assoc_ann_fraud_handover";
+    },
     "a non-numeric position": (document) => {
       (document.interactions as { position: Record<string, unknown> }[])[0]!.position.y = "10";
     },
@@ -135,7 +159,7 @@ describe("plugin checker ↔ schema-model", () => {
       const text = readFileSync(join(examplesDirectory, exampleFile), "utf8");
       const parsed = parseDocument(JSON.parse(text));
       if (!parsed.ok) throw new Error(parsed.error);
-      expect(text).toBe(`${serializeDocument(parsed.document)}\n`);
+      expect(text).toBe(serializeDocument(parsed.document));
       const result = checker.checkDocument(JSON.parse(text));
       expect(result.errors).toEqual([]);
       expect(result.warnings).toEqual([]);

@@ -164,8 +164,10 @@ words; put explanations into annotations.
 ## Ids
 
 Any non-empty string, unique across nodes, interactions, flows and annotations together — a
-duplicate breaks the import. Because a save sorts by `id` and diffs anchor on it, use stable,
-descriptive ids rather than random ones:
+duplicate breaks the import. A few ids belong to parts of the diagram the file never lists, so no
+element may use them: `tt-root` (the diagram itself), ids starting with `__implicitroot`, and
+`assoc_<annotation id>` (the connector of that annotation). Because a save sorts by `id` and diffs
+anchor on it, use stable, descriptive ids rather than random ones:
 
 - teams `team_<name>` (`team_checkout`), groupings `grp_<name>`
 - interactions `int_<a>_<b>` (`int_platform_checkout`)
@@ -218,8 +220,8 @@ node ${CLAUDE_SKILL_DIR}/scripts/check.mjs a.tt b.ttm.json --strict   # warnings
 It reports:
 
 - **errors** — anything that stops the modeler opening the file: invalid JSON, wrong field types,
-  unknown `type`/`mode`, non-hex colours, non-positive sizes, duplicate ids, a non-array collection,
-  an interaction without `position`/`size`;
+  unknown `type`/`mode`, non-hex colours, non-positive sizes, duplicate or reserved ids, a
+  non-array collection, an interaction without `position`/`size`;
 - **warnings** — what opens but reads wrong: stream-aligned teams one after the other along the
   flow (side by side or staggered — sharing less than half their width and at most 60 px apart
   vertically; a hand-off; once per neighbouring pair, on the right-hand team; not inside a platform
@@ -227,7 +229,8 @@ It reports:
   triangle between side-by-side teams or pointing from a stream-aligned team up at a platform;
   partly overlapping teams; a grouping that hides or covers its inner teams; annotations or
   interactions covering other shapes; text that overflows its shape, including a label running
-  over the triangle's slanted edges; sizes below the minimum; unknown fields (dropped on save);
+  over the triangle's slanted edges; sizes below the minimum; unknown fields (the modeler ignores
+  them and keeps them on save);
   `attachedTo` pointing nowhere; a missing title or a version other than 3;
 - **readings** — one line per interaction (`x-as-a-service  "Cloud Platform" → "Checkout"`,
   `collaboration  "A" ↔ "B"`), grouping and annotation, plus one line per lane a platform serves
@@ -241,9 +244,10 @@ A clean run ends with `OK: no errors, no warnings`.
 
 What the modeler writes on save, and what `--write` produces: keys in schema order
 (`version, title, nodes, interactions, flows, annotations`; per element `id`, `type`/`mode`,
-`label`/`text`, `position`, `size`, then optional fields), every array sorted by `id`, numbers
-rounded to 2 decimals, empty optional strings and an empty `annotations` array left out, two-space
-indentation. Writing canonical files keeps diffs minimal when the user later saves from the editor.
+`label`/`text`, `position`, `size`, then optional fields, then fields the modeler does not know,
+sorted by name), every array sorted by `id`, numbers rounded to 2 decimals, empty optional strings
+and an empty `annotations` array left out, two-space indentation and a line break at the end of the
+file. Writing canonical files keeps diffs minimal when the user later saves from the editor.
 
 ## Before handing a file back
 
