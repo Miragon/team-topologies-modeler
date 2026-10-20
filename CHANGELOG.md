@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.2](https://github.com/Miragon/team-topologies-modeler/compare/v0.11.1...v0.11.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* **renderer:** ship the design tokens in a cascade layer so a host's own tokens win ([#126](https://github.com/Miragon/team-topologies-modeler/issues/126)) ([05dd296](https://github.com/Miragon/team-topologies-modeler/commit/05dd296b167f098f651580706ef87c55a797049a))
+
 ## [0.11.1](https://github.com/Miragon/team-topologies-modeler/compare/v0.11.0...v0.11.1) (2026-10-20)
 
 
