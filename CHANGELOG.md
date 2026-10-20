@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/Miragon/team-topologies-modeler/compare/v0.11.0...v0.11.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **vscode:** bundle jsonc-parser's ESM build so the extension activates again ([#123](https://github.com/Miragon/team-topologies-modeler/issues/123)) ([748a2ec](https://github.com/Miragon/team-topologies-modeler/commit/748a2ecea4ed3e57ec6bea761bfcf903ac0640ab))
+
 ## [0.11.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.10.1...v0.11.0) (2026-10-20)
 
 
