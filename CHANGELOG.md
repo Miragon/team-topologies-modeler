@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.11.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.10.1...v0.11.0) (2026-10-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* parseDocument keeps unknown fields instead of stripping them and rejects duplicate and reserved ids; serializeDocument(doc) ends with "\n".
+
+### Features
+
+* adopt @miragon/modeler-api and @miragon/modeler-shell in VS Code and the web app ([#122](https://github.com/Miragon/team-topologies-modeler/issues/122)) ([72cbf24](https://github.com/Miragon/team-topologies-modeler/commit/72cbf247ea64c71d09add4ae113213e12857ba2a))
+* Miragon design system UI/UX overhaul, VS Code inspector and stacked-lane layout ([#118](https://github.com/Miragon/team-topologies-modeler/issues/118)) ([60e1ec6](https://github.com/Miragon/team-topologies-modeler/commit/60e1ec67982bad6c23dec29d8a3cb8fd17a46fa3))
+* **plugin:** ship the Team Topologies skills as a Claude Code plugin ([#109](https://github.com/Miragon/team-topologies-modeler/issues/109)) ([98bc278](https://github.com/Miragon/team-topologies-modeler/commit/98bc2781b6a77c52baa1a27beedfdbf21f3916bc))
+* **plugin:** teach stacked stream-aligned lanes in the Team Topologies skills ([60e1ec6](https://github.com/Miragon/team-topologies-modeler/commit/60e1ec67982bad6c23dec29d8a3cb8fd17a46fa3))
+* **renderer:** apply the Miragon design system and make the canvas keyboard-accessible ([60e1ec6](https://github.com/Miragon/team-topologies-modeler/commit/60e1ec67982bad6c23dec29d8a3cb8fd17a46fa3))
+* **schema-model:** lay out the example with stacked stream-aligned lanes ([60e1ec6](https://github.com/Miragon/team-topologies-modeler/commit/60e1ec67982bad6c23dec29d8a3cb8fd17a46fa3))
+* **ui:** add a private package with the inspector and legend shared by both apps ([60e1ec6](https://github.com/Miragon/team-topologies-modeler/commit/60e1ec67982bad6c23dec29d8a3cb8fd17a46fa3))
+* **vscode:** add the inspector and a legend toggle to the custom editor ([60e1ec6](https://github.com/Miragon/team-topologies-modeler/commit/60e1ec67982bad6c23dec29d8a3cb8fd17a46fa3))
+* **webapp:** redesign the editor chrome and guard against losing a diagram ([60e1ec6](https://github.com/Miragon/team-topologies-modeler/commit/60e1ec67982bad6c23dec29d8a3cb8fd17a46fa3))
+
+
+### Bug Fixes
+
+* **ci:** sign Claude's dependency-repair commits ([#116](https://github.com/Miragon/team-topologies-modeler/issues/116)) ([1f389ea](https://github.com/Miragon/team-topologies-modeler/commit/1f389ea9787b831039f858bc840f567605258e31))
+* **ci:** skip npm ci before the Claude dependency repair ([#115](https://github.com/Miragon/team-topologies-modeler/issues/115)) ([00dbadf](https://github.com/Miragon/team-topologies-modeler/commit/00dbadf05a64fe7075f9cb2236c666ec4fea0ebe))
+* **renderer:** only emit Lucide elements and attributes from iconMarkup ([#119](https://github.com/Miragon/team-topologies-modeler/issues/119)) ([ef29878](https://github.com/Miragon/team-topologies-modeler/commit/ef298784566f7735f901c4c28a84a1da18d0070b))
+
+
+### Reverts
+
+* **ci:** drop commit signing for Claude's dependency repair ([#117](https://github.com/Miragon/team-topologies-modeler/issues/117)) ([313a213](https://github.com/Miragon/team-topologies-modeler/commit/313a213d9cc99097e9922f8518e4f6023d9020e3))
+
 ## [0.10.1](https://github.com/Miragon/team-topologies-modeler/compare/v0.10.0...v0.10.1) (2026-10-10)
 
 
