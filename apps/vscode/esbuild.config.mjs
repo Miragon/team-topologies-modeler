@@ -79,6 +79,9 @@ export const host = {
   // VS Code 1.96 (engines) runs extensions on Node 20; the shell's createNonce needs its
   // globalThis.crypto.
   target: "node20",
+  // jsonc-parser's `main` is a UMD build whose inner requires esbuild can't follow: they would stay
+  // in the bundle and throw on load, so the extension never registers its editors.
+  mainFields: ["module", "main"],
   alias,
   // `vscode` is only available at runtime (from the host) and must not be bundled.
   external: ["vscode"],
