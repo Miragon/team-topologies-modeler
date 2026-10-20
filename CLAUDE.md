@@ -22,7 +22,9 @@ The design system **1.13.0** is **vendored** from that skill, byte-identical:
 from the skill to update and update their hashes in the drift test
 (`packages/renderer/src/theme/theme.sync.test.ts`), which also checks that
 [`palette.ts`](packages/renderer/src/theme/palette.ts) (the pure-TS mirror for canvas colours) and the
-vendored files agree and that `team-topologies.css` reads only `--cd-ui-*` roles.
+vendored files agree and that `team-topologies.css` reads only `--cd-ui-*` roles and, built, keeps the
+tokens in the cascade layer `team-topologies-tokens` (so a host page's own tokens win) with
+`cd-canvas.css` unlayered.
 `apps/vscode/src/tokens.sync.test.ts` pins the shell's sizes (`SHELL`) to the JSON's `shell` group.
 
 **Chrome:** both apps run on [`@miragon/modeler-shell`](https://www.npmjs.com/package/@miragon/modeler-shell):

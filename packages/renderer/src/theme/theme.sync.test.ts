@@ -1,17 +1,20 @@
+// @vitest-environment node
 /// <reference types="node" />
 import { describe, it, expect } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, relative } from "node:path";
+import { build } from "vite";
 import { CD_TOKENS, MIRAGON } from "./palette.js";
 
 /**
  * Drift guard for the design system (CLAUDE.md § "Design system (mandatory)"): the three vendored
  * files are unchanged copies of one design-system release, `palette.ts` mirrors their values, and
  * the renderer stylesheet takes every colour from the `--cd-ui-*` roles, so the canvas chrome
- * follows the mode with the host's chrome. Re-copying the files from the skill changes their
- * hashes on purpose: update them here together with the release name.
+ * follows the mode with the host's chrome. The tokens ship in a cascade layer, so a host page's own
+ * tokens win. Re-copying the files from the skill changes their hashes on purpose: update them here
+ * together with the release name.
  */
 
 // `fileURLToPath(import.meta.url)` instead of `new URL('./file', import.meta.url)`, which Vite
@@ -34,6 +37,8 @@ interface VendoredTokens {
   shell: Record<string, string>;
 }
 const tokens = JSON.parse(tokensJson) as VendoredTokens;
+
+const TOKENS_LAYER = "team-topologies-tokens";
 
 /** sha256 of the files of design system 1.13.0 (skill `miragon-brand:modeler-tool-design`). */
 const DESIGN_SYSTEM_1_13_0: Record<string, string> = {
@@ -83,6 +88,58 @@ function ruleSelectors(source: string): string[] {
   return [...withoutComments(source).matchAll(/([^{};]+)\{/g)].flatMap((match) =>
     match[1]!.split(",").map((selector) => selector.trim()),
   );
+}
+
+/**
+ * Every custom property a stylesheet declares, by the cascade layer it sits in (`""` for none,
+ * `outer.inner` for a nested one).
+ */
+function customPropertiesByLayer(source: string): Map<string, Set<string>> {
+  const byLayer = new Map<string, Set<string>>();
+  const openBlocks: string[] = [];
+  let pending = "";
+  const takeDeclaration = (): void => {
+    const property = /^(--[\w-]+)\s*:/.exec(pending.trim())?.[1];
+    if (property) {
+      const layer = openBlocks.filter(Boolean).join(".");
+      byLayer.set(layer, (byLayer.get(layer) ?? new Set()).add(property));
+    }
+    pending = "";
+  };
+  for (const character of withoutComments(source)) {
+    if (character === "{") {
+      openBlocks.push(/^@layer\s+([\w-]+)$/.exec(pending.trim())?.[1] ?? "");
+      pending = "";
+    } else if (character === ";") {
+      takeDeclaration();
+    } else if (character === "}") {
+      takeDeclaration();
+      openBlocks.pop();
+    } else {
+      pending += character;
+    }
+  }
+  return byLayer;
+}
+
+/** team-topologies.css with its imports inlined, as Vite builds it into dist/ and the web app. */
+async function builtRendererCss(): Promise<string> {
+  const result = await build({
+    configFile: false,
+    logLevel: "silent",
+    root: here,
+    build: {
+      write: false,
+      rolldownOptions: { input: join(here, "../assets/team-topologies.css") },
+    },
+  });
+  const stylesheets = (Array.isArray(result) ? result : [result])
+    .flatMap((bundle) => ("output" in bundle ? bundle.output : []))
+    .flatMap((file) =>
+      file.type === "asset" && file.fileName.endsWith(".css") ? [String(file.source)] : [],
+    );
+  expect(stylesheets).toHaveLength(1);
+  return stylesheets[0]!;
 }
 
 const STYLED_SOURCE_DIRS = [
@@ -167,16 +224,33 @@ describe("theme.sync — palette.ts mirrors the vendored tokens", () => {
 });
 
 describe("theme.sync — team-topologies.css takes every colour from the roles", () => {
-  it("loads the tokens, diagram-js and cd-canvas.css first, in this order (guide §10.3)", () => {
+  it("loads the tokens (layered), diagram-js and cd-canvas.css (unlayered) first, in this order (guide §10.3)", () => {
     const statements = withoutComments(rendererCss)
       .split(/;|\{/)
       .map((statement) => statement.trim().replace(/\s+/g, " "));
     expect(statements.slice(0, 3)).toEqual([
-      '@import "../theme/cd-tokens.generated.css"',
+      `@import "../theme/cd-tokens.generated.css" layer(${TOKENS_LAYER})`,
       '@import "diagram-js/assets/diagram-js.css"',
       '@import "../theme/cd-canvas.css"',
     ]);
     expect(rendererCss.match(/@import/g)).toHaveLength(3);
+  });
+
+  it("ships every token in its layer and the cd-canvas.css mapping unlayered once built", async () => {
+    const built = customPropertiesByLayer(await builtRendererCss());
+    const vendoredTokens = customPropertiesByLayer(tokensCss).get("")!;
+    const canvasMapping = customPropertiesByLayer(canvasCss).get("")!;
+    expect(vendoredTokens.size).toBeGreaterThan(80);
+    expect(canvasMapping.size).toBeGreaterThan(10);
+
+    const designTokens = (properties: Set<string> = new Set()): string[] =>
+      [...properties].filter((property) => property.startsWith("--cd-")).sort();
+    expect([...built.keys()].sort()).toEqual(["", TOKENS_LAYER]);
+    expect(designTokens(built.get(TOKENS_LAYER))).toEqual(designTokens(vendoredTokens));
+    expect(designTokens(built.get(""))).toEqual([]);
+    for (const property of canvasMapping) {
+      expect(built.get("")?.has(property), `${property} of cd-canvas.css, unlayered`).toBe(true);
+    }
   });
 
   it("declares no colour literal: no hex, rgb() or hsl() value", () => {

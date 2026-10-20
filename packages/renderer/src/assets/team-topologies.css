@@ -1,7 +1,9 @@
 /* The vendored design-system files first, in the guide's order (§10.3): the tokens, diagram-js,
    then cd-canvas.css, which maps the diagram-js variables onto the --cd-ui-* roles. Imported here
-   so every renderer host (web app, VS Code webview) gets them exactly once. */
-@import "../theme/cd-tokens.generated.css";
+   so every renderer host (web app, VS Code webview) gets them exactly once. The tokens sit in a
+   cascade layer, so a host page's own --cd-* tokens (unlayered) win over this copy. cd-canvas.css
+   stays unlayered and comes after diagram-js.css, so its mapping beats diagram-js's defaults. */
+@import "../theme/cd-tokens.generated.css" layer(team-topologies-tokens);
 @import "diagram-js/assets/diagram-js.css";
 @import "../theme/cd-canvas.css";
 
