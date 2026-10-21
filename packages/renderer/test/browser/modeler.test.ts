@@ -182,10 +182,15 @@ interface Services {
     appendAnnotation(element: unknown): TtAnnotation;
     updateLabel(element: unknown, label: string): void;
   };
-  commandStack: { undo(): void; redo(): void };
+  commandStack: { undo(): void; redo(): void; canUndo(): boolean };
   rules: { allowed(action: string, context: unknown): unknown };
   selection: { get(): unknown[]; select(elements: unknown): void };
-  canvas: { zoom(level?: number): number; getContainer(): HTMLElement };
+  canvas: {
+    zoom(level?: number, center?: { x: number; y: number }): number;
+    viewbox(box?: { x: number; y: number; width: number; height: number }): unknown;
+    scroll(delta: { dx: number; dy: number }): unknown;
+    getContainer(): HTMLElement;
+  };
   labelEditing: { activate(element: unknown): void };
 }
 
@@ -576,6 +581,79 @@ test("Enter commits one undo step, Shift+Enter keeps a line break, Escape discar
     );
     expect(editor(container)).toBeNull();
     expect(team.ttLabel).toBe(original);
+  } finally {
+    modeler.destroy();
+    container.remove();
+  }
+});
+
+test("a view change keeps the editor open with its text, on its element, without a commit", () => {
+  const { modeler, container } = mountModeler();
+  try {
+    modeler.importDocument(SAMPLE_DOCUMENT);
+    const { registry, canvas, labelEditing, commandStack } = services(modeler);
+    const team = registry.get("team_checkout") as TtTeam;
+    const original = team.ttLabel;
+    const changes: unknown[] = [];
+    modeler.on("commandStack.changed", (event) => changes.push(event));
+    canvas.zoom(1);
+    labelEditing.activate(team);
+    editor(container)!.value = "Typed, not committed";
+
+    const teamBox = () =>
+      container.querySelector(`[data-element-id="${team.id}"]`)!.getBoundingClientRect();
+    for (const changeView of [
+      () => canvas.viewbox({ x: -300, y: -200, width: 450, height: 320 }),
+      () => canvas.zoom(0.5, { x: 0, y: 0 }),
+      () => canvas.scroll({ dx: 40, dy: -30 }),
+      () => modeler.fitToView(),
+    ]) {
+      changeView();
+      const textarea = editor(container)!;
+      expect(textarea).not.toBeNull();
+      expect(textarea.value).toBe("Typed, not committed");
+      expect(parseFloat(textarea.style.fontSize)).toBeCloseTo(13.5 * canvas.zoom());
+      const editorBox = textarea.getBoundingClientRect();
+      const shapeBox = teamBox();
+      expect(editorBox.left).toBeGreaterThanOrEqual(shapeBox.left);
+      expect(editorBox.right).toBeLessThanOrEqual(shapeBox.right);
+      expect(editorBox.top).toBeGreaterThanOrEqual(shapeBox.top);
+      expect(editorBox.bottom).toBeLessThanOrEqual(shapeBox.bottom);
+    }
+    expect(team.ttLabel).toBe(original);
+    expect(changes).toEqual([]);
+    expect(commandStack.canUndo()).toBe(false);
+
+    editor(container)!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(team.ttLabel).toBe("Typed, not committed");
+  } finally {
+    modeler.destroy();
+    container.remove();
+  }
+});
+
+test("a click on another element still commits an open editor", () => {
+  const { modeler, container } = mountModeler();
+  try {
+    modeler.importDocument(SAMPLE_DOCUMENT);
+    const { registry, labelEditing } = services(modeler);
+    const team = registry.get("team_checkout") as TtTeam;
+    labelEditing.activate(team);
+    editor(container)!.value = "Committed by a click";
+
+    const other = container.querySelector('[data-element-id="team_platform"]')!;
+    const { left, top } = other.getBoundingClientRect();
+    other.dispatchEvent(
+      new MouseEvent("mousedown", {
+        bubbles: true,
+        button: 0,
+        clientX: left + 5,
+        clientY: top + 5,
+      }),
+    );
+
+    expect(editor(container)).toBeNull();
+    expect(team.ttLabel).toBe("Committed by a click");
   } finally {
     modeler.destroy();
     container.remove();
