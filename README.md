@@ -66,12 +66,13 @@ Requires Node ≥ 22.13 and npm. From the repo root:
 
 ```bash
 npm install
-npm run dev:webapp   # start the webapp dev server (http://localhost:5181)
-npm run dev:vscode   # watch-build the VS Code extension (then F5 in VS Code)
-npm test             # unit tests (Vitest)
-npm run test:vscode  # the extension in a real VS Code (opens a window, see CONTRIBUTING.md)
-npm run lint         # eslint + type-check
-npm run build        # build the publishable packages (schema-model, renderer)
+npm run dev:webapp          # start the webapp dev server (http://localhost:5181)
+npm run dev:vscode          # watch-build the VS Code extension (then F5 in VS Code)
+npm test                    # unit tests (Vitest)
+npm run test:vscode:docker  # the extension in a real VS Code, in Docker without a window
+npm run test:vscode         # the same with a VS Code window here (see CONTRIBUTING.md)
+npm run lint                # eslint + type-check
+npm run build               # build the publishable packages (schema-model, renderer)
 ```
 
 ## Architecture
