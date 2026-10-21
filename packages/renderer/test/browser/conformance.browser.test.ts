@@ -96,6 +96,7 @@ const harness: ConformanceHarness = {
     onlineShop.replace('"id": "team_fraud"', '"id": "team_checkout"'),
     onlineShop.replace('"id": "flow_main"', '"id": "tt-root"'),
     onlineShop.replace('"id": "flow_main"', '"id": "assoc_ann_fraud_handover"'),
+    onlineShop.replace('"id": "flow_main"', '"id": "constructor"'),
   ],
   foreignTexts: [
     {

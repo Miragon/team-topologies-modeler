@@ -208,6 +208,24 @@ describe("parseDocument: ids", () => {
     expect(parseDocument(documentWith([team("__implicitroot_0")])).ok).toBe(false);
   });
 
+  it("rejects ids that name built-in object properties, at their path", () => {
+    for (const id of ["constructor", "toString", "__proto__", "hasOwnProperty", "valueOf"]) {
+      const result = parseDocument(documentWith([team("a")], [note(id)]));
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.issues).toEqual([
+          {
+            path: ["annotations", 0, "id"],
+            message: `"${id}" is reserved: it names a built-in property of JavaScript objects`,
+          },
+        ]);
+      }
+    }
+    expect(parseDocument(documentWith([team("team_constructor"), team("Constructor")])).ok).toBe(
+      true,
+    );
+  });
+
   it("rejects the id an annotation's connector takes", () => {
     const result = parseDocument(documentWith([team(associationId("ann_1"))], [note("ann_1")]));
     expect(result.ok).toBe(false);

@@ -2,7 +2,8 @@
  * The id rules of a Team Topologies document. Besides the elements a document lists, a diagram
  * holds parts it never writes down: the diagram itself and the connector of every annotation. They
  * take ids of their own, so no element may use one of them; otherwise opening the file would fail
- * halfway, with the previous diagram already gone.
+ * halfway, with the previous diagram already gone. The canvas also keeps its elements in a plain
+ * object, where the names of JavaScript's built-in object properties already resolve.
  */
 
 /** The id of the diagram itself (the canvas root of the renderer). */
@@ -26,9 +27,15 @@ const COLLECTIONS = ["nodes", "interactions", "flows", "annotations"] as const;
 
 type DocumentElements = Record<(typeof COLLECTIONS)[number], readonly { id: string }[]>;
 
+/** Ids such as `constructor`, `toString` or `__proto__`, which every plain object already has. */
+function isBuiltInPropertyId(id: string): boolean {
+  return Object.hasOwn(Object.prototype, id);
+}
+
 /**
  * Every id of the document that would collide on the canvas: a duplicate, the diagram's own id, a
- * diagram-js root id, or the id of an annotation's connector.
+ * diagram-js root id, the name of a built-in object property, or the id of an annotation's
+ * connector.
  */
 export function documentIdProblems(doc: DocumentElements): DocumentIdProblem[] {
   const problems: DocumentIdProblem[] = [];
@@ -53,6 +60,11 @@ export function documentIdProblems(doc: DocumentElements): DocumentIdProblem[] {
         problems.push({
           path,
           message: `ids starting with "${ENGINE_ROOT_ID_PREFIX}" are reserved`,
+        });
+      } else if (isBuiltInPropertyId(id)) {
+        problems.push({
+          path,
+          message: `"${id}" is reserved: it names a built-in property of JavaScript objects`,
         });
       }
       const annotationId = connectorIds.get(id);

@@ -106,6 +106,8 @@ const UNKNOWN_FIELD = "unknown field; the modeler ignores it and keeps it on sav
 const DIAGRAM_ROOT_ID = "tt-root";
 const ENGINE_ROOT_ID_PREFIX = "__implicitroot";
 const associationId = (annotationId) => `assoc_${annotationId}`;
+// The canvas keeps its elements in a plain object, where these names already resolve.
+const isBuiltInPropertyId = (id) => Object.hasOwn(Object.prototype, id);
 
 const isPlainObject = (value) =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -705,6 +707,11 @@ export function checkDocument(input) {
       findings.errors.push({
         path: element.id,
         message: `ids starting with "${ENGINE_ROOT_ID_PREFIX}" are reserved`,
+      });
+    } else if (isBuiltInPropertyId(element.id)) {
+      findings.errors.push({
+        path: element.id,
+        message: "reserved: it names a built-in property of JavaScript objects",
       });
     }
     if (connectorIds.has(element.id)) {

@@ -171,9 +171,11 @@ console.log(SAMPLE_DOCUMENT.title);
   `"x-vendor"` on the root or on an element) pass `parseDocument()` untouched and are written after
   the known fields, sorted by name (nested keys too), so another tool's data survives a save.
 - **Ids** — `parseDocument()` rejects a document whose ids would collide on the canvas: an id used
-  twice, the diagram's own id `tt-root` (`DIAGRAM_ROOT_ID`), ids starting with `__implicitroot`, and
-  `assoc_<annotation id>` (`associationId()`), the id of that annotation's connector.
-  `documentIdProblems()` lists them with their path.
+  twice, the diagram's own id `tt-root` (`DIAGRAM_ROOT_ID`), ids starting with `__implicitroot`,
+  `assoc_<annotation id>` (`associationId()`), the id of that annotation's connector, and the names
+  of JavaScript's built-in object properties (`constructor`, `toString`, `__proto__`, …), which the
+  canvas's element registry, a plain object, already resolves. `documentIdProblems()` lists them
+  with their path.
 - **Migrations** — `parseDocument()` upgrades older documents before validating (keyed by `version`).
   The `1 → 2` step drops the legacy `showFlowOfChange` flag and the old edge-based interactions,
   keeping only interactions that carry geometry (the placed-shape model). The `2 → 3` step adds an

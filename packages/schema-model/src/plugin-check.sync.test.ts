@@ -140,6 +140,12 @@ describe("plugin checker ↔ schema-model", () => {
     "the id of an annotation's connector": (document) => {
       (document.flows as Record<string, unknown>[])[0]!.id = "assoc_ann_fraud_handover";
     },
+    "an id that names a built-in object property": (document) => {
+      (document.flows as Record<string, unknown>[])[0]!.id = "constructor";
+    },
+    "the id __proto__": (document) => {
+      (document.annotations as Record<string, unknown>[])[0]!.id = "__proto__";
+    },
     "a non-numeric position": (document) => {
       (document.interactions as { position: Record<string, unknown> }[])[0]!.position.y = "10";
     },

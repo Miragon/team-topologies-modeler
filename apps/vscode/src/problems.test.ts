@@ -44,6 +44,19 @@ describe("documentProblems", () => {
     expect(documentProblems(duplicate).map((problem) => problem.severity)).toEqual(["error"]);
   });
 
+  it("calls an id that names a built-in object property an error, at the id", () => {
+    const builtIn = sample.replace('"id": "flow_main"', '"id": "constructor"');
+    expect(documentProblems(builtIn)).toEqual([
+      {
+        severity: "error",
+        message:
+          'flows[0].id: "constructor" is reserved: it names a built-in property of JavaScript objects',
+        offset: at(builtIn, '"constructor"'),
+        length: '"constructor"'.length,
+      },
+    ]);
+  });
+
   it("warns about a connector the diagram drops, at its attachedTo", () => {
     const dangling = sample.replace(
       '"attachedTo": "int_checkout_fraud"',
