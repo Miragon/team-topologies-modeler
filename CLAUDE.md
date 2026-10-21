@@ -81,6 +81,13 @@ legend and dialog; where they sit is the host's), and must never import from `ap
 - `npm test` — Vitest (unit) · `npm run test:browser` — renderer and the contract kit in Chromium ·
   `npm run test:e2e` — Playwright, projects `webapp` and `vscode-webview` (ports `E2E_PORT`,
   `E2E_WEBVIEW_PORT`)
+- `npm run test:vscode` — the packed extension in a real VS Code (Vitest project `vscode`,
+  `apps/vscode/test-smoke/`, the shell's `./testing/vscode-electron`): open, edit, save, undo and
+  the four default themes, screenshots in `test-results/vscode-smoke/`. Opt-in: it opens a VS Code
+  window (on Linux without a display: `xvfb-run -a`) and downloads VS Code once into the OS cache.
+  CI runs it only in [`vscode-smoke.yml`](.github/workflows/vscode-smoke.yml) (on demand, weekly, on
+  PRs touching `apps/vscode/**`, the root `package.json` or `vitest.config.ts`), never in `ci.yml`.
+  See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - `npm run typecheck` · `npm run lint` (ESLint + typecheck)
 - `npm run format` — Prettier · `npm run depcruise` — check the module graph
 

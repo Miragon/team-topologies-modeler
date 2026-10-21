@@ -1,0 +1,55 @@
+# The extension in a real VS Code (npm run test:vscode): its own workflow, so it never adds a job,
+# a wait or a flake to CI. It runs where only a real VS Code can break the extension: on demand, on
+# pull requests that change the extension or the test's own setup (its script, its Vitest project,
+# the driver's peers in the root package.json), and weekly against the newest stable VS Code, which
+# changes without a commit here.
+name: VS Code smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 4 * * 1"
+  pull_request:
+    paths:
+      - "apps/vscode/**"
+      - "package.json"
+      - "vitest.config.ts"
+      - ".github/workflows/vscode-smoke.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vscode-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  vscode-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+
+      # The test runs the newest stable VS Code, so the cache key is that version; the path is the
+      # driver's own default, wherever XDG_CACHE_HOME points.
+      - name: Locate the VS Code download
+        id: vscode
+        run: |
+          echo "version=$(curl -fsSL 'https://update.code.visualstudio.com/api/releases/stable?released=true' | jq -r '.[0]')" >> "$GITHUB_OUTPUT"
+          echo "path=$(node --input-type=module -e "import { homedir } from 'node:os'; import { defaultVsCodeCachePath } from '@miragon/modeler-shell/testing/vscode-electron'; console.log(defaultVsCodeCachePath(process.platform, process.env, homedir()));")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.vscode.outputs.path }}
+          key: vscode-${{ runner.os }}-${{ runner.arch }}-${{ steps.vscode.outputs.version }}
+
+      - run: xvfb-run -a npm run test:vscode
+
+      - if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vscode-smoke
+          path: test-results/vscode-smoke/
+          if-no-files-found: ignore
+          retention-days: 7

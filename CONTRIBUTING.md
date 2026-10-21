@@ -57,7 +57,45 @@ several worktrees run the suite at once. Locally, run `npx playwright install ch
 the official Playwright container (`mcr.microsoft.com/playwright`), which ships the browser + system
 libs pre-installed — so **when you bump `playwright`/`@playwright/test`, bump the matching image tag
 in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) too** (the version pin-check does not catch
-this).
+this), and keep `playwright-core` on the same version.
+
+### The extension in a real VS Code
+
+`npm run test:vscode` (the Vitest project `vscode`,
+[`apps/vscode/test-smoke/`](apps/vscode/test-smoke/vscode-smoke.test.ts)) runs the extension the way
+it ships in a real VS Code, driven by `@miragon/modeler-shell/testing/vscode-electron`: it packs the
+VSIX like the release (`vsce package`, which runs `vscode:prepublish`, the production build, into
+`apps/vscode/dist`), unpacks it, checks that the package holds every file the webview loads (bundle,
+stylesheet, fonts), starts the newest stable VS Code with it on a throwaway profile, opens a small
+diagram ([`checkout.tt`](apps/vscode/test-smoke/checkout.tt)) in the custom editor and waits until
+the canvas shows it with the stylesheet applied, creates a team from the palette by keyboard, saves
+(the file must pass the Problems view's check), undoes (the canvas and, saved again, the file return
+to the fixture) and switches through VS Code's four default themes, with a screenshot each in
+`test-results/vscode-smoke/` (gitignored). It is not part of `npm test` or the regular CI
+(`ci.yml`): it needs a display and the VS Code download.
+
+**Locally (macOS):** just run it; a VS Code window opens for a few seconds and the whole run takes
+about 5 to 10 s. The first run downloads VS Code (about 320 MB, 0.9 GB unpacked) into
+`~/Library/Caches/miragon-modeler-shell/vscode-test`, shared by every Miragon modeler on the machine
+and outside the repository; let that first download finish before you start a second run anywhere.
+On Linux, run it under `xvfb-run -a` when there is no display.
+
+```bash
+npm run test:vscode
+```
+
+A file missing from the package fails the test before VS Code starts, with its path. Any other
+failure names its step (`open`, `edit`, `save`, `undo`, `themes`, …) in the test's output. To read
+VS Code's own logs, pass `keepTemporaryFiles: true` to `runVsCodeSmoke` for that run; it then logs
+where the profile is.
+
+**In CI:** the [`VS Code smoke`](.github/workflows/vscode-smoke.yml) workflow runs it on
+`ubuntu-latest` under `xvfb-run -a` — on demand (Actions → VS Code smoke → Run workflow), every
+Monday against the newest stable VS Code, and on pull requests that change `apps/vscode/**`, the root
+`package.json` (its script, the driver's peers `playwright-core` and `@vscode/test-electron`) or
+`vitest.config.ts`. It is a workflow of its own and not a required check, so it never slows down or
+blocks the regular CI; it caches the VS Code download per version and uploads the screenshots as the
+artifact `vscode-smoke` (kept 7 days).
 
 ## Pre-commit reality
 
