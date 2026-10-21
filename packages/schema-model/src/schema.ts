@@ -113,6 +113,9 @@ export function parseDocument(input: unknown): ParseResult {
   return { ok: true, document: result.data as TtDocument };
 }
 
+/** The last document version that modelled interactions as edges without geometry. */
+const EDGE_INTERACTIONS_VERSION = 1;
+
 interface Migration {
   document: unknown;
   /** For each interaction the migrated document keeps, its index in the input. */
@@ -123,8 +126,10 @@ interface Migration {
  * Forward-migrates older document shapes to the current version. v1 modelled
  * interactions as edges (source/target, no geometry) and carried a
  * `showFlowOfChange` flag; v2 makes interactions placed shapes and adds `flows`;
- * v3 adds `annotations`. Legacy edge-interactions can't be placed meaningfully,
- * so they're dropped.
+ * v3 adds `annotations`. The edge-interactions of a v1 file can't be placed
+ * meaningfully, so they're dropped. From v2 on, an interaction without position
+ * or size is refused like any other missing field: dropped, it would vanish from
+ * the file on the next save without a word.
  */
 function migrate(input: unknown): Migration {
   if (input == null || typeof input !== "object") {
@@ -136,18 +141,18 @@ function migrate(input: unknown): Migration {
   next.version = DOCUMENT_VERSION;
   if (typeof next.title !== "string") next.title = "Untitled team topology";
   if (!Array.isArray(next.nodes)) next.nodes = [];
-  // Keep only placed interaction shapes; drop legacy edges (no position/size).
-  const placedInteractions = Array.isArray(next.interactions)
+  const dropsEdgeInteractions = doc.version === EDGE_INTERACTIONS_VERSION;
+  const keptInteractions = Array.isArray(next.interactions)
     ? next.interactions
         .map((interaction: unknown, fileIndex) => ({ interaction, fileIndex }))
-        .filter(({ interaction }) => isPlacedShape(interaction))
+        .filter(({ interaction }) => !dropsEdgeInteractions || isPlacedShape(interaction))
     : [];
-  next.interactions = placedInteractions.map(({ interaction }) => interaction);
+  next.interactions = keptInteractions.map(({ interaction }) => interaction);
   if (!Array.isArray(next.flows)) next.flows = [];
   if (!Array.isArray(next.annotations)) next.annotations = [];
   return {
     document: next,
-    interactionFileIndexes: placedInteractions.map(({ fileIndex }) => fileIndex),
+    interactionFileIndexes: keptInteractions.map(({ fileIndex }) => fileIndex),
   };
 }
 

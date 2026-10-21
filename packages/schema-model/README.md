@@ -178,10 +178,12 @@ console.log(SAMPLE_DOCUMENT.title);
   with their path.
 - **Migrations** — `parseDocument()` upgrades older documents before validating (keyed by `version`).
   The `1 → 2` step drops the legacy `showFlowOfChange` flag and the old edge-based interactions,
-  keeping only interactions that carry geometry (the placed-shape model). The `2 → 3` step adds an
-  empty `annotations` list — and because an empty list is not written back, re-saving a v2 file
-  changes nothing but its `version`. Issue paths always count in the input: an invalid interaction
-  after a dropped one is reported at its index in the file.
+  keeping only interactions that carry geometry (the placed-shape model). Only a version 1 file
+  loses interactions this way: from version 2 on, an interaction without `position` or `size` is
+  refused at its path like any other missing field, so it never vanishes on the next save. The
+  `2 → 3` step adds an empty `annotations` list — and because an empty list is not written back,
+  re-saving a v2 file changes nothing but its `version`. Issue paths always count in the input: an
+  invalid interaction after a dropped one is reported at its index in the file.
 
 ## Development
 

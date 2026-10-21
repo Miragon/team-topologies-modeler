@@ -100,6 +100,28 @@ describe("parseDocument", () => {
     });
   });
 
+  it.each([2, DOCUMENT_VERSION])(
+    "refuses a version %i interaction without a size at its path instead of dropping it",
+    (version) => {
+      const result = parseDocument({
+        version,
+        title: "x",
+        nodes: [],
+        interactions: [
+          { id: "i1", mode: "collaboration", position: { x: 0, y: 0 } },
+          { id: "e1", mode: "collaboration", source: "a", target: "b" },
+        ],
+        flows: [],
+      });
+      if (result.ok) throw new Error("expected the document to be refused");
+      expect(result.issues.map(({ path }) => path)).toEqual([
+        ["interactions", 0, "size"],
+        ["interactions", 1, "position"],
+        ["interactions", 1, "size"],
+      ]);
+    },
+  );
+
   it("accepts a placed interaction shape", () => {
     const result = parseDocument({
       version: 2,

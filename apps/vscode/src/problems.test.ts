@@ -58,14 +58,28 @@ describe("documentProblems", () => {
   });
 
   it("points at the interaction in the file after a legacy one the migration drops", () => {
-    const legacyFirst = sample.replace(
-      '"interactions": [\n',
-      '"interactions": [\n    { "id": "edge_1", "mode": "collaboration", "source": "a", "target": "b" },\n',
-    );
+    const legacyFirst = sample
+      .replace('"version": 3', '"version": 1')
+      .replace(
+        '"interactions": [\n',
+        '"interactions": [\n    { "id": "edge_1", "mode": "collaboration", "source": "a", "target": "b" },\n',
+      );
     const wrongMode = legacyFirst.replace('"mode": "facilitating"', '"mode": "handover"');
     const [problem, ...rest] = documentProblems(wrongMode);
     expect(rest).toEqual([]);
     expect(problem).toMatchObject({ severity: "error", offset: at(wrongMode, '"handover"') });
+  });
+
+  it("calls an interaction without a size an error, at the interaction", () => {
+    const withoutSize = sample.replace(
+      /("id": "int_platform_fulfilment",[\s\S]*?),\n\s*"size": \{[^}]*\}/,
+      "$1",
+    );
+    expect(withoutSize).not.toBe(sample);
+    const [problem, ...rest] = documentProblems(withoutSize);
+    expect(rest).toEqual([]);
+    expect(problem).toMatchObject({ severity: "error", length: 1 });
+    expect(problem!.message).toMatch(/^interactions\[\d\]\.size: /);
   });
 
   it("warns about a connector the diagram drops, at its attachedTo", () => {

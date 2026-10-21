@@ -14,6 +14,10 @@ import { fileURLToPath } from "node:url";
 
 export const DOCUMENT_VERSION = 3;
 
+// Only a version 1 file drew interactions as edges, so only there does the modeler drop an
+// interaction without geometry; from version 2 on it refuses the file.
+const EDGE_INTERACTIONS_VERSION = 1;
+
 export const TEAM_TYPES = {
   "stream-aligned": {
     label: "Stream-aligned",
@@ -670,6 +674,7 @@ export function checkDocument(input) {
       const path = `${key}[${index}]${isPlainObject(element) && typeof element.id === "string" ? ` (${element.id})` : ""}`;
       if (
         kind === "interaction" &&
+        input.version === EDGE_INTERACTIONS_VERSION &&
         isPlainObject(element) &&
         !("position" in element && "size" in element)
       ) {
