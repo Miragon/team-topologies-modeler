@@ -82,6 +82,14 @@ function typedHalfway(fragment: string, typedSoFar: string): string {
   return onlineShop.replace(fragment, typedSoFar);
 }
 
+function withoutSizeOf(interactionId: string): string {
+  const sizeOfInteraction = new RegExp(
+    `("id": "${interactionId}",[\\s\\S]*?),\\n\\s*"size": \\{[^}]*\\}`,
+  );
+  if (!sizeOfInteraction.test(onlineShop)) throw new Error(`the fixture lost "${interactionId}"`);
+  return onlineShop.replace(sizeOfInteraction, "$1");
+}
+
 const harness: ConformanceHarness = {
   async create() {
     const modeler = createCollaborativeModeler();
@@ -106,6 +114,7 @@ const harness: ConformanceHarness = {
     onlineShop.replace('"id": "flow_main"', '"id": "tt-root"'),
     onlineShop.replace('"id": "flow_main"', '"id": "assoc_ann_fraud_handover"'),
     onlineShop.replace('"id": "flow_main"', '"id": "constructor"'),
+    withoutSizeOf("int_platform_fulfilment"),
   ],
   foreignTexts: [
     {
