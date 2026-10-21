@@ -402,6 +402,15 @@ select.tt-field__control {
 
 /* ---- Legend rows (the host renders the card around them) ------------------------------ */
 
+.tt-legend__heading {
+  max-width: 232px;
+  margin: 0 0 4px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
 .tt-legend__group {
   display: flex;
   flex-direction: column;
@@ -415,6 +424,21 @@ select.tt-field__control {
   display: block;
   width: 24px;
   height: 24px;
+}
+
+/* Name and explanation stack, so the card stays narrow next to the diagram. */
+.tt-legend__text {
+  display: flex;
+  flex-direction: column;
+  max-width: 200px;
+}
+
+.tt-legend__label {
+  color: var(--ink);
+}
+
+.tt-legend__explanation {
+  color: var(--ink-muted);
 }
 
 /* ---- Dialogs: keyboard shortcuts, diagram title (guide §5.4, §8) ----------------------

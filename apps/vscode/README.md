@@ -62,9 +62,10 @@ the bottom left, the same in every Miragon modeler.
   without touching the JSON. Change a team's type, name, description and fill or outline colour, an
   interaction's mode and label, the flow-of-change label, or an annotation's text, and detach an
   annotation from its element. With several elements selected, it deletes them together.
-- **Legend** (bottom-left): which shape stands for which team type, interaction mode and element.
-  Switch it on and off with **Legend** in the menu or its close button. It starts hidden in panes
-  shorter than 820 px, and each editor remembers your choice.
+- **Legend** (bottom-left): which shape stands for which team type, interaction mode and element,
+  each with a short explanation, and that teams are solid and long-lived while interactions are
+  dashed and short-lived. Switch it on and off with **Legend** in the menu or its close button. It
+  starts hidden in panes shorter than 820 px, and each editor remembers your choice.
 - **Menu** (top-left, the icon button): the legend, **Export as PNG** and **Export as SVG**, and
   **Keyboard shortcuts…**. The exports and **Fit to View** are also commands in the Command Palette
   and in the editor title's **…** menu.
