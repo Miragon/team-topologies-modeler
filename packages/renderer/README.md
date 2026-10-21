@@ -51,8 +51,13 @@ them together with the zoom panel.
 
 **Palette from the keyboard.** A host chrome that makes the palette a toolbar (the modeler shell)
 triggers an entry with a click whose `detail` is 0. On a creating entry that click places the
-element in the centre of the free part of the canvas (`freeRectCenter`, else the centre of the
-view), 24px further diagonally while that spot is taken, selects it and opens its label editor.
+element in the centre of the free part of the canvas (`freeArea`, else the centre of the view), 24px
+further diagonally while that spot is taken, selects it and opens its label editor.
+
+**Label editor and the view.** A change of the view (a host's `setViewState` or fit, a wheel zoom or
+scroll) never commits an open label editor: it stays open with what was typed and moves with its
+element. Enter, a click or drag on the canvas and leaving the field commit; Escape discards (law L5
+of `@miragon/modeler-api` 1.2).
 
 **Read-only lock.** `modeler.get("ttReadOnly").setReadOnly(true)` locks the canvas while the
 document behind it cannot be saved from it (an invalid file in an IDE host): no move, resize,
@@ -109,7 +114,9 @@ new Modeler({
   height?: number | string,          // canvas height (default "100%", or "600px" with no container)
   additionalModules?: ModuleDeclaration[], // extra diagram-js modules
   undoRedoKeys?: boolean,            // bind Cmd/Ctrl+Z, Shift+Z, Y (default true; false: the host owns the history)
-  freeRectCenter?: () => Point | undefined, // where keyboard creation places an element (diagram coordinates)
+  freeArea?: { insets: () => FreeAreaInsets } | { center: () => Point | undefined },
+                                     // the canvas part no chrome covers; keyboard creation lands in its centre
+  freeRectCenter?: () => Point | undefined, // deprecated since 0.12: freeArea: { center }
 });
 ```
 
@@ -132,9 +139,20 @@ await modeler.importText(text); // silent, fitted; rejects without a trace for a
 modeler.onContentChanged(() => save(modeler.exportText()));
 ```
 
-Options: `additionalModules`, `undoRedoKeys`, `freeRectCenter` and `fitOnImport` (default true: a
-fit of at most 100 % that keeps the palette's strip free; a host whose chrome fits the diagram
-itself passes false). `modeler.diagram` is the wrapped `Modeler`.
+Options: the contract's `CollaborativeModelerOptions` (1.2) and `additionalModules`:
+
+- `freeArea`: the part of the canvas no host chrome covers, `{ insets: () => shell.fitInsets() }`
+  (px from the container's edges) or `{ center: () => viewport.freeRectCenter() }` (diagram
+  coordinates); keyboard creation lands in its centre. Default: the whole view.
+- `fitOnImport` (default true): a fit of at most 100 % that keeps the palette's strip free after
+  every import; a host whose chrome fits the diagram itself passes false.
+- `undoRedoKeys` (default true): false when the host owns the history (VS Code).
+- `freeRectCenter`: deprecated since 0.12, the old name of `freeArea: { center }`; given both,
+  `freeArea` wins. It goes in a later minor release.
+
+The viewer takes the same options and ignores `freeArea` and `undoRedoKeys`. `modeler.diagram` is
+the wrapped `Modeler`. `elements.bounds(id)` (contract 1.2) returns a team's, interaction's, flow's
+or annotation's box in diagram coordinates from the live canvas, `undefined` for any other id.
 
 ### Shared methods (`Viewer` / `NavigatedViewer` / `Modeler`)
 

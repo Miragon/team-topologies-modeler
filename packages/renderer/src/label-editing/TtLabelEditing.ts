@@ -6,6 +6,11 @@
  * `ttModeling.updateLabel` — one undo step; Shift+Enter inserts a line break;
  * Escape discards. Double-click any element to edit its label.
  *
+ * A change of the view (a host's `setViewState` or fit, a wheel zoom or scroll) never commits: the
+ * editor stays open with what was typed and follows its element, because a host may change the
+ * view while the user types, and only the user's own gestures end an edit (law L5 of the
+ * `@miragon/modeler-api` contract).
+ *
  * An import replaces every element, so an edit open while one runs is taken down without a commit
  * and reopened, with what was typed, on the element with the same id (hosts re-import remote
  * states while the user types). Under the read-only lock no editor opens.
@@ -42,6 +47,8 @@ function editorName(element: TtElement): string {
 interface ActiveEdit {
   commit: () => void;
   cleanup: () => void;
+  /** Lays the editor over its element again, after the view changed. */
+  place: () => void;
   /** The element and what was typed so far, to reopen the edit after an import. */
   snapshot: () => SuspendedEdit;
 }
@@ -72,10 +79,9 @@ export default class TtLabelEditing {
     eventBus.on("element.dblclick", (event: { element?: unknown }) => {
       if (isTtElement(event.element)) this.activate(event.element);
     });
-    // Any click/drag/pan outside the editor commits (only Escape discards).
-    eventBus.on(["element.mousedown", "drag.init", "canvas.viewbox.changing"], () =>
-      this.active?.commit(),
-    );
+    // Any click or drag outside the editor commits (only Escape discards); a pan starts with one.
+    eventBus.on(["element.mousedown", "drag.init"], () => this.active?.commit());
+    eventBus.on("canvas.viewbox.changed", () => this.active?.place());
     // An import that bypasses suspend() still must not apply a pending edit to a removed element.
     eventBus.on("import.render.start", () => this.cancel());
     eventBus.on(READ_ONLY_CHANGED_EVENT, (event: { readOnly?: boolean }) => {
@@ -104,8 +110,8 @@ export default class TtLabelEditing {
 
   /**
    * Reopens a suspended edit on the element with the same id, if the imported diagram still has
-   * it. Deferred to the next task, after the host restored its viewbox around the import (a
-   * viewbox change commits an open editor).
+   * it. Deferred to the next task, so the host's own work around the import (restoring its view,
+   * moving the focus) is done before the editor takes the focus back.
    */
   resumeAfterImport(): void {
     clearTimeout(this.resumeTimer);
@@ -133,13 +139,8 @@ export default class TtLabelEditing {
 
     const layout = labelLayout(element);
     const centred = layout.align === "center";
-    const scale = this.canvas.zoom();
-    const viewbox = this.canvas.viewbox();
-
     const width = centred ? Math.max(layout.box.width, MIN_EDITOR_WIDTH) : layout.box.width;
     const left = element.x + layout.box.x + (layout.box.width - width) / 2;
-    const top = (element.y + layout.box.y - viewbox.y) * scale;
-    const boxHeight = layout.box.height * scale;
 
     const editor = document.createElement("textarea");
     editor.className = "tt-label-editor";
@@ -147,10 +148,7 @@ export default class TtLabelEditing {
     editor.rows = 1;
     editor.setAttribute("aria-label", editorName(element));
     Object.assign(editor.style, {
-      left: `${(left - viewbox.x) * scale}px`,
-      width: `${width * scale}px`,
       fontFamily: FONT.family,
-      fontSize: `${layout.fontSize * scale}px`,
       fontWeight: layout.fontWeight,
       letterSpacing: layout.letterSpacing ?? "normal",
       lineHeight: String(LINE_HEIGHT),
@@ -158,6 +156,8 @@ export default class TtLabelEditing {
       textAlign: centred ? "center" : "left",
     });
 
+    let top = 0;
+    let boxHeight = 0;
     // Grow with the text; centred labels stay vertically centred like the rendered ones.
     const fitToContent = () => {
       editor.style.height = "0px";
@@ -165,10 +165,22 @@ export default class TtLabelEditing {
       editor.style.height = `${centred ? contentHeight : Math.max(contentHeight, boxHeight)}px`;
       editor.style.top = `${centred ? top + (boxHeight - contentHeight) / 2 : top}px`;
     };
+    const place = () => {
+      const scale = this.canvas.zoom();
+      const viewbox = this.canvas.viewbox();
+      top = (element.y + layout.box.y - viewbox.y) * scale;
+      boxHeight = layout.box.height * scale;
+      Object.assign(editor.style, {
+        left: `${(left - viewbox.x) * scale}px`,
+        width: `${width * scale}px`,
+        fontSize: `${layout.fontSize * scale}px`,
+      });
+      fitToContent();
+    };
 
     this.canvas.getContainer().appendChild(editor);
     this.canvas.addMarker(element, EDITING_MARKER);
-    fitToContent();
+    place();
     editor.focus();
     if (resumed) editor.setSelectionRange(resumed.selectionStart, resumed.selectionEnd);
     else editor.select();
@@ -218,7 +230,7 @@ export default class TtLabelEditing {
       selectionStart: editor.selectionStart,
       selectionEnd: editor.selectionEnd,
     });
-    this.active = { commit, cleanup, snapshot };
+    this.active = { commit, cleanup, place, snapshot };
   }
 
   cancel(): void {

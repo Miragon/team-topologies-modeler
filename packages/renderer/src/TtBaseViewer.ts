@@ -11,6 +11,7 @@ import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
 import type EventBus from "diagram-js/lib/core/EventBus";
 import type CommandStack from "diagram-js/lib/command/CommandStack";
 import type { Root } from "diagram-js/lib/model/Types";
+import type { FreeArea } from "@miragon/modeler-api";
 import { documentIdProblems, type TtDocument } from "@miragon/team-topologies-schema-model";
 import { saveSVG } from "./io/saveSvg.js";
 import type TtImporter from "./io/TtImporter.js";
@@ -40,8 +41,14 @@ export interface TtViewerOptions {
   undoRedoKeys?: boolean | undefined;
   /**
    * Where Enter or Space on a creating palette entry places the element (guide §5.5): the centre
-   * of the part of the canvas no chrome covers, in diagram coordinates. Without it, the centre of
-   * the visible canvas.
+   * of the part of the canvas no chrome covers, given as its insets in px from the container's
+   * edges (`{ insets }`) or as that centre in diagram coordinates (`{ center }`). Without it, the
+   * centre of the visible canvas.
+   */
+  freeArea?: FreeArea | undefined;
+  /**
+   * @deprecated Since 0.12, the `@miragon/modeler-api` 1.2 name is `freeArea: { center }`; given
+   * both, `freeArea` wins. Accepted for one more minor release.
    */
   freeRectCenter?: (() => Point | undefined) | undefined;
 }
@@ -86,7 +93,10 @@ export abstract class TtBaseViewer {
         canvas: { container: this._container },
         modules,
         ttKeyboard: { undoRedoKeys: this._options.undoRedoKeys ?? true },
-        ttPalette: { freeRectCenter: this._options.freeRectCenter },
+        ttPalette: {
+          freeArea: this._options.freeArea,
+          freeRectCenter: this._options.freeRectCenter,
+        },
       });
       this._describeCanvas(this._diagram);
     }

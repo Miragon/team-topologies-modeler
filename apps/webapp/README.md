@@ -17,7 +17,8 @@ and a diagram is shared by encoding it into the URL.
 - **The Miragon modeler chrome**, the same as in the VS Code extension: the menu top left, the tool
   palette top centre (Enter or Space on an entry places the element in the free part of the canvas),
   **Share** top right, the zoom panel bottom right (`Cmd/Ctrl` + `+` / `−`, `Cmd/Ctrl+0` for 100 %,
-  `Shift+1` to fit), the legend, the problems pill and the legal line bottom left, and the
+  `Shift+1` to fit), the legend (every shape with a short explanation, solid teams and dashed
+  interactions), the problems pill and the legal line bottom left, and the
   **inspector** on the right (a bottom sheet on narrow screens) while something is selected. A fresh
   visit shows a **start screen** (New diagram, Show example, or open a file) instead of the work
   chrome.

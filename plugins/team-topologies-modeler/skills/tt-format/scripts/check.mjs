@@ -14,6 +14,10 @@ import { fileURLToPath } from "node:url";
 
 export const DOCUMENT_VERSION = 3;
 
+// Only a version 1 file drew interactions as edges, so only there does the modeler drop an
+// interaction without geometry; from version 2 on it refuses the file.
+const EDGE_INTERACTIONS_VERSION = 1;
+
 export const TEAM_TYPES = {
   "stream-aligned": {
     label: "Stream-aligned",
@@ -106,6 +110,8 @@ const UNKNOWN_FIELD = "unknown field; the modeler ignores it and keeps it on sav
 const DIAGRAM_ROOT_ID = "tt-root";
 const ENGINE_ROOT_ID_PREFIX = "__implicitroot";
 const associationId = (annotationId) => `assoc_${annotationId}`;
+// The canvas keeps its elements in a plain object, where these names already resolve.
+const isBuiltInPropertyId = (id) => Object.hasOwn(Object.prototype, id);
 
 const isPlainObject = (value) =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -668,6 +674,7 @@ export function checkDocument(input) {
       const path = `${key}[${index}]${isPlainObject(element) && typeof element.id === "string" ? ` (${element.id})` : ""}`;
       if (
         kind === "interaction" &&
+        input.version === EDGE_INTERACTIONS_VERSION &&
         isPlainObject(element) &&
         !("position" in element && "size" in element)
       ) {
@@ -705,6 +712,11 @@ export function checkDocument(input) {
       findings.errors.push({
         path: element.id,
         message: `ids starting with "${ENGINE_ROOT_ID_PREFIX}" are reserved`,
+      });
+    } else if (isBuiltInPropertyId(element.id)) {
+      findings.errors.push({
+        path: element.id,
+        message: "reserved: it names a built-in property of JavaScript objects",
       });
     }
     if (connectorIds.has(element.id)) {

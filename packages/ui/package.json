@@ -20,7 +20,7 @@
     "test": "npm --prefix ../.. run test"
   },
   "dependencies": {
-    "@miragon/modeler-shell": "0.2.1",
+    "@miragon/modeler-shell": "0.2.2",
     "@miragon/team-topologies-renderer": "0.11.2",
     "@miragon/team-topologies-schema-model": "0.11.2",
     "diagram-js": "15.28.1",

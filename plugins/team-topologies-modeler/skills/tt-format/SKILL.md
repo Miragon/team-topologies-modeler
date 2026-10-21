@@ -166,8 +166,9 @@ words; put explanations into annotations.
 Any non-empty string, unique across nodes, interactions, flows and annotations together — a
 duplicate breaks the import. A few ids belong to parts of the diagram the file never lists, so no
 element may use them: `tt-root` (the diagram itself), ids starting with `__implicitroot`, and
-`assoc_<annotation id>` (the connector of that annotation). Because a save sorts by `id` and diffs
-anchor on it, use stable, descriptive ids rather than random ones:
+`assoc_<annotation id>` (the connector of that annotation). Nor may an id name a built-in property
+of JavaScript objects (`constructor`, `toString`, `__proto__`, …). Because a save sorts by `id`
+and diffs anchor on it, use stable, descriptive ids rather than random ones:
 
 - teams `team_<name>` (`team_checkout`), groupings `grp_<name>`
 - interactions `int_<a>_<b>` (`int_platform_checkout`)

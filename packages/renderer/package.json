@@ -37,7 +37,7 @@
     "test:browser": "npm --prefix ../.. run test:browser"
   },
   "dependencies": {
-    "@miragon/modeler-api": "1.1.0",
+    "@miragon/modeler-api": "1.2.0",
     "@miragon/team-topologies-schema-model": "0.11.2"
   },
   "peerDependencies": {

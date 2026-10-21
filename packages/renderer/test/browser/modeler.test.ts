@@ -182,10 +182,15 @@ interface Services {
     appendAnnotation(element: unknown): TtAnnotation;
     updateLabel(element: unknown, label: string): void;
   };
-  commandStack: { undo(): void; redo(): void };
+  commandStack: { undo(): void; redo(): void; canUndo(): boolean };
   rules: { allowed(action: string, context: unknown): unknown };
   selection: { get(): unknown[]; select(elements: unknown): void };
-  canvas: { zoom(level?: number): number; getContainer(): HTMLElement };
+  canvas: {
+    zoom(level?: number, center?: { x: number; y: number }): number;
+    viewbox(box?: { x: number; y: number; width: number; height: number }): unknown;
+    scroll(delta: { dx: number; dy: number }): unknown;
+    getContainer(): HTMLElement;
+  };
   labelEditing: { activate(element: unknown): void };
 }
 
@@ -576,6 +581,79 @@ test("Enter commits one undo step, Shift+Enter keeps a line break, Escape discar
     );
     expect(editor(container)).toBeNull();
     expect(team.ttLabel).toBe(original);
+  } finally {
+    modeler.destroy();
+    container.remove();
+  }
+});
+
+test("a view change keeps the editor open with its text, on its element, without a commit", () => {
+  const { modeler, container } = mountModeler();
+  try {
+    modeler.importDocument(SAMPLE_DOCUMENT);
+    const { registry, canvas, labelEditing, commandStack } = services(modeler);
+    const team = registry.get("team_checkout") as TtTeam;
+    const original = team.ttLabel;
+    const changes: unknown[] = [];
+    modeler.on("commandStack.changed", (event) => changes.push(event));
+    canvas.zoom(1);
+    labelEditing.activate(team);
+    editor(container)!.value = "Typed, not committed";
+
+    const teamBox = () =>
+      container.querySelector(`[data-element-id="${team.id}"]`)!.getBoundingClientRect();
+    for (const changeView of [
+      () => canvas.viewbox({ x: -300, y: -200, width: 450, height: 320 }),
+      () => canvas.zoom(0.5, { x: 0, y: 0 }),
+      () => canvas.scroll({ dx: 40, dy: -30 }),
+      () => modeler.fitToView(),
+    ]) {
+      changeView();
+      const textarea = editor(container)!;
+      expect(textarea).not.toBeNull();
+      expect(textarea.value).toBe("Typed, not committed");
+      expect(parseFloat(textarea.style.fontSize)).toBeCloseTo(13.5 * canvas.zoom());
+      const editorBox = textarea.getBoundingClientRect();
+      const shapeBox = teamBox();
+      expect(editorBox.left).toBeGreaterThanOrEqual(shapeBox.left);
+      expect(editorBox.right).toBeLessThanOrEqual(shapeBox.right);
+      expect(editorBox.top).toBeGreaterThanOrEqual(shapeBox.top);
+      expect(editorBox.bottom).toBeLessThanOrEqual(shapeBox.bottom);
+    }
+    expect(team.ttLabel).toBe(original);
+    expect(changes).toEqual([]);
+    expect(commandStack.canUndo()).toBe(false);
+
+    editor(container)!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(team.ttLabel).toBe("Typed, not committed");
+  } finally {
+    modeler.destroy();
+    container.remove();
+  }
+});
+
+test("a click on another element still commits an open editor", () => {
+  const { modeler, container } = mountModeler();
+  try {
+    modeler.importDocument(SAMPLE_DOCUMENT);
+    const { registry, labelEditing } = services(modeler);
+    const team = registry.get("team_checkout") as TtTeam;
+    labelEditing.activate(team);
+    editor(container)!.value = "Committed by a click";
+
+    const other = container.querySelector('[data-element-id="team_platform"]')!;
+    const { left, top } = other.getBoundingClientRect();
+    other.dispatchEvent(
+      new MouseEvent("mousedown", {
+        bubbles: true,
+        button: 0,
+        clientX: left + 5,
+        clientY: top + 5,
+      }),
+    );
+
+    expect(editor(container)).toBeNull();
+    expect(team.ttLabel).toBe("Committed by a click");
   } finally {
     modeler.destroy();
     container.remove();
@@ -976,7 +1054,7 @@ test("keyboard creation lands on the free centre, 24px further while that spot i
   container.style.height = "640px";
   document.body.appendChild(container);
   const freeCentre = { x: 300, y: 200 };
-  const modeler = new Modeler({ container, freeRectCenter: () => freeCentre });
+  const modeler = new Modeler({ container, freeArea: { center: () => freeCentre } });
   try {
     modeler.importDocument(emptyDocument());
     const { registry } = services(modeler);
@@ -997,6 +1075,56 @@ test("keyboard creation lands on the free centre, 24px further while that spot i
     modeler.destroy();
     container.remove();
   }
+});
+
+/** Where a keyboard click on the flow entry places the flow, for a modeler built with `options`. */
+function keyboardCreatedCentre(options: Partial<ConstructorParameters<typeof Modeler>[0]>): {
+  centre: { x: number; y: number };
+  viewbox: { x: number; y: number; scale: number; outer: { width: number; height: number } };
+} {
+  const container = document.createElement("div");
+  container.style.width = "900px";
+  container.style.height = "640px";
+  document.body.appendChild(container);
+  const modeler = new Modeler({ container, ...options });
+  try {
+    modeler.importDocument(emptyDocument());
+    const { registry, canvas } = services(modeler);
+    canvas.viewbox({ x: 100, y: 50, width: 450, height: 320 });
+    keyboardClick(container.querySelector<HTMLElement>('.djs-palette [data-action="flow"]')!);
+    const [flow] = registry.filter(isTtElement) as TtElement[];
+    const viewbox = canvas.viewbox() as ReturnType<typeof keyboardCreatedCentre>["viewbox"];
+    return { centre: centreOf(flow!), viewbox };
+  } finally {
+    modeler.destroy();
+    container.remove();
+  }
+}
+
+test("freeArea { insets } places a keyboard-created element in the centre of the free part", () => {
+  const insets = { top: 64, right: 120, bottom: 64, left: 80 };
+  const { centre, viewbox } = keyboardCreatedCentre({ freeArea: { insets: () => insets } });
+  const { width, height } = viewbox.outer;
+  expect(width).toBeGreaterThan(insets.left + insets.right);
+  expect(height).toBeGreaterThan(insets.top + insets.bottom);
+  const expected = {
+    x: viewbox.x + (insets.left + (width - insets.left - insets.right) / 2) / viewbox.scale,
+    y: viewbox.y + (insets.top + (height - insets.top - insets.bottom) / 2) / viewbox.scale,
+  };
+  expect(Math.abs(centre.x - expected.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(centre.y - expected.y)).toBeLessThanOrEqual(1);
+  const wholeView = keyboardCreatedCentre({}).centre;
+  expect(Math.abs(centre.x - wholeView.x)).toBeGreaterThan(1);
+});
+
+test("freeRectCenter stays accepted as the deprecated name of freeArea { center }", () => {
+  const free = { x: 300, y: 200 };
+  expect(keyboardCreatedCentre({ freeRectCenter: () => free }).centre).toEqual(free);
+  const aligned = { x: 160, y: 120 };
+  expect(
+    keyboardCreatedCentre({ freeRectCenter: () => free, freeArea: { center: () => aligned } })
+      .centre,
+  ).toEqual(aligned);
 });
 
 test("context-pad entries are named buttons that Enter activates", () => {

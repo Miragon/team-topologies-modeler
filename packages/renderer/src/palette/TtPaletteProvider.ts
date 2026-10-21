@@ -24,6 +24,7 @@ import type {
 } from "diagram-js/lib/features/palette/PaletteProvider";
 import type { Root, Shape } from "diagram-js/lib/model/Types";
 import type { Injector } from "didi";
+import type { FreeArea, FreeAreaInsets } from "@miragon/modeler-api";
 import {
   ALL_INTERACTION_SPECS,
   ALL_TEAM_SPECS,
@@ -58,9 +59,13 @@ export interface Point {
 
 export interface TtPaletteConfig {
   /**
-   * The centre of the part of the canvas no chrome covers, in diagram coordinates (the modeler
-   * shell's `viewport.freeRectCenter()`). Without it, the centre of the visible canvas.
+   * The part of the canvas no chrome covers (contract option of `@miragon/modeler-api` 1.2): its
+   * insets in px from the container's edges (the modeler shell's `shell.fitInsets()`) or its centre
+   * in diagram coordinates (the shell's `viewport.freeRectCenter()`). Without it, the centre of
+   * the visible canvas.
    */
+  freeArea?: FreeArea | undefined;
+  /** @deprecated Pass `freeArea: { center }`; given both, `freeArea` wins. */
   freeRectCenter?: (() => Point | undefined) | undefined;
 }
 
@@ -75,6 +80,18 @@ function isKeyboardClick(event: Event): boolean {
 
 function centreOf(element: TtElement): Point {
   return { x: element.x + element.width / 2, y: element.y + element.height / 2 };
+}
+
+/** The centre of the container minus `insets`, in diagram coordinates, the way a fit finds it. */
+function centreInside(canvas: Canvas, insets: FreeAreaInsets): Point | undefined {
+  const { x, y, scale, outer } = canvas.viewbox();
+  const freeWidth = outer.width - insets.left - insets.right;
+  const freeHeight = outer.height - insets.top - insets.bottom;
+  if (!(scale > 0) || !(freeWidth > 0) || !(freeHeight > 0)) return undefined;
+  return {
+    x: x + (insets.left + freeWidth / 2) / scale,
+    y: y + (insets.top + freeHeight / 2) / scale,
+  };
 }
 
 export default class TtPaletteProvider implements PaletteProvider {
@@ -179,7 +196,7 @@ export default class TtPaletteProvider implements PaletteProvider {
   /** The centre of the free rectangle, stepped diagonally past elements already centred there. */
   private freePlace(): Point {
     const viewbox = this.canvas.viewbox();
-    const centre = this.config?.freeRectCenter?.() ?? {
+    const centre = this.freeAreaCentre() ?? {
       x: viewbox.x + viewbox.width / 2,
       y: viewbox.y + viewbox.height / 2,
     };
@@ -194,6 +211,13 @@ export default class TtPaletteProvider implements PaletteProvider {
       place.y += KEYBOARD_CREATE_OFFSET;
     }
     return place;
+  }
+
+  private freeAreaCentre(): Point | undefined {
+    const freeArea = this.config?.freeArea;
+    if (freeArea?.center) return freeArea.center();
+    if (freeArea?.insets) return centreInside(this.canvas, freeArea.insets());
+    return this.config?.freeRectCenter?.();
   }
 
   private placeInFreeRect(shape: Shape): void {

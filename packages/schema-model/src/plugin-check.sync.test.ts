@@ -140,6 +140,15 @@ describe("plugin checker ↔ schema-model", () => {
     "the id of an annotation's connector": (document) => {
       (document.flows as Record<string, unknown>[])[0]!.id = "assoc_ann_fraud_handover";
     },
+    "an id that names a built-in object property": (document) => {
+      (document.flows as Record<string, unknown>[])[0]!.id = "constructor";
+    },
+    "the id __proto__": (document) => {
+      (document.annotations as Record<string, unknown>[])[0]!.id = "__proto__";
+    },
+    "an interaction without a size": (document) => {
+      delete (document.interactions as Record<string, unknown>[])[1]!.size;
+    },
     "a non-numeric position": (document) => {
       (document.interactions as { position: Record<string, unknown> }[])[0]!.position.y = "10";
     },
@@ -165,6 +174,36 @@ describe("plugin checker ↔ schema-model", () => {
       expect(result.warnings).toEqual([]);
     });
   }
+
+  it("calls a version 1 edge interaction dropped and a later one without geometry invalid", () => {
+    const edge = { id: "edge_1", mode: "collaboration", source: "a", target: "b" };
+    const withEdge = (version: number) => ({
+      version,
+      title: "x",
+      nodes: [],
+      interactions: [edge],
+      flows: [],
+      annotations: [],
+    });
+
+    expect(parseDocument(withEdge(1)).ok).toBe(true);
+    expect(checker.checkDocument(withEdge(1)).errors).toEqual([
+      {
+        path: "interactions[0] (edge_1)",
+        message: "has no position/size; the modeler drops it on open",
+      },
+    ]);
+
+    const current = parseDocument(withEdge(DOCUMENT_VERSION));
+    if (current.ok) throw new Error("expected the document to be refused");
+    expect(current.issues.map(({ path }) => path.join("."))).toEqual([
+      "interactions.0.position",
+      "interactions.0.size",
+    ]);
+    expect(
+      checker.checkDocument(withEdge(DOCUMENT_VERSION)).errors.map(({ path }) => path),
+    ).toEqual(["interactions[0] (edge_1).position", "interactions[0] (edge_1).size"]);
+  });
 
   it("accepts the optional fields parseDocument accepts", () => {
     const document = sampleCopy();

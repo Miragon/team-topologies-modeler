@@ -5,4 +5,5 @@ export {
   parseDocumentText,
   type CollaborativeTeamTopologiesModeler,
   type CollaborativeTeamTopologiesOptions,
+  type TtElementsSurface,
 } from "./CollaborativeTeamTopologies.js";

@@ -8,6 +8,8 @@
 import {
   MODELER_API_VERSION,
   type CollaborativeModeler,
+  type CollaborativeModelerOptions,
+  type ElementBounds,
   type ElementInfo,
   type ElementsSurface,
   type ImportResult,
@@ -31,23 +33,28 @@ import type { Point } from "../palette/TtPaletteProvider.js";
 /** Stable notation id in `meta.notation` of the collaborative-modeler contract. */
 export const TEAM_TOPOLOGIES_NOTATION = "team-topologies";
 
-export interface CollaborativeTeamTopologiesOptions {
+/**
+ * The contract's factory options (`freeArea`, `fitOnImport`, `undoRedoKeys`; the viewer ignores
+ * `freeArea` and `undoRedoKeys`) plus the renderer's own.
+ */
+export interface CollaborativeTeamTopologiesOptions extends CollaborativeModelerOptions {
   /** Appended to the renderer's own modules (e.g. a host's chrome module). */
   additionalModules?: ModuleDeclaration[] | undefined;
-  /** See `TtViewerOptions.undoRedoKeys` (default true). */
-  undoRedoKeys?: boolean | undefined;
-  /** See `TtViewerOptions.freeRectCenter`. */
-  freeRectCenter?: (() => Point | undefined) | undefined;
   /**
-   * Fit the diagram into view after every import (default true, contract law L5). A host whose
-   * chrome fits the diagram itself (the modeler shell's viewport) passes false.
+   * @deprecated Since 0.12, the contract's name is `freeArea: { center }`; given both, `freeArea`
+   * wins. Accepted for one more minor release.
    */
-  fitOnImport?: boolean | undefined;
+  freeRectCenter?: (() => Point | undefined) | undefined;
+}
+
+/** The elements surface with the optional `bounds` of contract 1.2, which this renderer has. */
+export interface TtElementsSurface extends ElementsSurface {
+  bounds(id: string): ElementBounds | undefined;
 }
 
 /** The contract surface plus the wrapped diagram for host-specific wiring. */
 export interface CollaborativeTeamTopologiesModeler extends CollaborativeModeler {
-  readonly elements: ElementsSurface;
+  readonly elements: TtElementsSurface;
   readonly diagram: Modeler | NavigatedViewer;
 }
 
@@ -66,6 +73,7 @@ export function createCollaborativeModeler(
     new Modeler({
       ...diagramOptions(options),
       undoRedoKeys: options.undoRedoKeys ?? true,
+      freeArea: options.freeArea,
       freeRectCenter: options.freeRectCenter,
     }),
     true,
@@ -75,7 +83,7 @@ export function createCollaborativeModeler(
 
 /** The read-only mount (`meta.editable: false`): imports, exports and reveals, never edits. */
 export function createCollaborativeViewer(
-  options: Pick<CollaborativeTeamTopologiesOptions, "additionalModules" | "fitOnImport"> = {},
+  options: CollaborativeTeamTopologiesOptions = {},
 ): CollaborativeTeamTopologiesModeler {
   return collaborative(
     new NavigatedViewer(diagramOptions(options)),
@@ -127,7 +135,7 @@ function collaborative(
 
   const exportText = (): string => serializeDocument(diagram.exportDocument());
 
-  const elements: ElementsSurface = {
+  const elements: TtElementsSurface = {
     list: () =>
       destroyed ? [] : (elementRegistry.getAll() as unknown[]).filter(isTtElement).map(elementInfo),
     reveal(id) {
@@ -144,6 +152,13 @@ function collaborative(
         callback(elementIds((event as { newSelection?: unknown[] }).newSelection ?? []));
       eventBus.on("selection.changed", listener);
       return () => eventBus.off("selection.changed", listener);
+    },
+    bounds(id) {
+      if (destroyed) return undefined;
+      const element = elementRegistry.get(id);
+      if (!isTtElement(element)) return undefined;
+      const { x, y, width, height } = element;
+      return { x, y, width, height };
     },
   };
 

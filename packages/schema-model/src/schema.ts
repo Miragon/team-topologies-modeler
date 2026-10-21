@@ -94,11 +94,14 @@ export type ParseResult =
  * friendly message, or point at each offending value (`issues`).
  */
 export function parseDocument(input: unknown): ParseResult {
-  const migrated = migrate(input);
+  const { document: migrated, interactionFileIndexes } = migrate(input);
   const result = documentSchema.safeParse(migrated);
   if (!result.success) {
     const issues = result.error.issues.map((issue) => ({
-      path: issue.path.filter((key): key is string | number => typeof key !== "symbol"),
+      path: pathInFile(
+        issue.path.filter((key): key is string | number => typeof key !== "symbol"),
+        interactionFileIndexes,
+      ),
       message: issue.message,
     }));
     return {
@@ -110,28 +113,63 @@ export function parseDocument(input: unknown): ParseResult {
   return { ok: true, document: result.data as TtDocument };
 }
 
+/** The last document version that modelled interactions as edges without geometry. */
+const EDGE_INTERACTIONS_VERSION = 1;
+
+interface Migration {
+  document: unknown;
+  /** For each interaction the migrated document keeps, its index in the input. */
+  interactionFileIndexes: readonly number[];
+}
+
 /**
  * Forward-migrates older document shapes to the current version. v1 modelled
  * interactions as edges (source/target, no geometry) and carried a
  * `showFlowOfChange` flag; v2 makes interactions placed shapes and adds `flows`;
- * v3 adds `annotations`. Legacy edge-interactions can't be placed meaningfully,
- * so they're dropped.
+ * v3 adds `annotations`. The edge-interactions of a v1 file can't be placed
+ * meaningfully, so they're dropped. From v2 on, an interaction without position
+ * or size is refused like any other missing field: dropped, it would vanish from
+ * the file on the next save without a word.
  */
-function migrate(input: unknown): unknown {
-  if (input == null || typeof input !== "object") return input;
+function migrate(input: unknown): Migration {
+  if (input == null || typeof input !== "object") {
+    return { document: input, interactionFileIndexes: [] };
+  }
   const doc = input as Record<string, unknown>;
   const next: Record<string, unknown> = { ...doc };
   delete next.showFlowOfChange; // v1 flag, gone in v2
   next.version = DOCUMENT_VERSION;
   if (typeof next.title !== "string") next.title = "Untitled team topology";
   if (!Array.isArray(next.nodes)) next.nodes = [];
-  // Keep only placed interaction shapes; drop legacy edges (no position/size).
-  next.interactions = Array.isArray(next.interactions)
-    ? next.interactions.filter(
-        (e) => e != null && typeof e === "object" && "position" in e && "size" in e,
-      )
+  const dropsEdgeInteractions = doc.version === EDGE_INTERACTIONS_VERSION;
+  const keptInteractions = Array.isArray(next.interactions)
+    ? next.interactions
+        .map((interaction: unknown, fileIndex) => ({ interaction, fileIndex }))
+        .filter(({ interaction }) => !dropsEdgeInteractions || isPlacedShape(interaction))
     : [];
+  next.interactions = keptInteractions.map(({ interaction }) => interaction);
   if (!Array.isArray(next.flows)) next.flows = [];
   if (!Array.isArray(next.annotations)) next.annotations = [];
-  return next;
+  return {
+    document: next,
+    interactionFileIndexes: keptInteractions.map(({ fileIndex }) => fileIndex),
+  };
+}
+
+function isPlacedShape(value: unknown): boolean {
+  return value != null && typeof value === "object" && "position" in value && "size" in value;
+}
+
+/**
+ * An issue's path in the input rather than in the migrated document: an editor points at the
+ * file, and every legacy interaction dropped before an invalid one would shift its index.
+ */
+function pathInFile(
+  path: (string | number)[],
+  interactionFileIndexes: readonly number[],
+): (string | number)[] {
+  const [collection, index, ...rest] = path;
+  if (collection !== "interactions" || typeof index !== "number") return path;
+  const fileIndex = interactionFileIndexes[index];
+  return fileIndex === undefined ? path : [collection, fileIndex, ...rest];
 }

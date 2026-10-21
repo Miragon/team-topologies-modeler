@@ -52,6 +52,76 @@ describe("parseDocument", () => {
     }
   });
 
+  describe("after dropping legacy interactions", () => {
+    const placed = (id: string, mode: string) => ({
+      id,
+      mode,
+      position: { x: 0, y: 0 },
+      size: { width: 100, height: 60 },
+    });
+    const legacy = (id: string) => ({ id, mode: "collaboration", source: "a", target: "b" });
+    const issuesOf = (interactions: unknown[]) => {
+      const result = parseDocument({ version: 1, title: "x", nodes: [], interactions });
+      if (result.ok) throw new Error("expected the document to be refused");
+      return result;
+    };
+
+    it("reports a schema issue at the file's index", () => {
+      const result = issuesOf([
+        legacy("e1"),
+        placed("i1", "collaboration"),
+        legacy("e2"),
+        placed("i2", "handover"),
+      ]);
+      expect(result.issues.map(({ path }) => path)).toEqual([["interactions", 3, "mode"]]);
+      expect(result.error).toMatch(/^interactions\.3\.mode: /);
+    });
+
+    it("reports an id problem at the file's index", () => {
+      const result = issuesOf([
+        legacy("e1"),
+        placed("i1", "collaboration"),
+        placed("i1", "facilitating"),
+      ]);
+      expect(result.issues).toEqual([
+        { path: ["interactions", 2, "id"], message: expect.stringMatching(/^duplicate id "i1"/) },
+      ]);
+    });
+
+    it("leaves the paths of other collections alone", () => {
+      const result = parseDocument({
+        version: 1,
+        title: "x",
+        nodes: [{ id: "a", type: "not-a-team" }],
+        interactions: [legacy("e1")],
+      });
+      if (result.ok) throw new Error("expected the document to be refused");
+      expect(result.issues.every(({ path }) => path[0] === "nodes" && path[1] === 0)).toBe(true);
+    });
+  });
+
+  it.each([2, DOCUMENT_VERSION])(
+    "refuses a version %i interaction without a size at its path instead of dropping it",
+    (version) => {
+      const result = parseDocument({
+        version,
+        title: "x",
+        nodes: [],
+        interactions: [
+          { id: "i1", mode: "collaboration", position: { x: 0, y: 0 } },
+          { id: "e1", mode: "collaboration", source: "a", target: "b" },
+        ],
+        flows: [],
+      });
+      if (result.ok) throw new Error("expected the document to be refused");
+      expect(result.issues.map(({ path }) => path)).toEqual([
+        ["interactions", 0, "size"],
+        ["interactions", 1, "position"],
+        ["interactions", 1, "size"],
+      ]);
+    },
+  );
+
   it("accepts a placed interaction shape", () => {
     const result = parseDocument({
       version: 2,
@@ -206,6 +276,24 @@ describe("parseDocument: ids", () => {
   it("rejects the diagram's own id and diagram-js root ids", () => {
     expect(parseDocument(documentWith([team(DIAGRAM_ROOT_ID)])).ok).toBe(false);
     expect(parseDocument(documentWith([team("__implicitroot_0")])).ok).toBe(false);
+  });
+
+  it("rejects ids that name built-in object properties, at their path", () => {
+    for (const id of ["constructor", "toString", "__proto__", "hasOwnProperty", "valueOf"]) {
+      const result = parseDocument(documentWith([team("a")], [note(id)]));
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.issues).toEqual([
+          {
+            path: ["annotations", 0, "id"],
+            message: `"${id}" is reserved: it names a built-in property of JavaScript objects`,
+          },
+        ]);
+      }
+    }
+    expect(parseDocument(documentWith([team("team_constructor"), team("Constructor")])).ok).toBe(
+      true,
+    );
   });
 
   it("rejects the id an annotation's connector takes", () => {
