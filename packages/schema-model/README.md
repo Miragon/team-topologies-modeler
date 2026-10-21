@@ -180,7 +180,8 @@ console.log(SAMPLE_DOCUMENT.title);
   The `1 → 2` step drops the legacy `showFlowOfChange` flag and the old edge-based interactions,
   keeping only interactions that carry geometry (the placed-shape model). The `2 → 3` step adds an
   empty `annotations` list — and because an empty list is not written back, re-saving a v2 file
-  changes nothing but its `version`.
+  changes nothing but its `version`. Issue paths always count in the input: an invalid interaction
+  after a dropped one is reported at its index in the file.
 
 ## Development
 

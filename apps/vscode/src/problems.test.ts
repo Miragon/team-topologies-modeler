@@ -57,6 +57,17 @@ describe("documentProblems", () => {
     ]);
   });
 
+  it("points at the interaction in the file after a legacy one the migration drops", () => {
+    const legacyFirst = sample.replace(
+      '"interactions": [\n',
+      '"interactions": [\n    { "id": "edge_1", "mode": "collaboration", "source": "a", "target": "b" },\n',
+    );
+    const wrongMode = legacyFirst.replace('"mode": "facilitating"', '"mode": "handover"');
+    const [problem, ...rest] = documentProblems(wrongMode);
+    expect(rest).toEqual([]);
+    expect(problem).toMatchObject({ severity: "error", offset: at(wrongMode, '"handover"') });
+  });
+
   it("warns about a connector the diagram drops, at its attachedTo", () => {
     const dangling = sample.replace(
       '"attachedTo": "int_checkout_fraud"',
