@@ -88,7 +88,10 @@ legend and dialog; where they sit is the host's), and must never import from `ap
   **Run it locally as `npm run test:vscode:docker`** (the shell's `modeler-shell-vscode-docker`,
   needs Docker): the same test in a Linux container under `xvfb-run -a`, so no window opens and
   takes the user's focus; it runs `npm ci` in the container and copies `test-results/vscode-smoke/`
-  back. CI runs `test:vscode` directly under `xvfb-run -a`, only in
+  back. Known issue with shell 0.3.1: it now and then exits 1 right after `1 passed` with
+  `cp: cannot create regular file '/results/…'`; the test passed, only the copy failed, so run it
+  again. The root `package.json` declares the shell itself so the bin resolves at the root; keep its
+  pin equal to the workspaces'. CI runs `test:vscode` directly under `xvfb-run -a`, only in
   [`vscode-smoke.yml`](.github/workflows/vscode-smoke.yml) (on demand, weekly, on PRs touching
   `apps/vscode/**`, the root `package.json` or `vitest.config.ts`), never in `ci.yml`. See
   [`CONTRIBUTING.md`](CONTRIBUTING.md).

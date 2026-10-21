@@ -77,18 +77,27 @@ part of `npm test` or the regular CI (`ci.yml`): it needs a display and the VS C
 **Locally, without a window:** run it in Docker. `npm run test:vscode:docker` runs
 `npm run test:vscode` in a Linux container under `xvfb-run -a` (the shell's
 `modeler-shell-vscode-docker`), so no VS Code window opens and nothing takes the focus while you
-work. It needs only Docker (Docker Desktop on macOS). It copies your working copy, uncommitted changes included, into the container
-without `node_modules` and `.git`, runs `npm ci` there (your `node_modules` stay as they are) and
-copies `test-results/vscode-smoke/` back. The first run builds a local image
-(`modeler-shell-vscode-smoke:node<version>-…`, about 0.9 GB, on the Node version that runs the
-command; `npm run test:vscode:docker -- --node 22.13.0` picks another) and downloads VS Code into
-the Docker volume `modeler-shell-vscode-cache`; both are kept and shared by every Miragon modeler on
-the machine, and a run then takes about 12 to 20 s on an Apple silicon Mac, `npm ci` included. Paths
-in the test's output are the container's (`/work/…`).
+work. It needs only Docker (Docker Desktop on macOS). It copies your working copy, uncommitted
+changes included, into the container without `node_modules` and `.git`, runs `npm ci` there (your
+`node_modules` stay as they are) and copies `test-results/vscode-smoke/` back. The first run builds
+a local image (`modeler-shell-vscode-smoke:node<version>-…`, about 0.9 GB, on the Node version that
+runs the command; `npm run test:vscode:docker -- --node 22.13.0` picks another) and downloads
+VS Code into the Docker volume `modeler-shell-vscode-cache`; both are kept and shared by every
+Miragon modeler on the machine, and a run then takes about 12 to 20 s on an Apple silicon Mac,
+`npm ci` included. Paths in the test's output are the container's (`/work/…`). The root
+`package.json` declares `@miragon/modeler-shell` itself, at the workspaces' exact version, so the
+command (and the CI workflow's import of the driver) finds the shell at the root whatever npm
+hoists; bump all five pins together.
 
 ```bash
 npm run test:vscode:docker
 ```
+
+Known issue with shell 0.3.1: the command deletes and recreates `test-results/vscode-smoke/` before
+each run, and Docker Desktop now and then still mounts the deleted folder. Copying the screenshots
+back then fails and the command exits 1 with `cp: cannot create regular file '/results/…'` right
+after the test reported `1 passed`. The test did pass; run it again if you need the screenshots. The
+fix belongs in the shell, so nothing here works around it.
 
 **Locally, with a window:** `npm run test:vscode` runs it on your machine; on macOS a VS Code window
 opens for a few seconds and takes the focus, and the whole run takes about 5 to 10 s. The first run
