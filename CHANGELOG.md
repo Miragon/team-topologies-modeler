@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.12.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.11.2...v0.12.0) (2026-10-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* parseDocument and documentIdProblems refuse ids that name a built-in property of JavaScript objects (constructor, toString, __proto__, hasOwnProperty, valueOf, ...).
+
+### Features
+
+* explain the notation in the legend, tighten document checks and implement modeler-api 1.2 ([#129](https://github.com/Miragon/team-topologies-modeler/issues/129)) ([bb58b61](https://github.com/Miragon/team-topologies-modeler/commit/bb58b612429efb451bdbe51695282b0365c587ab))
+
 ## [0.11.2](https://github.com/Miragon/team-topologies-modeler/compare/v0.11.1...v0.11.2) (2026-10-20)
 
 
