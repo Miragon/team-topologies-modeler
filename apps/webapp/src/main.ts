@@ -108,7 +108,7 @@ if (!app) throw new Error("index.html has no #app root.");
 const modeler = new Modeler({
   height: "100%",
   additionalModules: [shellModule],
-  freeRectCenter: () => connection.viewport.freeRectCenter(),
+  freeArea: { center: () => connection.viewport.freeRectCenter() },
 });
 modeler.get("canvas");
 const registry = modeler.get<ElementRegistryLike>("elementRegistry");

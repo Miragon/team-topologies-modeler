@@ -24,6 +24,7 @@ export {
 export type {
   CollaborativeTeamTopologiesModeler,
   CollaborativeTeamTopologiesOptions,
+  TtElementsSurface,
 } from "./collaborative/index.js";
 
 // Modules (for additionalModules / extension) + their services

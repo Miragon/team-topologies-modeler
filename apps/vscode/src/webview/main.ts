@@ -86,7 +86,7 @@ const collaborative = createCollaborativeModeler({
   additionalModules: [shellModule],
   undoRedoKeys: false,
   fitOnImport: false,
-  freeRectCenter: () => connection.viewport.freeRectCenter(),
+  freeArea: { center: () => connection.viewport.freeRectCenter() },
 });
 const modeler = collaborative.diagram as Modeler;
 modeler.get("canvas");

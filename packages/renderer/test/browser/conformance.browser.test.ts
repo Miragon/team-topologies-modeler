@@ -67,6 +67,15 @@ function renameDiagram(modeler: CollaborativeModeler): void {
   modelerOf(modeler).get<TtModeling>("ttModeling").setTitle(`Renamed topology ${renamedTitles}`);
 }
 
+function labelEditor(modeler: CollaborativeModeler): HTMLTextAreaElement {
+  const field = modelerOf(modeler)
+    .get<Canvas>("canvas")
+    .getContainer()
+    .querySelector<HTMLTextAreaElement>("textarea.tt-label-editor");
+  if (!field) throw new Error("no label editor is open");
+  return field;
+}
+
 /** The canonical sample with `fragment` typed only as far as `typedSoFar`. */
 function typedHalfway(fragment: string, typedSoFar: string): string {
   if (!onlineShop.includes(fragment)) throw new Error(`the fixture lost "${fragment}"`);
@@ -123,21 +132,29 @@ const harness: ConformanceHarness = {
     typedHalfway('"title": "Online shop team topology",', '"title": "Online shop'),
     "{",
   ],
+  moveElement(modeler) {
+    const diagram = modelerOf(modeler);
+    const team = diagram.get<ElementRegistry>("elementRegistry").get("team_checkout");
+    if (!team) throw new Error("the imported diagram has no team_checkout to move");
+    diagram.get<Modeling>("modeling").moveElements([team as Shape], { x: 60, y: 40 });
+    return team.id;
+  },
   openInteraction(modeler) {
     const diagram = modelerOf(modeler);
     const team = diagram.get<ElementRegistry>("elementRegistry").get("team_checkout");
     if (!team) throw new Error("the imported diagram has no team_checkout to edit");
     diagram.get<TtLabelEditing>("ttLabelEditing").activate(team as unknown as TtElement);
-    const field = diagram
-      .get<Canvas>("canvas")
-      .getContainer()
-      .querySelector<HTMLTextAreaElement>("textarea.tt-label-editor");
-    if (!field) throw new Error("no label editor opened");
-    field.value = "typed, not committed";
+    labelEditor(modeler).value = "typed, not committed";
   },
   interactionState(modeler) {
     const edit = modelerOf(modeler).get<TtLabelEditing>("ttLabelEditing").openEdit();
     return edit && { elementId: edit.elementId, text: edit.value };
+  },
+  // Enter in the field, as a user commits the label.
+  commitInteraction(modeler) {
+    labelEditor(modeler).dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+    );
   },
 };
 

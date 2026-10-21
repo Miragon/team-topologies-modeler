@@ -1054,7 +1054,7 @@ test("keyboard creation lands on the free centre, 24px further while that spot i
   container.style.height = "640px";
   document.body.appendChild(container);
   const freeCentre = { x: 300, y: 200 };
-  const modeler = new Modeler({ container, freeRectCenter: () => freeCentre });
+  const modeler = new Modeler({ container, freeArea: { center: () => freeCentre } });
   try {
     modeler.importDocument(emptyDocument());
     const { registry } = services(modeler);
@@ -1075,6 +1075,56 @@ test("keyboard creation lands on the free centre, 24px further while that spot i
     modeler.destroy();
     container.remove();
   }
+});
+
+/** Where a keyboard click on the flow entry places the flow, for a modeler built with `options`. */
+function keyboardCreatedCentre(options: Partial<ConstructorParameters<typeof Modeler>[0]>): {
+  centre: { x: number; y: number };
+  viewbox: { x: number; y: number; scale: number; outer: { width: number; height: number } };
+} {
+  const container = document.createElement("div");
+  container.style.width = "900px";
+  container.style.height = "640px";
+  document.body.appendChild(container);
+  const modeler = new Modeler({ container, ...options });
+  try {
+    modeler.importDocument(emptyDocument());
+    const { registry, canvas } = services(modeler);
+    canvas.viewbox({ x: 100, y: 50, width: 450, height: 320 });
+    keyboardClick(container.querySelector<HTMLElement>('.djs-palette [data-action="flow"]')!);
+    const [flow] = registry.filter(isTtElement) as TtElement[];
+    const viewbox = canvas.viewbox() as ReturnType<typeof keyboardCreatedCentre>["viewbox"];
+    return { centre: centreOf(flow!), viewbox };
+  } finally {
+    modeler.destroy();
+    container.remove();
+  }
+}
+
+test("freeArea { insets } places a keyboard-created element in the centre of the free part", () => {
+  const insets = { top: 64, right: 120, bottom: 64, left: 80 };
+  const { centre, viewbox } = keyboardCreatedCentre({ freeArea: { insets: () => insets } });
+  const { width, height } = viewbox.outer;
+  expect(width).toBeGreaterThan(insets.left + insets.right);
+  expect(height).toBeGreaterThan(insets.top + insets.bottom);
+  const expected = {
+    x: viewbox.x + (insets.left + (width - insets.left - insets.right) / 2) / viewbox.scale,
+    y: viewbox.y + (insets.top + (height - insets.top - insets.bottom) / 2) / viewbox.scale,
+  };
+  expect(Math.abs(centre.x - expected.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(centre.y - expected.y)).toBeLessThanOrEqual(1);
+  const wholeView = keyboardCreatedCentre({}).centre;
+  expect(Math.abs(centre.x - wholeView.x)).toBeGreaterThan(1);
+});
+
+test("freeRectCenter stays accepted as the deprecated name of freeArea { center }", () => {
+  const free = { x: 300, y: 200 };
+  expect(keyboardCreatedCentre({ freeRectCenter: () => free }).centre).toEqual(free);
+  const aligned = { x: 160, y: 120 };
+  expect(
+    keyboardCreatedCentre({ freeRectCenter: () => free, freeArea: { center: () => aligned } })
+      .centre,
+  ).toEqual(aligned);
 });
 
 test("context-pad entries are named buttons that Enter activates", () => {
