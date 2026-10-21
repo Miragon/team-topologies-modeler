@@ -1,0 +1,60 @@
+{
+  "version": 3,
+  "title": "Checkout and its platform",
+  "nodes": [
+    {
+      "id": "team_checkout",
+      "type": "stream-aligned",
+      "label": "Checkout",
+      "position": {
+        "x": 40,
+        "y": 136
+      },
+      "size": {
+        "width": 600,
+        "height": 96
+      }
+    },
+    {
+      "id": "team_platform",
+      "type": "platform",
+      "label": "Cloud Platform",
+      "position": {
+        "x": 40,
+        "y": 292
+      },
+      "size": {
+        "width": 600,
+        "height": 110
+      }
+    }
+  ],
+  "interactions": [
+    {
+      "id": "int_platform_checkout",
+      "mode": "x-as-a-service",
+      "position": {
+        "x": 296,
+        "y": 224
+      },
+      "size": {
+        "width": 88,
+        "height": 78
+      }
+    }
+  ],
+  "flows": [
+    {
+      "id": "flow_main",
+      "position": {
+        "x": 40,
+        "y": 40
+      },
+      "size": {
+        "width": 600,
+        "height": 56
+      },
+      "label": "Flow of change"
+    }
+  ]
+}
