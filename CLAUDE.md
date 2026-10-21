@@ -86,7 +86,8 @@ legend and dialog; where they sit is the host's), and must never import from `ap
   the four default themes, screenshots in `test-results/vscode-smoke/`. Opt-in: it opens a VS Code
   window (on Linux without a display: `xvfb-run -a`) and downloads VS Code once into the OS cache.
   CI runs it only in [`vscode-smoke.yml`](.github/workflows/vscode-smoke.yml) (on demand, weekly, on
-  PRs touching `apps/vscode/**`), never in `ci.yml`. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+  PRs touching `apps/vscode/**`, the root `package.json` or `vitest.config.ts`), never in `ci.yml`.
+  See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - `npm run typecheck` · `npm run lint` (ESLint + typecheck)
 - `npm run format` — Prettier · `npm run depcruise` — check the module graph
 
