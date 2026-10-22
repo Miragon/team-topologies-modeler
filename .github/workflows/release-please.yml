@@ -71,6 +71,20 @@ jobs:
       - name: Package extension
         working-directory: apps/vscode
         run: npx vsce package --no-dependencies -o team-topologies-modeler.vsix
+      # The file that is about to be published, in a real VS Code: the pull request's smoke packed
+      # its own VSIX from another commit, and a broken package must never reach a marketplace.
+      - name: Smoke-test the extension package in VS Code
+        run: xvfb-run -a npm run test:vscode
+        env:
+          VSCODE_SMOKE_VSIX: apps/vscode/team-topologies-modeler.vsix
+          VSCODE_VERSION: stable
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vscode-smoke-release-marketplace
+          path: test-results/vscode-smoke/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Publish to VS Code Marketplace
         working-directory: apps/vscode
         run: npx vsce publish --packagePath team-topologies-modeler.vsix
@@ -95,6 +109,20 @@ jobs:
       - name: Package extension
         working-directory: apps/vscode
         run: npx vsce package --no-dependencies -o team-topologies-modeler.vsix
+      # The file that is about to be published, in a real VS Code: the pull request's smoke packed
+      # its own VSIX from another commit, and a broken package must never reach a marketplace.
+      - name: Smoke-test the extension package in VS Code
+        run: xvfb-run -a npm run test:vscode
+        env:
+          VSCODE_SMOKE_VSIX: apps/vscode/team-topologies-modeler.vsix
+          VSCODE_VERSION: stable
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vscode-smoke-release-open-vsx
+          path: test-results/vscode-smoke/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Publish to Open VSX Marketplace
         working-directory: apps/vscode
         run: npx ovsx --pat "$OVSX_PAT" publish --packagePath team-topologies-modeler.vsix
@@ -117,3 +145,16 @@ jobs:
       - name: Package extension
         working-directory: apps/vscode
         run: npx vsce package --no-dependencies -o team-topologies-modeler.vsix
+      # The dry run checks the release path end to end, the smoke of the packed VSIX included.
+      - name: Smoke-test the extension package in VS Code
+        run: xvfb-run -a npm run test:vscode
+        env:
+          VSCODE_SMOKE_VSIX: apps/vscode/team-topologies-modeler.vsix
+          VSCODE_VERSION: stable
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vscode-smoke-dry-run
+          path: test-results/vscode-smoke/
+          if-no-files-found: ignore
+          retention-days: 7

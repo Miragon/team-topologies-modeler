@@ -133,7 +133,8 @@ that carries the shared version: `$.version` and each internal `@miragon/team-to
 dependency in every workspace's `package.json` **and** the same values in that workspace's
 `package-lock.json` entry (`$.packages['<dir>'].version`,
 `$.packages['<dir>'].dependencies['@miragon/…']`), so the next `npm install` after a release
-leaves the workspace versions alone.
+leaves the workspace versions alone. The jobs that publish the extension (and the dry run) run the
+VS Code smoke on the VSIX they upload (`VSCODE_SMOKE_VSIX`) before `vsce publish` / `ovsx publish`.
 
 **Adding an internal dependency edge or a workspace** needs an `extra-files` entry for the
 `package.json` path **and** one for the matching `package-lock.json` path;

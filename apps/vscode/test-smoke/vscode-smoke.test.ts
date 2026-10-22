@@ -25,6 +25,8 @@ const repositoryRoot = resolve(here, "../../..");
 const screenshotDir = resolve(repositoryRoot, "test-results/vscode-smoke");
 /** `stable`, `insiders` or a version like `1.96.0`; unset, the driver takes the newest stable. */
 const requestedVsCodeVersion = process.env.VSCODE_VERSION?.trim() || undefined;
+/** A packed VSIX to test instead of packing one: the release smoke-tests the file it publishes. */
+const prebuiltVsix = process.env.VSCODE_SMOKE_VSIX?.trim() || undefined;
 
 /** The check the Problems view runs: valid JSON, a valid diagram, no dropped connector. */
 function parseTeamTopology(text: string): TtDocument {
@@ -41,7 +43,7 @@ function parseTeamTopology(text: string): TtDocument {
 
 /**
  * Packs the VSIX as the release does (`vsce package` runs `vscode:prepublish`, the production
- * build) and unpacks its `extension/` folder, so VS Code loads exactly the files that ship.
+ * build).
  */
 async function packExtension(into: string): Promise<string> {
   const vsix = join(into, "team-topologies-modeler.vsix");
@@ -49,6 +51,11 @@ async function packExtension(into: string): Promise<string> {
     cwd: extensionFolder,
     maxBuffer: 16 * 1024 * 1024,
   });
+  return vsix;
+}
+
+/** Unpacks the VSIX's `extension/` folder, so VS Code loads exactly the files that ship. */
+async function unpackExtension(vsix: string, into: string): Promise<string> {
   await run("unzip", ["-q", vsix, "extension/*", "-d", into]);
   return join(into, "extension");
 }
@@ -102,8 +109,13 @@ it(
     const workDirectory = await mkdtemp(join(tmpdir(), "team-topologies-vscode-smoke-"));
     try {
       const packStarted = performance.now();
-      const extensionPath = await packExtension(workDirectory);
-      console.log(`pack: ${Math.round(performance.now() - packStarted)} ms`);
+      const vsix = prebuiltVsix ? resolve(prebuiltVsix) : await packExtension(workDirectory);
+      const extensionPath = await unpackExtension(vsix, workDirectory);
+      console.log(
+        prebuiltVsix
+          ? `unpacked ${vsix}`
+          : `pack: ${Math.round(performance.now() - packStarted)} ms`,
+      );
       expect(await missingWebviewFiles(extensionPath)).toEqual([]);
 
       const fixtureText = await readFile(join(here, "checkout.tt"), "utf8");

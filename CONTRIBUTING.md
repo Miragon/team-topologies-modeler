@@ -141,6 +141,12 @@ it runs; on a schedule or on demand it always runs. When it skips, the job "Skip
 change" passes with a notice, so `ci-ok` sees a success. A new file the extension or the smoke
 depends on outside these paths goes into the list in the step "Check the changed paths".
 
+**Before a release:** the jobs in [`release-please.yml`](.github/workflows/release-please.yml) that
+publish the extension (VS Code Marketplace, Open VSX) run the smoke on the VSIX they have just packed
+and are about to upload, on the newest stable VS Code, and publish nothing when it fails;
+`VSCODE_SMOKE_VSIX` names the file, so the test unpacks it instead of packing its own. The dry run
+(Actions → Release → Run workflow with `dry_run`) does the same without publishing.
+
 ## CI and the merge gate
 
 [`ci.yml`](.github/workflows/ci.yml) runs on every pull request, push to `main` and merge group. Its
