@@ -85,9 +85,14 @@ legend and dialog; where they sit is the host's), and must never import from `ap
   `apps/vscode/test-smoke/`, the shell's `./testing/vscode-electron`): open, edit, save, undo and
   the four default themes, screenshots in `test-results/vscode-smoke/`. Opt-in: it opens a VS Code
   window (on Linux without a display: `xvfb-run -a`) and downloads VS Code once into the OS cache.
-  CI runs it only in [`vscode-smoke.yml`](.github/workflows/vscode-smoke.yml) (on demand, weekly, on
-  PRs touching `apps/vscode/**`, the root `package.json` or `vitest.config.ts`), never in `ci.yml`.
-  See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+  **Run it locally as `npm run test:vscode:docker`** (the shell's `modeler-shell-vscode-docker`,
+  needs Docker): the same test in a Linux container under `xvfb-run -a`, so no window opens and
+  takes the user's focus; it runs `npm ci` in the container and copies `test-results/vscode-smoke/`
+  back. The root `package.json` declares the shell itself so the bin resolves at the root; keep its
+  pin equal to the workspaces'. CI runs `test:vscode` directly under `xvfb-run -a`, only in
+  [`vscode-smoke.yml`](.github/workflows/vscode-smoke.yml) (on demand, weekly, on PRs touching
+  `apps/vscode/**`, the root `package.json` or `vitest.config.ts`), never in `ci.yml`. See
+  [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - `npm run typecheck` · `npm run lint` (ESLint + typecheck)
 - `npm run format` — Prettier · `npm run depcruise` — check the module graph
 

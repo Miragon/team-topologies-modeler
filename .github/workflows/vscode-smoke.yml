@@ -44,6 +44,9 @@ jobs:
           path: ${{ steps.vscode.outputs.path }}
           key: vscode-${{ runner.os }}-${{ runner.arch }}-${{ steps.vscode.outputs.version }}
 
+      # Directly under xvfb-run -a, not through npm run test:vscode:docker: a runner has no window
+      # to keep out of anyone's way, and the Docker mode would build its image and run npm ci a
+      # second time on every run, with VS Code's download in a volume the cache above cannot reach.
       - run: xvfb-run -a npm run test:vscode
 
       - if: always()

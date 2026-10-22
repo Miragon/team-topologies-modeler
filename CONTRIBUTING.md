@@ -75,16 +75,37 @@ VSIX like the release (`vsce package`, which runs `vscode:prepublish`, the produ
 stylesheet, fonts), starts the newest stable VS Code with it on a throwaway profile, opens a small
 diagram ([`checkout.tt`](apps/vscode/test-smoke/checkout.tt)) in the custom editor and waits until
 the canvas shows it with the stylesheet applied, creates a team from the palette by keyboard, saves
-(the file must pass the Problems view's check), undoes (the canvas and, saved again, the file return
-to the fixture) and switches through VS Code's four default themes, with a screenshot each in
-`test-results/vscode-smoke/` (gitignored). It is not part of `npm test` or the regular CI
-(`ci.yml`): it needs a display and the VS Code download.
+(once the tab is clean and the file on disk holds still, it must pass the Problems view's check),
+undoes (the canvas and, saved again, the file return to the fixture) and switches through VS Code's
+four default themes, with a screenshot each in `test-results/vscode-smoke/` (gitignored). It is not
+part of `npm test` or the regular CI (`ci.yml`): it needs a display and the VS Code download.
 
-**Locally (macOS):** just run it; a VS Code window opens for a few seconds and the whole run takes
-about 5 to 10 s. The first run downloads VS Code (about 320 MB, 0.9 GB unpacked) into
+**Locally, without a window:** run it in Docker. `npm run test:vscode:docker` runs
+`npm run test:vscode` in a Linux container under `xvfb-run -a` (the shell's
+`modeler-shell-vscode-docker`), so no VS Code window opens and nothing takes the focus while you
+work. It needs only Docker (Docker Desktop on macOS). It copies your working copy, uncommitted
+changes included, into the container without `node_modules` and `.git`, runs `npm ci` there (your
+`node_modules` stay as they are) and copies `test-results/vscode-smoke/` back. The first run builds
+a local image (`modeler-shell-vscode-smoke:node<version>-…`, about 0.9 GB, on the Node version that
+runs the command; `npm run test:vscode:docker -- --node 22.13.0` picks another) and downloads
+VS Code into the Docker volume `modeler-shell-vscode-cache`; both are kept and shared by every
+Miragon modeler on the machine, and a run then takes about 12 to 20 s on an Apple silicon Mac,
+`npm ci` included. Paths in the test's output are the container's (`/work/…`). The root
+`package.json` declares `@miragon/modeler-shell` itself, at the workspaces' exact version, so the
+command (and the CI workflow's import of the driver) finds the shell at the root whatever npm
+hoists; bump all five pins together.
+
+```bash
+npm run test:vscode:docker
+```
+
+**Locally, with a window:** `npm run test:vscode` runs it on your machine; on macOS a VS Code window
+opens for a few seconds and takes the focus, and the whole run takes about 5 to 10 s. The first run
+downloads VS Code (about 320 MB, 0.9 GB unpacked) into
 `~/Library/Caches/miragon-modeler-shell/vscode-test`, shared by every Miragon modeler on the machine
-and outside the repository; let that first download finish before you start a second run anywhere.
-On Linux, run it under `xvfb-run -a` when there is no display.
+and outside the repository; let that first download finish before you start a second run anywhere
+(the same holds for the Docker volume). On Linux, run it under `xvfb-run -a` when there is no
+display.
 
 ```bash
 npm run test:vscode
@@ -93,15 +114,17 @@ npm run test:vscode
 A file missing from the package fails the test before VS Code starts, with its path. Any other
 failure names its step (`open`, `edit`, `save`, `undo`, `themes`, …) in the test's output. To read
 VS Code's own logs, pass `keepTemporaryFiles: true` to `runVsCodeSmoke` for that run; it then logs
-where the profile is.
+where the profile is (in Docker, the logs come back in `test-results/vscode-smoke/vscode-logs/`).
 
-**In CI:** the [`VS Code smoke`](.github/workflows/vscode-smoke.yml) workflow runs it on
-`ubuntu-latest` under `xvfb-run -a` — on demand (Actions → VS Code smoke → Run workflow), every
-Monday against the newest stable VS Code, and on pull requests that change `apps/vscode/**`, the root
-`package.json` (its script, the driver's peers `playwright-core` and `@vscode/test-electron`) or
-`vitest.config.ts`. It is a workflow of its own and not a required check, so it never slows down or
-blocks the regular CI; it caches the VS Code download per version and uploads the screenshots as the
-artifact `vscode-smoke` (kept 7 days).
+**In CI:** the [`VS Code smoke`](.github/workflows/vscode-smoke.yml) workflow runs
+`npm run test:vscode` directly on `ubuntu-latest` under `xvfb-run -a` — on demand (Actions → VS Code
+smoke → Run workflow), every Monday against the newest stable VS Code, and on pull requests that
+change `apps/vscode/**`, the root `package.json` (its scripts, the driver's peers `playwright-core`
+and `@vscode/test-electron`) or `vitest.config.ts`. It is a workflow of its own and not a required
+check, so it never slows down or blocks the regular CI; it caches the VS Code download per version
+and uploads the screenshots as the artifact `vscode-smoke` (kept 7 days). It does not use the Docker
+mode: a runner has no window to keep out of the way, and the container would build its image and
+install the dependencies again on every run.
 
 ## Pre-commit reality
 

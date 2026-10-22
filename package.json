@@ -27,6 +27,7 @@
     "test": "vitest run --project=unit",
     "test:browser": "vitest run --project=browser",
     "test:vscode": "vitest run --project=vscode --silent=false",
+    "test:vscode:docker": "modeler-shell-vscode-docker",
     "test:e2e": "npm run test:e2e -w e2e",
     "dev": "npm run dev:webapp",
     "dev:webapp": "npm run dev -w apps/webapp",
@@ -46,6 +47,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@miragon/modeler-shell": "0.3.2",
     "@types/node": "26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
