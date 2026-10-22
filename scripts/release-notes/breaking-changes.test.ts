@@ -1,6 +1,7 @@
 // @vitest-environment node
 /// <reference types="node" />
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { breakingChangeReport, squashCommitMessage } from "./breaking-changes.mjs";
 import { mergedPullRequest, overrideBody } from "./fixtures/merged-pull-requests";
@@ -130,5 +131,18 @@ describe("breakingChangeReport", () => {
     );
     expect(result.lost).toEqual([]);
     expect(result.complete).toBe(false);
+  });
+});
+
+describe("CONTRIBUTING.md", () => {
+  it("shows the BEGIN_COMMIT_OVERRIDE block #129 needed, and it keeps both breaking changes", () => {
+    const contributing = readFileSync(new URL("../../CONTRIBUTING.md", import.meta.url), "utf8");
+    const example = contributing.match(
+      /```text\n(BEGIN_COMMIT_OVERRIDE\n[\s\S]*?\nEND_COMMIT_OVERRIDE)\n```/,
+    )?.[1];
+    expect(example).toBe(overrideBody(129).trim());
+    const report = breakingChangeReport({ ...mergedPullRequest(129), body: example ?? "" });
+    expect(report.released).toEqual([BUILT_IN_IDS, INTERACTION_GEOMETRY]);
+    expect(report.complete).toBe(true);
   });
 });
