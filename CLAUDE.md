@@ -44,8 +44,9 @@ to everything else (chrome, typography, accent/selection, neutrals, the app icon
 
 Workspaces are declared in the root `package.json` (`workspaces` array, listed in topological build
 order). **All** versions are pinned to exact values inline in each package's `package.json` (`.npmrc`
-sets `save-exact=true`) — including internal `@miragon/team-topologies-*` deps, which use the exact local version
-`0.1.0` (npm still links them to the local workspace). Exact pinning is enforced in CI by the
+sets `save-exact=true`) — including internal `@miragon/team-topologies-*` deps, which pin the current
+shared version from `.release-please-manifest.json` (npm still links them to the local workspace;
+release-please bumps them, see [Releases](#releases)). Exact pinning is enforced in CI by the
 `pin-check` job.
 
 | Package                                 | Purpose                                                                  | DOM |
@@ -113,13 +114,31 @@ per breaking change, each with its own one-paragraph footer (text on the `BREAKI
 no `!` in the headers. The **Release notes** check (`release-notes.yml`, locally
 `npm run check:release-notes -- <number>`) fails otherwise. Details and an example in [`CONTRIBUTING.md`](CONTRIBUTING.md#breaking-changes).
 
+## Releases
+
+One shared version for the whole monorepo, one tag (`vX.Y.Z`), one root
+[`CHANGELOG.md`](CHANGELOG.md), driven by release-please on push to `main`
+([`release-please.yml`](.github/workflows/release-please.yml), a single root component `"."` in
+[`release-please-config.json`](release-please-config.json)). Its `node` strategy bumps only the root
+`package.json` and the root entries of `package-lock.json`; `extra-files` bumps every other place
+that carries the shared version: `$.version` and each internal `@miragon/team-topologies-*`
+dependency in every workspace's `package.json` **and** the same values in that workspace's
+`package-lock.json` entry (`$.packages['<dir>'].version`,
+`$.packages['<dir>'].dependencies['@miragon/…']`), so the next `npm install` after a release
+leaves the workspace versions alone.
+
+**Adding an internal dependency edge or a workspace** needs an `extra-files` entry for the
+`package.json` path **and** one for the matching `package-lock.json` path;
+[`release-config.sync.test.ts`](packages/schema-model/src/release-config.sync.test.ts) fails when
+one is missing or no longer holds the released version.
+
 ## Conventions
 
 - Keep the core package (`schema-model`) strictly DOM-free (P1, above).
 - JSON serialization must stay deterministic (sorted, rounded, version-stamped) so diffs and share
   URLs stay stable.
 - Pin **all** dependencies to exact versions — no version ranges (`^`/`~`/`>=`/`*`), internal
-  workspace deps included (use `0.1.0`). See
+  workspace deps included (the current shared version, see [Releases](#releases)). See
   [`.claude/rules/package-json-fixed-versions.md`](.claude/rules/package-json-fixed-versions.md).
 - The repo's Claude skills ship as the **`team-topologies-modeler` plugin**
   ([`plugins/team-topologies-modeler/`](plugins/team-topologies-modeler/)) via the marketplace in

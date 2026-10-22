@@ -9,11 +9,26 @@
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         { "type": "json", "path": "packages/schema-model/package.json", "jsonpath": "$.version" },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['packages/schema-model'].version"
+        },
         { "type": "json", "path": "packages/renderer/package.json", "jsonpath": "$.version" },
         {
           "type": "json",
           "path": "packages/renderer/package.json",
           "jsonpath": "$.dependencies['@miragon/team-topologies-schema-model']"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['packages/renderer'].version"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['packages/renderer'].dependencies['@miragon/team-topologies-schema-model']"
         },
         { "type": "json", "path": "packages/ui/package.json", "jsonpath": "$.version" },
         {
@@ -25,6 +40,21 @@
           "type": "json",
           "path": "packages/ui/package.json",
           "jsonpath": "$.dependencies['@miragon/team-topologies-schema-model']"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['packages/ui'].version"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['packages/ui'].dependencies['@miragon/team-topologies-renderer']"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['packages/ui'].dependencies['@miragon/team-topologies-schema-model']"
         },
         { "type": "json", "path": "apps/vscode/package.json", "jsonpath": "$.version" },
         {
@@ -42,6 +72,26 @@
           "path": "apps/vscode/package.json",
           "jsonpath": "$.dependencies['@miragon/team-topologies-ui']"
         },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['apps/vscode'].version"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['apps/vscode'].dependencies['@miragon/team-topologies-renderer']"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['apps/vscode'].dependencies['@miragon/team-topologies-schema-model']"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['apps/vscode'].dependencies['@miragon/team-topologies-ui']"
+        },
         { "type": "json", "path": "apps/webapp/package.json", "jsonpath": "$.version" },
         {
           "type": "json",
@@ -58,7 +108,28 @@
           "path": "apps/webapp/package.json",
           "jsonpath": "$.dependencies['@miragon/team-topologies-ui']"
         },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['apps/webapp'].version"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['apps/webapp'].dependencies['@miragon/team-topologies-renderer']"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['apps/webapp'].dependencies['@miragon/team-topologies-schema-model']"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages['apps/webapp'].dependencies['@miragon/team-topologies-ui']"
+        },
         { "type": "json", "path": "e2e/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "package-lock.json", "jsonpath": "$.packages['e2e'].version" },
         {
           "type": "json",
           "path": "plugins/team-topologies-modeler/.claude-plugin/plugin.json",
