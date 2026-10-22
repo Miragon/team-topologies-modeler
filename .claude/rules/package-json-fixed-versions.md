@@ -9,8 +9,11 @@ Never use version ranges (`^`, `~`, `>=`, `*`) in `dependencies` or `devDependen
 Always pin to an exact version (e.g. `"eslint": "9.17.0"`).
 
 This applies to `dependencies` and `devDependencies` — including internal
-`@miragon/team-topologies-*` workspace deps, which use the exact local version `0.1.0` (not `*`; npm still links
-them to the local workspace). Exact pinning is enforced in CI by the `pin-check` job.
+`@miragon/team-topologies-*` workspace deps, which pin the current shared version from
+`.release-please-manifest.json` (not `*`; npm still links them to the local workspace). Exact
+pinning is enforced in CI by the `pin-check` job. A new internal dep also needs two `extra-files`
+entries in `release-please-config.json`, one for the `package.json` path and one for the matching
+`package-lock.json` path, or the release leaves it behind (see `CLAUDE.md`, Releases).
 
 **Exception — `peerDependencies` of published libraries.** Consumer-shared / singleton
 runtime libs are declared as **ranged `peerDependencies`** (caret) so a downstream app
