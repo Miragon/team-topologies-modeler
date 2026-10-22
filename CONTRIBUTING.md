@@ -72,13 +72,14 @@ workspace's `@playwright/test` on the same version.
 it ships in a real VS Code, driven by `@miragon/modeler-shell/testing/vscode-electron`: it packs the
 VSIX like the release (`vsce package`, which runs `vscode:prepublish`, the production build, into
 `apps/vscode/dist`), unpacks it, checks that the package holds every file the webview loads (bundle,
-stylesheet, fonts), starts the newest stable VS Code with it on a throwaway profile, opens a small
+stylesheet, fonts), starts the newest stable VS Code with it on a throwaway profile (or the version
+in `VSCODE_VERSION`: `stable`, `insiders` or a number like `1.96.0`), opens a small
 diagram ([`checkout.tt`](apps/vscode/test-smoke/checkout.tt)) in the custom editor and waits until
 the canvas shows it with the stylesheet applied, creates a team from the palette by keyboard, saves
 (once the tab is clean and the file on disk holds still, it must pass the Problems view's check),
 undoes (the canvas and, saved again, the file return to the fixture) and switches through VS Code's
 four default themes, with a screenshot each in `test-results/vscode-smoke/` (gitignored). It is not
-part of `npm test` or the regular CI (`ci.yml`): it needs a display and the VS Code download.
+part of `npm test`: it needs a display and the VS Code download.
 
 **Locally, without a window:** run it in Docker. `npm run test:vscode:docker` runs
 `npm run test:vscode` in a Linux container under `xvfb-run -a` (the shell's
@@ -97,6 +98,7 @@ hoists; bump all five pins together.
 
 ```bash
 npm run test:vscode:docker
+npm run test:vscode:docker -- --env VSCODE_VERSION=1.96.0   # the oldest VS Code engines.vscode admits
 ```
 
 **Locally, with a window:** `npm run test:vscode` runs it on your machine; on macOS a VS Code window
@@ -116,15 +118,41 @@ failure names its step (`open`, `edit`, `save`, `undo`, `themes`, …) in the te
 VS Code's own logs, pass `keepTemporaryFiles: true` to `runVsCodeSmoke` for that run; it then logs
 where the profile is (in Docker, the logs come back in `test-results/vscode-smoke/vscode-logs/`).
 
-**In CI:** the [`VS Code smoke`](.github/workflows/vscode-smoke.yml) workflow runs
-`npm run test:vscode` directly on `ubuntu-latest` under `xvfb-run -a` — on demand (Actions → VS Code
-smoke → Run workflow), every Monday against the newest stable VS Code, and on pull requests that
-change `apps/vscode/**`, the root `package.json` (its scripts, the driver's peers `playwright-core`
-and `@vscode/test-electron`) or `vitest.config.ts`. It is a workflow of its own and not a required
-check, so it never slows down or blocks the regular CI; it caches the VS Code download per version
-and uploads the screenshots as the artifact `vscode-smoke` (kept 7 days). It does not use the Docker
-mode: a runner has no window to keep out of the way, and the container would build its image and
-install the dependencies again on every run.
+**In CI:** [`vscode-smoke.yml`](.github/workflows/vscode-smoke.yml) runs `npm run test:vscode`
+directly on `ubuntu-latest` under `xvfb-run -a`, once on the newest stable VS Code and once on the
+oldest one `engines.vscode` in [`apps/vscode/package.json`](apps/vscode/package.json) admits (read at
+run time, today 1.96.0), each as `VSCODE_VERSION`. It is a reusable workflow: `ci.yml` calls it as
+the job `vscode-smoke`, so [`ci-ok`](#ci-and-the-merge-gate) waits for it, and
+[`vscode-smoke-weekly.yml`](.github/workflows/vscode-smoke-weekly.yml) calls it every Monday,
+because the newest stable VS Code changes without a commit here; a failed weekly run opens the issue
+"VS Code smoke: the weekly run failed", or comments on it while it is open. Actions → VS Code smoke →
+Run workflow starts it on demand. It caches the VS Code download per version and uploads the
+screenshots as the artifacts `vscode-smoke-stable` and `vscode-smoke-<version>` (kept 7 days). It
+does not use the Docker mode: a runner has no window to keep out of the way, and the container would
+build its image and install the dependencies again on every run.
+
+**When it runs:** its first job compares the commit with its base (a pull request's base commit, the
+commit before a push, a merge group's base) and starts VS Code only when one of these changed:
+`apps/vscode/**`, `packages/**`, any `package.json`, `package-lock.json`, `vitest.config.ts`,
+`tsconfig.base.json`, `.github/actions/setup/**`, `ci.yml` or the two smoke workflows. The VSIX
+bundles the packages from source and the lockfile's resolved versions, so these break the extension
+as surely as a change in `apps/vscode`. Without a base (a new branch) or with a base it cannot fetch
+it runs; on a schedule or on demand it always runs. When it skips, the job "Skipped, no relevant
+change" passes with a notice, so `ci-ok` sees a success. A new file the extension or the smoke
+depends on outside these paths goes into the list in the step "Check the changed paths".
+
+## CI and the merge gate
+
+[`ci.yml`](.github/workflows/ci.yml) runs on every pull request, push to `main` and merge group. Its
+last job, **`ci-ok`**, is the merge gate: the ruleset on `main` requires it and the PR title check
+(`validate-pr-title`), not the single jobs. `ci-ok` needs every other job of the workflow and fails,
+with one error per job, when any of them did not succeed: a failure, a cancellation, or a skip
+because a job before it failed (a failed `lint` skips `test-browser` and `e2e`). Only a job whose own
+`if:` leaves it out on that event by design may be skipped; today that is `dependency-review`
+outside pull requests, listed in `ci-ok`'s `SKIPPED_BY_DESIGN`.
+
+**A new job in `ci.yml` goes into `ci-ok`'s `needs`**, or nothing waits for it. If it has an `if:` of
+its own that skips it on some events, add it to `SKIPPED_BY_DESIGN` for exactly those events.
 
 ## Pre-commit reality
 
@@ -222,5 +250,7 @@ Also keep JSON serialization deterministic.
 
 - Keep PRs small and focused.
 - Make sure local gates are green: `npm run lint`, `npm test`, `npm run depcruise`, `npm run build`.
+  CI runs these and more; a pull request merges once `ci-ok` passes (see
+  [CI and the merge gate](#ci-and-the-merge-gate)).
 - More than one breaking change? End the description with a `BEGIN_COMMIT_OVERRIDE` block (see
   [Breaking changes](#breaking-changes)); the Release notes check tells you when it is missing.

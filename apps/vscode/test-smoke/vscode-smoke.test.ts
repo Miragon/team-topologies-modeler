@@ -23,6 +23,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const extensionFolder = resolve(here, "..");
 const repositoryRoot = resolve(here, "../../..");
 const screenshotDir = resolve(repositoryRoot, "test-results/vscode-smoke");
+/** `stable`, `insiders` or a version like `1.96.0`; unset, the driver takes the newest stable. */
+const requestedVsCodeVersion = process.env.VSCODE_VERSION?.trim() || undefined;
 
 /** The check the Problems view runs: valid JSON, a valid diagram, no dropped connector. */
 function parseTeamTopology(text: string): TtDocument {
@@ -115,11 +117,15 @@ it(
         themes: WEBVIEW_THEMES,
         name: "team-topologies",
         screenshotDir,
+        vscodeVersion: requestedVsCodeVersion,
         log: console.log,
       });
       console.log(formatVsCodeSmoke(result));
 
       expect(result.failures).toEqual([]);
+      if (requestedVsCodeVersion && /^\d+\.\d+\.\d+$/.test(requestedVsCodeVersion)) {
+        expect(result.vscodeVersion).toBe(requestedVsCodeVersion);
+      }
       const saved = result.saved?.parsed as TtDocument | undefined;
       expect(saved?.nodes).toHaveLength(fixture.nodes.length + 1);
       expect(result.undone).toBe(true);

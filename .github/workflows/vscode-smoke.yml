@@ -1,42 +1,115 @@
-# The extension in a real VS Code (npm run test:vscode): its own workflow, so it never adds a job,
-# a wait or a flake to CI. It runs where only a real VS Code can break the extension: on demand, on
-# pull requests that change the extension or the test's own setup (its script, its Vitest project,
-# the driver's peers in the root package.json), and weekly against the newest stable VS Code, which
-# changes without a commit here.
+# The extension in a real VS Code (npm run test:vscode), on the newest stable VS Code and on the
+# oldest one engines.vscode admits, so an API or webview behaviour of newer builds cannot break the
+# users of older ones unnoticed. ci.yml calls it on every pull request, push and merge group, so the
+# ci-ok gate waits for it; vscode-smoke-weekly.yml calls it because the newest stable VS Code changes
+# without a commit here.
 name: VS Code smoke
 
 on:
+  workflow_call:
   workflow_dispatch:
-  schedule:
-    - cron: "41 4 * * 1"
-  pull_request:
-    paths:
-      - "apps/vscode/**"
-      - "package.json"
-      - "vitest.config.ts"
-      - ".github/workflows/vscode-smoke.yml"
 
 permissions:
   contents: read
 
-concurrency:
-  group: vscode-smoke-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
+  decide:
+    name: Decide whether to run
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.paths.outputs.run }}
+      vscode-versions: ${{ steps.versions.outputs.list }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The VSIX bundles the packages from source and the lockfile's resolved versions, so a change
+      # to either breaks the extension as surely as one in apps/vscode. A diff of two trees needs
+      # only the base commit itself, not the history between. Without a base to compare with (a
+      # new branch, a base that is gone) the smoke runs: skipping it then could hide a breakage.
+      - id: paths
+        name: Check the changed paths
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          run=true
+          case "$EVENT_NAME" in
+            pull_request | push | merge_group)
+              if [[ -z "$BASE_SHA" || "$BASE_SHA" =~ ^0+$ ]]; then
+                echo "No base commit to compare with: the smoke runs."
+              elif ! git fetch --quiet --no-tags --depth=1 origin "$BASE_SHA"; then
+                echo "The base commit $BASE_SHA cannot be fetched: the smoke runs."
+              else
+                changed=$(git diff --name-only "$BASE_SHA" HEAD)
+                run=false
+                while IFS= read -r path; do
+                  case "$path" in
+                    package-lock.json | package.json | */package.json | apps/vscode/* | packages/* | \
+                      vitest.config.ts | tsconfig.base.json | .github/actions/setup/* | \
+                      .github/workflows/ci.yml | .github/workflows/vscode-smoke.yml | \
+                      .github/workflows/vscode-smoke-weekly.yml)
+                      echo "Relevant change: $path"
+                      run=true
+                      ;;
+                  esac
+                done <<< "$changed"
+                if [ "$run" = false ]; then
+                  echo "No change since $BASE_SHA that the extension or the smoke depends on."
+                fi
+              fi
+              ;;
+            *)
+              echo "$EVENT_NAME always runs the smoke."
+              ;;
+          esac
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
+      - id: versions
+        if: steps.paths.outputs.run == 'true'
+        name: Read the oldest supported VS Code from engines.vscode
+        shell: bash
+        run: |
+          set -euo pipefail
+          range=$(jq -r '.engines.vscode' apps/vscode/package.json)
+          if [[ ! "$range" =~ ^(\^|~|>=)?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::error file=apps/vscode/package.json::engines.vscode is '$range', not ^x.y.z, ~x.y.z, >=x.y.z or x.y.z"
+            exit 1
+          fi
+          echo "list=$(jq -nc --arg minimum "${BASH_REMATCH[2]}" '["stable", $minimum]')" >> "$GITHUB_OUTPUT"
+
   vscode-smoke:
+    name: VS Code ${{ matrix.vscode-version }}
+    needs: decide
+    if: needs.decide.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        vscode-version: ${{ fromJSON(needs.decide.outputs.vscode-versions) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
 
-      # The test runs the newest stable VS Code, so the cache key is that version; the path is the
-      # driver's own default, wherever XDG_CACHE_HOME points.
+      # The cache key needs the version before the test resolves it, so stable becomes its version
+      # number here and the test runs exactly that one; the path is the driver's own default,
+      # wherever XDG_CACHE_HOME points.
       - name: Locate the VS Code download
         id: vscode
+        shell: bash
+        env:
+          REQUESTED: ${{ matrix.vscode-version }}
         run: |
-          echo "version=$(curl -fsSL 'https://update.code.visualstudio.com/api/releases/stable?released=true' | jq -r '.[0]')" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          if [ "$REQUESTED" = stable ]; then
+            version=$(curl -fsSL 'https://update.code.visualstudio.com/api/releases/stable?released=true' | jq -r '.[0]')
+          else
+            version=$REQUESTED
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "path=$(node --input-type=module -e "import { homedir } from 'node:os'; import { defaultVsCodeCachePath } from '@miragon/modeler-shell/testing/vscode-electron'; console.log(defaultVsCodeCachePath(process.platform, process.env, homedir()));")" >> "$GITHUB_OUTPUT"
 
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -48,11 +121,24 @@ jobs:
       # to keep out of anyone's way, and the Docker mode would build its image and run npm ci a
       # second time on every run, with VS Code's download in a volume the cache above cannot reach.
       - run: xvfb-run -a npm run test:vscode
+        env:
+          VSCODE_VERSION: ${{ steps.vscode.outputs.version }}
 
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: vscode-smoke
+          name: vscode-smoke-${{ matrix.vscode-version }}
           path: test-results/vscode-smoke/
           if-no-files-found: ignore
           retention-days: 7
+
+  # A caller sees a workflow whose jobs were all skipped as skipped, which ci-ok refuses; this job
+  # makes a deliberate skip a success that says why.
+  skipped:
+    name: Skipped, no relevant change
+    needs: decide
+    if: needs.decide.outputs.run != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "::notice title=VS Code smoke::Skipped, no change to apps/vscode, packages, a package.json, the lockfile or the smoke's own setup."

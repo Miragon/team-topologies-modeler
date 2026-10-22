@@ -1,0 +1,45 @@
+# The newest stable VS Code changes without a commit here, so the smoke also runs every week, and a
+# failure opens (or comments on) one tracking issue instead of passing unseen in the Actions tab.
+name: VS Code smoke (weekly)
+
+on:
+  schedule:
+    - cron: "41 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vscode-smoke:
+    uses: ./.github/workflows/vscode-smoke.yml
+
+  alert:
+    needs: vscode-smoke
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Only here: a called workflow may not ask for more than its caller grants, even in a job that
+    # is skipped, so issues: write stays out of vscode-smoke.yml.
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the tracking issue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TITLE: "VS Code smoke: the weekly run failed"
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          number=$(gh issue list --state open --limit 500 --json number,title |
+            jq -r --arg title "$TITLE" 'first(.[] | select(.title == $title) | .number) // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body "The weekly VS Code smoke failed again: $RUN_URL"
+            echo "Commented on #$number"
+          else
+            gh issue create --title "$TITLE" --body "$(printf '%s\n\n%s\n' \
+              "The weekly VS Code smoke (newest stable and the oldest VS Code that engines.vscode admits) failed: $RUN_URL" \
+              "Each further failed weekly run comments here. Close this issue once the smoke passes again.")"
+          fi
