@@ -127,19 +127,20 @@ the job `vscode-smoke`, so [`ci-ok`](#ci-and-the-merge-gate) waits for it, and
 because the newest stable VS Code changes without a commit here; a failed weekly run opens the issue
 "VS Code smoke: the weekly run failed", or comments on it while it is open. Actions → VS Code smoke →
 Run workflow starts it on demand. It caches the VS Code download per version and uploads the
-screenshots as the artifacts `vscode-smoke-stable` and `vscode-smoke-<version>` (kept 7 days). It
+screenshots as the artifacts `vscode-smoke-stable` and `vscode-smoke-minimum` (kept 7 days). It
 does not use the Docker mode: a runner has no window to keep out of the way, and the container would
 build its image and install the dependencies again on every run.
 
-**When it runs:** its first job compares the commit with its base (a pull request's base commit, the
-commit before a push, a merge group's base) and starts VS Code only when one of these changed:
-`apps/vscode/**`, `packages/**`, any `package.json`, `package-lock.json`, `vitest.config.ts`,
-`tsconfig.base.json`, `.github/actions/setup/**`, `ci.yml` or the two smoke workflows. The VSIX
-bundles the packages from source and the lockfile's resolved versions, so these break the extension
-as surely as a change in `apps/vscode`. Without a base (a new branch) or with a base it cannot fetch
-it runs; on a schedule or on demand it always runs. When it skips, the job "Skipped, no relevant
-change" passes with a notice, so `ci-ok` sees a success. A new file the extension or the smoke
-depends on outside these paths goes into the list in the step "Check the changed paths".
+**When it runs:** its first job, `changes`, compares the commit with its base (a pull request's
+base commit, the commit before a push, a merge group's base) and starts VS Code only when one of
+these changed: `apps/vscode/**`, `packages/**`, any `package.json`, `package-lock.json`,
+`vitest.config.ts`, `tsconfig.base.json`, `.github/actions/setup/**`, `ci.yml` or the two smoke
+workflows. The VSIX bundles the packages from source and the lockfile's resolved versions, so these
+break the extension as surely as a change in `apps/vscode`. A file moved out of these paths counts
+too: the comparison lists a move under its old and its new path. Without a base (a new branch) or
+with a base it cannot fetch it runs; on a schedule or on demand it always runs. When it skips, the
+job `skipped` passes with a notice, so `ci-ok` sees a success. A new file the extension or the smoke
+depends on outside these paths goes into the list in the `changes` job's step `decide`.
 
 **Before a release:** the jobs in [`release-please.yml`](.github/workflows/release-please.yml) that
 publish the extension (VS Code Marketplace, Open VSX) run the smoke on the VSIX they have just packed
