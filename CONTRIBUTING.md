@@ -197,7 +197,9 @@ any pull request with `npm run check:release-notes -- <number>`. Its tests in
 [`scripts/release-notes/`](scripts/release-notes/) also run release-please offline, on this
 repository's release config, against the squash commits of #122 and #129. The parser comes from the
 `release-please` devDependency, at the version the Release workflow's action bundles (17.6.0 in
-release-please-action v5.0.0); move the two together.
+release-please-action v5.0.0); move the two together. Dependabot leaves the devDependency alone, and
+[`parser-version.test.ts`](scripts/release-notes/parser-version.test.ts) fails when the action's pin
+moves without it.
 
 ## Monorepo map & the DOM boundary (P1)
 
