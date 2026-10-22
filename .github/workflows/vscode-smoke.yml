@@ -67,8 +67,8 @@ jobs:
           esac
           echo "run=$run" >> "$GITHUB_OUTPUT"
 
+      # Also when the smoke skips: the matrix below then still gets a valid list to parse.
       - id: versions
-        if: steps.paths.outputs.run == 'true'
         name: Read the oldest supported VS Code from engines.vscode
         shell: bash
         run: |
@@ -132,8 +132,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # A caller sees a workflow whose jobs were all skipped as skipped, which ci-ok refuses; this job
-  # makes a deliberate skip a success that says why.
+  # A deliberate skip ends in a passing job that says why, so the caller (ci-ok) gets a success with
+  # a reason, never a bare skip.
   skipped:
     name: Skipped, no relevant change
     needs: decide
