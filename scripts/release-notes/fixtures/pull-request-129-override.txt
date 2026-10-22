@@ -1,0 +1,13 @@
+BEGIN_COMMIT_OVERRIDE
+feat: explain the notation in the legend, tighten document checks and implement modeler-api 1.2 (#129)
+
+BREAKING CHANGE: parseDocument and documentIdProblems refuse ids that
+name a built-in property of JavaScript objects (constructor, toString,
+__proto__, hasOwnProperty, valueOf, ...).
+
+feat(schema-model): refuse an interaction without position or size from version 2 on
+
+BREAKING CHANGE: parseDocument refuses a version 2 or 3 document with
+an interaction that has no position or size instead of dropping that
+interaction.
+END_COMMIT_OVERRIDE

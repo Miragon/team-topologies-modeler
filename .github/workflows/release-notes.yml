@@ -1,0 +1,27 @@
+# release-please keeps one BREAKING CHANGE footer per squash commit, so every other one a pull
+# request's commits carry would miss CHANGELOG.md and the GitHub release. This check runs
+# release-please's own parser on the squash commit and the description (BEGIN_COMMIT_OVERRIDE) and
+# reruns on every edit of the description, where the fix goes.
+name: Release notes
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: release-notes-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  breaking-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: npm run check:release-notes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

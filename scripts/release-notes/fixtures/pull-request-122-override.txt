@@ -1,0 +1,14 @@
+BEGIN_COMMIT_OVERRIDE
+feat: adopt @miragon/modeler-api and @miragon/modeler-shell in VS Code and the web app (#122)
+
+BREAKING CHANGE: parseDocument keeps unknown fields instead of stripping
+them and rejects duplicate and reserved ids; serializeDocument(doc) ends
+with "\n".
+
+feat(renderer): implement the modeler-api contract and the canvas rules of the modeler shell
+
+BREAKING CHANGE: the canvas no longer binds +, -, Shift+0 and Shift+1;
+importDocument fires no commandStack.changed, rejects colliding ids and
+takes { fit }; palette entries are no tab stops and react to a click with
+detail 0 instead of keydown; the canvas svg has no role="group".
+END_COMMIT_OVERRIDE
