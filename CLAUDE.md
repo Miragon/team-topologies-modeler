@@ -68,7 +68,8 @@ rows, the "Keyboard shortcuts…" and "Diagram title…" dialogs and the menu en
 as `@miragon/team-topologies-ui/ui.css` (role aliases, buttons, fields, the content of inspector,
 legend and dialog; where they sit is the host's), and must never import from `apps/**`;
 `schema-model` and `renderer` must never import it, nor `@miragon/modeler-shell` (all enforced by
-`dependency-cruiser`; `schema-model` takes only types from `@miragon/modeler-api`).
+`dependency-cruiser`, the shell ban also by ESLint, so the pre-commit hook catches it; `schema-model`
+takes only types from `@miragon/modeler-api`).
 
 ## Commands
 

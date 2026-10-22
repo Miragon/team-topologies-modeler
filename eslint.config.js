@@ -9,22 +9,32 @@ import globals from "globals";
 
 /**
  * Flat Config. The most important project-specific piece is DOM-boundary enforcement:
- * the DOM-free package (schema-model) must not import diagram-js or any DOM library/global. This
- * mirrors the dependency-cruiser check so a violating import fails both `npm run lint` and
- * `npm run depcruise`.
+ * the DOM-free package (schema-model) must not import diagram-js or any DOM library/global, and
+ * neither library (schema-model, renderer) imports @miragon/modeler-shell: only the apps and the
+ * shared ui mount the chrome. This mirrors the dependency-cruiser check so a violating import fails
+ * both `npm run lint` (and so the pre-commit hook) and `npm run depcruise`.
  */
+
+const SHELL_RESTRICTED_IMPORTS = {
+  paths: [{ name: "@miragon/modeler-shell", message: "Only the apps and the ui mount the shell." }],
+  patterns: [
+    { group: ["@miragon/modeler-shell/*"], message: "Only the apps and the ui mount the shell." },
+  ],
+};
 
 const DOM_RESTRICTED_IMPORTS = {
   paths: [
     { name: "diagram-js", message: "DOM-free packages must not import diagram-js." },
     { name: "tiny-svg", message: "DOM-free packages must not import tiny-svg." },
     { name: "min-dom", message: "DOM-free packages must not import min-dom." },
+    ...SHELL_RESTRICTED_IMPORTS.paths,
   ],
   patterns: [
     {
       group: ["diagram-js/*"],
       message: "DOM-free packages must not import diagram-js.",
     },
+    ...SHELL_RESTRICTED_IMPORTS.patterns,
   ],
 };
 
@@ -117,6 +127,13 @@ export default tseslint.config(
       "jsdoc/check-alignment": "error",
       "jsdoc/multiline-blocks": "error",
       "jsdoc/no-multi-asterisks": "error",
+    },
+  },
+  // The renderer: the shell is the apps' chrome, never a library dependency.
+  {
+    files: ["packages/renderer/**/*.ts"],
+    rules: {
+      "no-restricted-imports": ["error", SHELL_RESTRICTED_IMPORTS],
     },
   },
   // DOM-FREE package: hard boundary.
