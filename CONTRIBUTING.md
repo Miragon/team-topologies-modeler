@@ -93,12 +93,6 @@ hoists; bump all five pins together.
 npm run test:vscode:docker
 ```
 
-Known issue with shell 0.3.1: the command deletes and recreates `test-results/vscode-smoke/` before
-each run, and Docker Desktop now and then still mounts the deleted folder. Copying the screenshots
-back then fails and the command exits 1 with `cp: cannot create regular file '/results/…'` right
-after the test reported `1 passed`. The test did pass; run it again if you need the screenshots. The
-fix belongs in the shell, so nothing here works around it.
-
 **Locally, with a window:** `npm run test:vscode` runs it on your machine; on macOS a VS Code window
 opens for a few seconds and takes the focus, and the whole run takes about 5 to 10 s. The first run
 downloads VS Code (about 320 MB, 0.9 GB unpacked) into
