@@ -61,9 +61,9 @@ conformance kit on its web host) and `vscode-webview`
 with the shell's conformance kit and a CSP smoke test of the production bundle); set both ports when
 several worktrees run the suite at once. Locally, run `npx playwright install chromium` once. In CI these two jobs run inside
 the official Playwright container (`mcr.microsoft.com/playwright`), which ships the browser + system
-libs pre-installed — so **when you bump `playwright`/`@playwright/test`, bump the matching image tag
-in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) too** (the version pin-check does not catch
-this), and keep `playwright-core` on the same version.
+libs pre-installed; the `playwright-version` job reads the image tag from the root `package.json`'s
+`playwright` devDependency, so a bump moves the image with it. Keep `playwright-core` and the e2e
+workspace's `@playwright/test` on the same version.
 
 ### The extension in a real VS Code
 
