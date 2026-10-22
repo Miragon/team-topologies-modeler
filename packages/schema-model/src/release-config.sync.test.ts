@@ -19,8 +19,9 @@ interface PackageManifest {
   devDependencies?: Record<string, string>;
 }
 
-interface ExtraFile {
-  type: string;
+type ExtraFileEntry = string | { type: string; path: string; jsonpath?: string; glob?: boolean };
+
+interface JsonLocation {
   path: string;
   jsonpath: string;
 }
@@ -32,20 +33,24 @@ function readJson<T>(relativePath: string): T {
 }
 
 const releasedVersion = readJson<Record<string, string>>(".release-please-manifest.json")["."];
-const extraFiles = readJson<{ packages: Record<string, { "extra-files": ExtraFile[] }> }>(
+const extraFiles = readJson<{ packages: Record<string, { "extra-files": ExtraFileEntry[] }> }>(
   "release-please-config.json",
 ).packages["."]["extra-files"];
+const jsonExtraFiles = extraFiles.filter(
+  (entry): entry is JsonLocation & { type: "json" } =>
+    typeof entry === "object" && entry.type === "json" && !entry.glob,
+);
 const workspaces = (readJson<PackageManifest>("package.json").workspaces ?? []).map(
   (directory) => ({ directory, manifest: readJson<PackageManifest>(`${directory}/package.json`) }),
 );
 const internalPackageNames = new Set(workspaces.map(({ manifest }) => manifest.name));
 const dependencySections = ["dependencies", "devDependencies"] as const;
 
-function jsonLocation(path: string, jsonpath: string): ExtraFile {
-  return { type: "json", path, jsonpath };
+function jsonLocation(path: string, jsonpath: string): JsonLocation {
+  return { path, jsonpath };
 }
 
-function sharedVersionLocations(): ExtraFile[] {
+function sharedVersionLocations(): JsonLocation[] {
   return workspaces.flatMap(({ directory, manifest }) => [
     jsonLocation(`${directory}/package.json`, "$.version"),
     jsonLocation("package-lock.json", `$.packages['${directory}'].version`),
@@ -78,11 +83,11 @@ function readJsonPath(document: unknown, jsonpath: string): unknown {
   return value;
 }
 
-const describeLocation = ({ path, jsonpath }: ExtraFile): string => `${path} ${jsonpath}`;
+const describeLocation = ({ path, jsonpath }: JsonLocation): string => `${path} ${jsonpath}`;
 
 describe("release-please extra-files", () => {
   it("bumps every workspace version and internal dependency in package.json and package-lock.json", () => {
-    const listed = new Set(extraFiles.map(describeLocation));
+    const listed = new Set(jsonExtraFiles.map(describeLocation));
     const missing = sharedVersionLocations()
       .map(describeLocation)
       .filter((location) => !listed.has(location));
@@ -90,10 +95,10 @@ describe("release-please extra-files", () => {
     expect(missing).toEqual([]);
   });
 
-  // release-please only logs a warning for a jsonpath that matches nothing, so a mistyped or
-  // orphaned entry would silently skip its bump.
-  it("points every entry at a value that holds the released version", () => {
-    const stale = extraFiles
+  // release-please skips a jsonpath that matches nothing without any log line, so a mistyped or
+  // orphaned entry would silently drop its bump.
+  it("points every json entry at a value that holds the released version", () => {
+    const stale = jsonExtraFiles
       .map((extraFile) => ({
         location: describeLocation(extraFile),
         value: readJsonPath(readJson(extraFile.path), extraFile.jsonpath),
