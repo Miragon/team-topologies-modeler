@@ -34,6 +34,7 @@
     "dev:webapp:plain": "npm run dev:app -w apps/webapp",
     "dev:vscode": "npm run watch -w apps/vscode",
     "depcruise": "depcruise packages apps --config .dependency-cruiser.cjs",
+    "check:release-notes": "node scripts/release-notes/check-pull-request.mjs",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -67,6 +68,7 @@
     "playwright": "1.64.0",
     "playwright-core": "1.64.0",
     "prettier": "3.9.10",
+    "release-please": "17.6.0",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.2",
     "vitest": "5.0.4"

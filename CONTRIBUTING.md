@@ -144,6 +144,63 @@ fix(schema-model): keep colours on the migration round-trip
 docs: add contributing guide
 ```
 
+### Breaking changes
+
+Pull requests are squash-merged: GitHub writes the title and every commit message into one commit.
+[release-please](https://github.com/googleapis/release-please) builds `CHANGELOG.md` and the GitHub
+release from that commit and takes **one** breaking note per conventional-commit message, so of the
+squash commit's `BREAKING CHANGE:` footers only one reaches the release (as a rule the first, cut at
+its first blank line), and a `type(scope)!:` line inside it counts for nothing. 0.11.0 and 0.12.0
+each lost a breaking change that way.
+
+Mark every breaking change in its commit with a one-paragraph `BREAKING CHANGE:` footer whose text
+starts on the footer's own line: release-please writes `BREAKING CHANGE:` with the text on the next
+line as an empty bullet. When a pull request carries more than one breaking change, or a commit
+marked only by the `!` in its header, end its description with a `BEGIN_COMMIT_OVERRIDE` block.
+release-please reads the block instead of the squash commit:
+
+- one conventional-commit message per changelog entry, separated by blank lines; the first is the
+  pull request's title with its number;
+- every breaking change in a message of its own, with its own `BREAKING CHANGE:` footer, the text
+  starting on the footer's line;
+- no `!` in a header: a `type(scope)!:` line does not start a new message, and the footer before it
+  is lost;
+- the markers nowhere else in the description: release-please reads from the first
+  `BEGIN_COMMIT_OVERRIDE` on.
+
+```text
+BEGIN_COMMIT_OVERRIDE
+feat: explain the notation in the legend, tighten document checks and implement modeler-api 1.2 (#129)
+
+BREAKING CHANGE: parseDocument and documentIdProblems refuse ids that
+name a built-in property of JavaScript objects (constructor, toString,
+__proto__, hasOwnProperty, valueOf, ...).
+
+feat(schema-model): refuse an interaction without position or size from version 2 on
+
+BREAKING CHANGE: parseDocument refuses a version 2 or 3 document with
+an interaction that has no position or size instead of dropping that
+interaction.
+END_COMMIT_OVERRIDE
+```
+
+With this block #129 would have given 0.12.0 both lines under "⚠ BREAKING CHANGES", the second as
+"**schema-model:** parseDocument refuses …", and a second entry under "Features". The block still
+counts after the merge: release-please reads the descriptions again whenever it updates the release
+pull request (on the next push to `main`, or when you run the Release workflow without a dry run),
+so a block can be added or fixed until the release pull request is merged.
+
+The **Release notes** check ([`release-notes.yml`](.github/workflows/release-notes.yml)) runs on
+every pull request and on every edit of its description. It hands the squash commit and the block
+to release-please's own parser and fails, naming every breaking change that would be lost. Run it on
+any pull request with `npm run check:release-notes -- <number>`. Its tests in
+[`scripts/release-notes/`](scripts/release-notes/) also run release-please offline, on this
+repository's release config, against the squash commits of #122 and #129. The parser comes from the
+`release-please` devDependency, at the version the Release workflow's action bundles (17.6.0 in
+release-please-action v5.0.0); move the two together. Dependabot leaves the devDependency alone, and
+[`parser-version.test.ts`](scripts/release-notes/parser-version.test.ts) fails when the action's pin
+moves without it.
+
 ## Monorepo map & the DOM boundary (P1)
 
 | Package                                 | Purpose                                               | DOM      |
@@ -165,3 +222,5 @@ Also keep JSON serialization deterministic.
 
 - Keep PRs small and focused.
 - Make sure local gates are green: `npm run lint`, `npm test`, `npm run depcruise`, `npm run build`.
+- More than one breaking change? End the description with a `BEGIN_COMMIT_OVERRIDE` block (see
+  [Breaking changes](#breaking-changes)); the Release notes check tells you when it is missing.

@@ -30,6 +30,7 @@ export default defineConfig({
           include: [
             "packages/*/src/**/*.{test,spec}.{ts,tsx}",
             "apps/*/src/**/*.{test,spec}.{ts,tsx}",
+            "scripts/**/*.test.ts",
           ],
           exclude: ["packages/renderer/test/browser/**", "**/node_modules/**", "**/dist/**"],
         },
