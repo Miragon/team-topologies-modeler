@@ -105,8 +105,9 @@ aliases), so neither the apps nor the tests need a prior package build; `npm run
 publishing the libraries. The Husky pre-commit hook runs **only** lint-staged + `npm run lint`
 (ESLint + type-check) — **not** tests/build/depcruise; run `npm test` yourself before pushing.
 
-**CI gate:** the last job of [`ci.yml`](.github/workflows/ci.yml), `ci-ok`, needs every other job
-and is the one required check besides the PR title. A new job in `ci.yml` must be added to its
+**CI gate:** the last job of [`ci.yml`](.github/workflows/ci.yml), `ci-ok`, needs every other job;
+`ci-ok` and the PR title check are the checks for the `main` ruleset to require, not the single
+jobs. A new job in `ci.yml` must be added to its
 `needs` (and, if its own `if:` skips it on some events, to `SKIPPED_BY_DESIGN`). Details in
 [`CONTRIBUTING.md`](CONTRIBUTING.md#ci-and-the-merge-gate).
 

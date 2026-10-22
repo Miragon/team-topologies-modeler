@@ -108,9 +108,10 @@ jobs:
   vscode-smoke:
     uses: ./.github/workflows/vscode-smoke.yml
 
-  # The one required check: it needs every other job, so a new job counts only once it is in this
-  # list. always() makes it report when a job it needs failed, was cancelled or was skipped because
-  # a job before it failed; GitHub treats a skipped required check as passed.
+  # The merge gate: a required check counts a skip as passed, so this job, not the single ones, is
+  # the check for the ruleset to require. It needs every other job, so a new job counts only once it
+  # is in this list. always() makes it report when a job it needs failed, was cancelled or was
+  # skipped because a job before it failed.
   ci-ok:
     name: ci-ok
     if: always()

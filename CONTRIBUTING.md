@@ -150,9 +150,10 @@ and are about to upload, on the newest stable VS Code, and publish nothing when 
 
 ## CI and the merge gate
 
-[`ci.yml`](.github/workflows/ci.yml) runs on every pull request, push to `main` and merge group. Its
-last job, **`ci-ok`**, is the merge gate: the ruleset on `main` requires it and the PR title check
-(`validate-pr-title`), not the single jobs. `ci-ok` needs every other job of the workflow and fails,
+[`ci.yml`](.github/workflows/ci.yml) runs on every pull request, push to `main` and merge group, and
+on demand. Its last job, **`ci-ok`**, is the merge gate: it and the PR title check
+(`validate-pr-title`) are the checks for the `main` ruleset to require, in place of the single jobs,
+so that Dependabot's auto-merge waits for every job, the VS Code smoke included. `ci-ok` needs every other job of the workflow and fails,
 with one error per job, when any of them did not succeed: a failure, a cancellation, or a skip
 because a job before it failed (a failed `lint` skips `test-browser` and `e2e`). Only a job whose own
 `if:` leaves it out on that event by design may be skipped; today that is `dependency-review`
