@@ -153,14 +153,16 @@ squash commit's `BREAKING CHANGE:` footers only one reaches the release (as a ru
 its first blank line), and a `type(scope)!:` line inside it counts for nothing. 0.11.0 and 0.12.0
 each lost a breaking change that way.
 
-Mark every breaking change in its commit with a one-paragraph `BREAKING CHANGE:` footer. When a
-pull request carries more than one, or a commit marked only by the `!` in its header, end its
-description with a `BEGIN_COMMIT_OVERRIDE` block. release-please reads the block instead of the
-squash commit:
+Mark every breaking change in its commit with a one-paragraph `BREAKING CHANGE:` footer whose text
+starts on the footer's own line: release-please writes `BREAKING CHANGE:` with the text on the next
+line as an empty bullet. When a pull request carries more than one breaking change, or a commit
+marked only by the `!` in its header, end its description with a `BEGIN_COMMIT_OVERRIDE` block.
+release-please reads the block instead of the squash commit:
 
 - one conventional-commit message per changelog entry, separated by blank lines; the first is the
   pull request's title with its number;
-- every breaking change in a message of its own, with its own `BREAKING CHANGE:` footer;
+- every breaking change in a message of its own, with its own `BREAKING CHANGE:` footer, the text
+  starting on the footer's line;
 - no `!` in a header: a `type(scope)!:` line does not start a new message, and the footer before it
   is lost;
 - the markers nowhere else in the description: release-please reads from the first

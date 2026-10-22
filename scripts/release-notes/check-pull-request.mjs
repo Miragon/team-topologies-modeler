@@ -67,20 +67,27 @@ if (report.hasOverride && report.changelogEntries === 0) {
     "release-please finds no conventional commit after BEGIN_COMMIT_OVERRIDE, so the pull request would vanish from CHANGELOG.md. It reads everything after the first BEGIN_COMMIT_OVERRIDE in the description: name the markers nowhere else.",
   );
 }
+if (report.emptyNotes > 0) {
+  lines.push(
+    `${report.emptyNotes} of them would be an empty bullet: release-please keeps a BREAKING CHANGE footer's text only when it starts on the footer's own line.`,
+  );
+}
+const listed = (text) => `- ${text || "(a BREAKING CHANGE footer with no text on its own line)"}`;
 if (report.lost.length > 0) {
-  lines.push("Lost:", ...report.lost.map((text) => `- ${text}`));
+  lines.push("Lost:", ...report.lost.map(listed));
 }
 if (report.expected.length < report.declaredByCommits.length) {
   lines.push(
     `Its commits declare ${report.declaredByCommits.length}, and the block needs a BREAKING CHANGE footer for each:`,
-    ...report.declaredByCommits.map((text) => `- ${text}`),
+    ...report.declaredByCommits.map(listed),
   );
 }
 lines.push(
   "",
   `${report.hasOverride ? "Fix the" : "Add a"} BEGIN_COMMIT_OVERRIDE … END_COMMIT_OVERRIDE block in the pull request's description:`,
-  "one message per breaking change, each with its own one-paragraph BREAKING CHANGE footer and no",
-  '`!` in its header (CONTRIBUTING.md, "Breaking changes"). The check reruns when you save the description.',
+  "one message per breaking change, each with its own one-paragraph BREAKING CHANGE footer whose text",
+  'starts on the footer\'s line, and no `!` in its header (CONTRIBUTING.md, "Breaking changes").',
+  "The check reruns when you save the description.",
 );
 console.error(lines.join("\n"));
 process.exit(1);

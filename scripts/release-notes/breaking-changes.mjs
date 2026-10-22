@@ -59,9 +59,9 @@ function breakingFooters(text) {
       paragraph?.push(line);
     }
   }
-  return paragraphs.map(([summary, ...rest]) => ({
-    summary: normalize(summary),
-    text: normalize([summary, ...rest].join(" ")),
+  return paragraphs.map((lines) => ({
+    summary: normalize(lines.find((line) => line.trim() !== "") ?? ""),
+    text: normalize(lines.join(" ")),
   }));
 }
 
@@ -98,12 +98,15 @@ function releasedCommits(pullRequest) {
 }
 
 // A note starts with its footer's first line; the rest of the paragraph may be cut or joined
-// differently, depending on where release-please found the footer.
+// differently, depending on where release-please found the footer. release-please keeps a footer's
+// text only when it starts on the footer's own line: otherwise the note is an empty bullet, or
+// missing when nothing follows the footer, so an empty note or summary never counts as written.
 function unreleased(expected, released) {
-  const remaining = released.map(normalize);
+  const remaining = released.map(normalize).filter((note) => note !== "");
   const missing = new Set(expected);
   // Longest first, so a summary that starts another one cannot take that one's note.
   for (const change of [...expected].sort((a, b) => b.summary.length - a.summary.length)) {
+    if (change.summary === "") continue;
     const index = remaining.findIndex((note) => note.startsWith(change.summary));
     if (index !== -1) {
       remaining.splice(index, 1);
@@ -122,6 +125,7 @@ export function breakingChangeReport(pullRequest) {
     commit.notes.filter((note) => note.title === "BREAKING CHANGE").map((note) => note.text),
   );
   const lost = unreleased(expected, released);
+  const emptyNotes = released.filter((note) => normalize(note) === "").length;
   const hasOverride = override !== "";
   return {
     hasOverride,
@@ -129,10 +133,12 @@ export function breakingChangeReport(pullRequest) {
     declaredByCommits: declaredByCommits.map((change) => change.text),
     expected: expected.map((change) => change.text),
     released,
+    emptyNotes,
     lost: lost.map((change) => change.text),
     complete:
       (!hasOverride || commits.length > 0) &&
       lost.length === 0 &&
+      emptyNotes === 0 &&
       expected.length >= declaredByCommits.length,
   };
 }

@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { Errors, Manifest, setLogger } from "release-please";
 import type { Commit, GitHub } from "release-please";
 import { beforeAll, describe, expect, it } from "vitest";
-import { squashCommitMessage } from "./breaking-changes.mjs";
+import { breakingChangeReport, squashCommitMessage } from "./breaking-changes.mjs";
 import {
   mergedPullRequest,
   overrideBody,
@@ -128,5 +128,18 @@ describe.each([
     const bullets = breakingChangeBullets(notes);
     expect(bullets).toHaveLength(2);
     expect(breakingChangeBullets(changelogSection(version))).toEqual(bullets);
+  });
+});
+
+describe("release 0.12.0 with #129 and an override whose footers' text starts on the next line", () => {
+  const body = `Summary.\n\n${overrideBody(129).replaceAll("BREAKING CHANGE: ", "BREAKING CHANGE:\n")}`;
+
+  it("writes empty bullets, and the check fails", async () => {
+    const notes = await releaseNotes(squashMergedHistory(129, "0.11.2", body));
+    expect(breakingChangeBullets(notes)).toEqual(["* ", "* **schema-model:** "]);
+    expect(breakingChangeReport({ ...mergedPullRequest(129), body })).toMatchObject({
+      emptyNotes: 2,
+      complete: false,
+    });
   });
 });

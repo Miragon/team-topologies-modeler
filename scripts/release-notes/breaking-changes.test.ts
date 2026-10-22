@@ -116,6 +116,40 @@ describe("breakingChangeReport", () => {
     expect(result.lost).toEqual(["a is gone"]);
   });
 
+  it("fails a footer whose text starts on the line after it, which release-please writes empty", () => {
+    const result = report([
+      "feat(renderer): drop the zoom keys\n\nBREAKING CHANGE:\nthe canvas no longer binds + and -.",
+      "fix: b",
+    ]);
+    expect(result).toMatchObject({
+      released: [""],
+      emptyNotes: 1,
+      lost: ["the canvas no longer binds + and -."],
+      complete: false,
+    });
+  });
+
+  it("fails a footer with no text at all, which release-please does not even count as breaking", () => {
+    const result = report(["fix: b", "feat(renderer): drop the zoom keys\n\nBREAKING CHANGE:"]);
+    expect(result).toMatchObject({ released: [], lost: [""], complete: false });
+  });
+
+  it("fails an override whose footers' text starts on the line after them", () => {
+    const result = report(
+      ["feat: a\n\nBREAKING CHANGE: a is gone", "feat: b\n\nBREAKING CHANGE: b is gone"],
+      override(
+        "feat: several changes (#1)\n\nBREAKING CHANGE:\na is gone",
+        "feat(renderer): b\n\nBREAKING CHANGE:\nb is gone",
+      ),
+    );
+    expect(result).toMatchObject({
+      released: ["", ""],
+      emptyNotes: 2,
+      lost: ["a is gone", "b is gone"],
+      complete: false,
+    });
+  });
+
   it("fails a description that names the marker without a block after it", () => {
     const result = report(
       ["feat: a", "fix: b"],

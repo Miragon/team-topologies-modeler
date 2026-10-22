@@ -11,6 +11,7 @@ export interface BreakingChangeReport {
   declaredByCommits: string[];
   expected: string[];
   released: string[];
+  emptyNotes: number;
   lost: string[];
   complete: boolean;
 }
