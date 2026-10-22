@@ -16,12 +16,15 @@ updates:
     cooldown:
       default-days: 3
       semver-major-days: 14
-    # @types/vscode must stay <= engines.vscode (^1.96.0) or `vsce package` fails.
     ignore:
+      # @types/vscode must stay <= engines.vscode (^1.96.0) or `vsce package` fails.
       - dependency-name: "@types/vscode"
         update-types:
           - "version-update:semver-minor"
           - "version-update:semver-major"
+      # release-please is the Release notes check's parser and stays on the version
+      # release-please-action bundles: bump it by hand, together with the action.
+      - dependency-name: "release-please"
     groups:
       npm-minor-patch:
         applies-to: version-updates

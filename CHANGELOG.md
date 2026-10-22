@@ -6,6 +6,7 @@
 ### ⚠ BREAKING CHANGES
 
 * parseDocument and documentIdProblems refuse ids that name a built-in property of JavaScript objects (constructor, toString, __proto__, hasOwnProperty, valueOf, ...).
+* **schema-model:** parseDocument refuses a version 2 or 3 document with an interaction that has no position or size instead of dropping that interaction.
 
 ### Features
 
@@ -31,6 +32,7 @@
 ### ⚠ BREAKING CHANGES
 
 * parseDocument keeps unknown fields instead of stripping them and rejects duplicate and reserved ids; serializeDocument(doc) ends with "\n".
+* **renderer:** the canvas no longer binds +, -, Shift+0 and Shift+1; importDocument fires no commandStack.changed, rejects colliding ids and takes { fit }; palette entries are no tab stops and react to a click with detail 0 instead of keydown; the canvas svg has no role="group".
 
 ### Features
 

@@ -107,6 +107,13 @@ publishing the libraries. The Husky pre-commit hook runs **only** lint-staged + 
 Everything is managed via **Conventional Commits** — primarily `feat`, `fix`, `refactor`, `chore`,
 `docs`. Example: `feat(renderer): add a context-pad colour picker`.
 
+Pull requests are squash-merged, and release-please takes one `BREAKING CHANGE:` footer per squash
+commit into `CHANGELOG.md` and the release. A pull request with more than one breaking change (or a
+commit marked only by `!`) ends its description with a `BEGIN_COMMIT_OVERRIDE` block: one message
+per breaking change, each with its own one-paragraph footer (text on the `BREAKING CHANGE:` line),
+no `!` in the headers. The **Release notes** check (`release-notes.yml`, locally
+`npm run check:release-notes -- <number>`) fails otherwise. Details and an example in [`CONTRIBUTING.md`](CONTRIBUTING.md#breaking-changes).
+
 ## Releases
 
 One shared version for the whole monorepo, one tag (`vX.Y.Z`), one root
