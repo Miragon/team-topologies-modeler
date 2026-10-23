@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://github.com/Miragon/team-topologies-modeler/compare/v0.13.0...v0.13.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **deps:** adopt modeler-shell 0.4.1 for a VS Code smoke that retries a missed theme switch ([#154](https://github.com/Miragon/team-topologies-modeler/issues/154)) ([71d1b31](https://github.com/Miragon/team-topologies-modeler/commit/71d1b31f24ebf6fe3f3ba03d4dc9747f23de9150))
+
 ## [0.13.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.12.0...v0.13.0) (2026-10-23)
 
 

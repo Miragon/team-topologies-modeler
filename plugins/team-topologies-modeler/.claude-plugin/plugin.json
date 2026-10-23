@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "team-topologies-modeler",
   "displayName": "Team Topologies Modeler",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "Team Topologies for Claude: the method after Skelton & Pais (the four team types, the three interaction modes, cognitive load, fracture planes, topology reviews with feedback annotations) and the `.tt` / `.ttm.json` file format of the Team Topologies Modeler — fields, coordinates, layout grid and a dependency-free checker — so Claude can design, draw, review and edit Team Topologies diagrams as plain JSON.",
   "author": {
     "name": "Miragon",
