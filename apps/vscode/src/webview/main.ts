@@ -48,10 +48,6 @@ declare const acquireVsCodeApi: () => VsCodeApi;
 
 interface DiagramElement {
   id: string;
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
 }
 interface ElementRegistryLike {
   getAll(): DiagramElement[];
@@ -61,13 +57,6 @@ interface SelectionLike {
   get(): DiagramElement[];
   select(elements: DiagramElement[] | null): void;
 }
-interface Bounds {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 const DIAGRAM_NAME = "Team Topologies diagram";
 
 const vscode = acquireVsCodeApi();
@@ -128,30 +117,13 @@ modeler.on("diagram.destroy", () => {
   inspector.destroy();
 });
 
-// Cheap tests only: the shell asks on every content change.
-const diagramElements = (): DiagramElement[] => registry.getAll().filter(isTtElement);
+// A cheap test only: the shell asks on every content change. The shell fits to the content bounds
+// the renderer reports (contract 1.3), tight, so its fit insets are the only margin (§5.9).
 const isEmpty = (): boolean => !registry.getAll().some(isTtElement);
 
-/** The tight bounds of every element; the shell's fit insets are the only margin (§5.9). */
-function contentBounds(): Bounds | undefined {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const { x = 0, y = 0, width = 0, height = 0 } of diagramElements()) {
-    minX = Math.min(minX, x);
-    minY = Math.min(minY, y);
-    maxX = Math.max(maxX, x + width);
-    maxY = Math.max(maxY, y + height);
-  }
-  return Number.isFinite(minX)
-    ? { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
-    : undefined;
-}
-
 const connection: DiagramJsConnection = connectDiagramJs(shell, modeler, {
+  modeler: collaborative,
   isEmpty,
-  contentBounds,
 });
 const { viewport } = connection;
 persistView(vscode, viewport);
