@@ -618,7 +618,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## lucide-react 1.59.0 (ISC)
+## lucide-react 1.60.0 (ISC)
 
 ```text
 ISC License
