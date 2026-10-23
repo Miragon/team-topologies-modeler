@@ -68,7 +68,8 @@ rows, the "Keyboard shortcuts…" and "Diagram title…" dialogs and the menu en
 as `@miragon/team-topologies-ui/ui.css` (role aliases, buttons, fields, the content of inspector,
 legend and dialog; where they sit is the host's), and must never import from `apps/**`;
 `schema-model` and `renderer` must never import it, nor `@miragon/modeler-shell` (all enforced by
-`dependency-cruiser`; `schema-model` takes only types from `@miragon/modeler-api`).
+`dependency-cruiser`, the shell ban also by ESLint, so the pre-commit hook catches it; `schema-model`
+takes only types from `@miragon/modeler-api`).
 
 ## Commands
 
@@ -90,10 +91,15 @@ legend and dialog; where they sit is the host's), and must never import from `ap
   needs Docker): the same test in a Linux container under `xvfb-run -a`, so no window opens and
   takes the user's focus; it runs `npm ci` in the container and copies `test-results/vscode-smoke/`
   back. The root `package.json` declares the shell itself so the bin resolves at the root; keep its
-  pin equal to the workspaces'. CI runs `test:vscode` directly under `xvfb-run -a`, only in
-  [`vscode-smoke.yml`](.github/workflows/vscode-smoke.yml) (on demand, weekly, on PRs touching
-  `apps/vscode/**`, the root `package.json` or `vitest.config.ts`), never in `ci.yml`. See
-  [`CONTRIBUTING.md`](CONTRIBUTING.md).
+  pin equal to the workspaces'. `VSCODE_VERSION` picks the VS Code (`stable`, `1.96.0`; with Docker
+  `npm run test:vscode:docker -- --env VSCODE_VERSION=1.96.0`), `VSCODE_SMOKE_KEEP=1` keeps VS
+  Code's logs (with Docker in `test-results/vscode-smoke/vscode-logs/`). CI runs `test:vscode`
+  directly under `xvfb-run -a` in the reusable
+  [`vscode-smoke.yml`](.github/workflows/vscode-smoke.yml), on the newest stable VS Code and the
+  `engines.vscode` minimum: `ci.yml` calls it (it skips with a passing notice when nothing the VSIX
+  depends on changed) and `vscode-smoke-weekly.yml` calls it every Monday; screenshots as the
+  `vscode-smoke-<stable|minimum>` artifacts, logs of a failed run as
+  `vscode-smoke-logs-<stable|minimum>`. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - `npm run typecheck` · `npm run lint` (ESLint + typecheck)
 - `npm run format` — Prettier · `npm run depcruise` — check the module graph
 
@@ -101,6 +107,12 @@ Requirements: Node ≥ 22.13, npm. The packages are consumed from **source** (Vi
 aliases), so neither the apps nor the tests need a prior package build; `npm run build` is for
 publishing the libraries. The Husky pre-commit hook runs **only** lint-staged + `npm run lint`
 (ESLint + type-check) — **not** tests/build/depcruise; run `npm test` yourself before pushing.
+
+**CI gate:** the last job of [`ci.yml`](.github/workflows/ci.yml), `ci-ok`, needs every other job;
+`ci-ok` and the PR title check are the checks for the `main` ruleset to require, not the single
+jobs. A new job in `ci.yml` must be added to its
+`needs` (and, if its own `if:` skips it on some events, to `SKIPPED_BY_DESIGN`). Details in
+[`CONTRIBUTING.md`](CONTRIBUTING.md#ci-and-the-merge-gate).
 
 ## Git
 
@@ -125,7 +137,8 @@ that carries the shared version: `$.version` and each internal `@miragon/team-to
 dependency in every workspace's `package.json` **and** the same values in that workspace's
 `package-lock.json` entry (`$.packages['<dir>'].version`,
 `$.packages['<dir>'].dependencies['@miragon/…']`), so the next `npm install` after a release
-leaves the workspace versions alone.
+leaves the workspace versions alone. The jobs that publish the extension (and the dry run) run the
+VS Code smoke on the VSIX they upload (`VSCODE_SMOKE_VSIX`) before `vsce publish` / `ovsx publish`.
 
 **Adding an internal dependency edge or a workspace** needs an `extra-files` entry for the
 `package.json` path **and** one for the matching `package-lock.json` path;
