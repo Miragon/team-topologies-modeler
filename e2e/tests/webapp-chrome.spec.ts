@@ -469,13 +469,20 @@ test.describe("webapp: the shell web chrome and the app behind it", () => {
     await expect(inspector).toBeHidden();
   });
 
-  test("the legend keeps the visitor's choice across visits", async ({ page }) => {
+  test("the legend starts closed on a wide screen too and keeps the visitor's choice", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await gotoApp(page);
     await loadExample(page);
     const legend = page.locator('[data-chrome="legend"]');
+    await expect(legend).toBeHidden();
+
+    await (await openMenu(page)).getByRole("menuitemcheckbox", { name: "Legend" }).click();
     await expect(legend).toBeVisible();
     await expect(legend.getByRole("list", { name: "Team types" })).toBeVisible();
+    await page.reload();
+    await expect(legend).toBeVisible();
 
     await legend.getByRole("button", { name: "Close legend" }).click();
     await expect(legend).toBeHidden();

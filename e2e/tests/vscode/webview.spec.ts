@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { EXAMPLE_MAP } from "../../../apps/vscode/src/examples.js";
 import {
+  WIDE,
   exportedDocument,
   openWebview,
   postFromHost,
@@ -150,16 +151,15 @@ test.describe("VS Code webview", () => {
     expect(await state()).toMatchObject({ modelerShell: { legendOpen: true } });
   });
 
-  test("in a phone-wide panel the legend starts closed, and a stored state still wins", async ({
-    page,
-  }) => {
-    const phone = { width: 390, height: 844 };
+  test("the legend starts closed in any panel, and a stored state still wins", async ({ page }) => {
     const legend = page.locator('[data-chrome="legend"]');
-    await openWebview(page, { size: phone });
-    await expect(legend).toBeHidden();
+    for (const size of [{ width: 390, height: 844 }, WIDE]) {
+      await openWebview(page, { size });
+      await expect(legend).toBeHidden();
 
-    await openWebview(page, { size: phone, state: { modelerShell: { legendOpen: true } } });
-    await expect(legend).toBeVisible();
+      await openWebview(page, { size, state: { modelerShell: { legendOpen: true } } });
+      await expect(legend).toBeVisible();
+    }
   });
 
   test("the menu and the Command Palette run the same exports", async ({ page }) => {

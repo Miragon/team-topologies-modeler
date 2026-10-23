@@ -10,7 +10,7 @@ import { postedMessages } from "./support/webview.js";
 
 /**
  * The modeler shell's conformance kit against the real VS Code webview (main.ts inside the VS
- * Code stub): geometry at three sizes, the legend's start state on a phone-sized panel, ARIA and
+ * Code stub): geometry at three sizes, the legend closed on a first visit at every size, ARIA and
  * keyboard models, chrome keys and select all that never reach VS Code, keyboard creation from the
  * palette, a label editor that the shell's zoom, fit and refit leave open, the read-only lock of an
  * invalid file, the appearance VS Code requests (a light-only diagram stays light, high contrast

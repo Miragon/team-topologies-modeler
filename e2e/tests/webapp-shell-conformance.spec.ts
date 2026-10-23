@@ -8,12 +8,13 @@ import { waitForApp } from "./support/modeler.js";
 /**
  * The shell's conformance kit against the real web app (the web host of guide §5.2): geometry at
  * three sizes with the primary action, the legal line, the legend, the inspector and the raised
- * zoom row, the legend's start state on a phone, ARIA and keyboard models, the focus after a click
- * on a File action, keyboard creation from the palette, a label editor that the shell's zoom, fit
- * and refit leave open, the light-only mode under any system setting, the start screen, toasts, the
- * problems list with rows that select their annotation, the drop zone and a clean teardown. The
- * web app has no invalid-file state (it edits no text, and a file it cannot read leaves the
- * diagram as it was), so the harness declares only that absent; any skip fails the suite.
+ * zoom row, the legend closed on a first visit at every size, ARIA and keyboard models, the focus
+ * after a click on a File action, keyboard creation from the palette, a label editor that the
+ * shell's zoom, fit and refit leave open, the light-only mode under any system setting, the start
+ * screen, toasts, the problems list with rows that select their annotation, the drop zone and a
+ * clean teardown. The web app has no invalid-file state (it edits no text, and a file it cannot
+ * read leaves the diagram as it was), so the harness declares only that absent; any skip fails the
+ * suite.
  */
 const describeSkips = (skips: readonly ShellSkip[]): string =>
   skips.map((skip) => `${skip.hook}: ${skip.reason}`).join("; ");
@@ -55,7 +56,7 @@ test.describe("web app: shell conformance", () => {
         }
         await page.setViewportSize(size);
         // A new document, as on a first visit: from the app, a link that changes only the fragment
-        // keeps the page, and the shell decides the legend's start state once per mount.
+        // keeps the page, and the shell reads the legend's start state once per mount.
         await page.goto("about:blank");
         await page.goto(diagramLink(sampleDocument()));
         await waitForApp(page);
