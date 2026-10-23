@@ -11,7 +11,7 @@ import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
 import type EventBus from "diagram-js/lib/core/EventBus";
 import type CommandStack from "diagram-js/lib/command/CommandStack";
 import type { Root } from "diagram-js/lib/model/Types";
-import type { FreeArea } from "@miragon/modeler-api";
+import type { ElementBounds, FreeArea } from "@miragon/modeler-api";
 import { documentIdProblems, type TtDocument } from "@miragon/team-topologies-schema-model";
 import { saveSVG } from "./io/saveSvg.js";
 import type TtImporter from "./io/TtImporter.js";
@@ -192,6 +192,24 @@ export abstract class TtBaseViewer {
     const viewport = this._ensureDiagram().get<TtViewport>("ttViewport", false);
     if (viewport) viewport.fit();
     else this.get<Canvas>("canvas").zoom("fit-viewport");
+  }
+
+  /**
+   * The tight box around the diagram's content in diagram coordinates (`contentBounds()` of
+   * `@miragon/modeler-api` 1.3), or `undefined` while the canvas shows no element. A host's fit
+   * adds its own margins; zoom and scroll leave the box alone.
+   */
+  contentBounds(): ElementBounds | undefined {
+    // Before the first use and after destroy() there is no diagram, and asking for one would build it.
+    const bounds = this._diagram?.get<TtViewport | null>("ttViewport", false)?.contentBounds();
+    return (
+      bounds && {
+        x: bounds.minX,
+        y: bounds.minY,
+        width: bounds.maxX - bounds.minX,
+        height: bounds.maxY - bounds.minY,
+      }
+    );
   }
 
   /** Current canvas state as a canonical document. */

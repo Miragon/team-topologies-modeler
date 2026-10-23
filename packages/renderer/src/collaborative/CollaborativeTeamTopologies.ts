@@ -52,10 +52,14 @@ export interface TtElementsSurface extends ElementsSurface {
   bounds(id: string): ElementBounds | undefined;
 }
 
-/** The contract surface plus the wrapped diagram for host-specific wiring. */
+/**
+ * The contract surface, with the optional `contentBounds` of contract 1.3, which this renderer
+ * has, plus the wrapped diagram for host-specific wiring.
+ */
 export interface CollaborativeTeamTopologiesModeler extends CollaborativeModeler {
   readonly elements: TtElementsSurface;
   readonly diagram: Modeler | NavigatedViewer;
+  contentBounds(): ElementBounds | undefined;
 }
 
 interface ViewState {
@@ -203,6 +207,9 @@ function collaborative(
     setViewState(state) {
       if (destroyed || !isViewState(state)) return;
       canvas.viewbox({ x: state.x, y: state.y, width: state.width, height: state.height });
+    },
+    contentBounds() {
+      return diagram.contentBounds();
     },
     destroy() {
       if (destroyed) return;
