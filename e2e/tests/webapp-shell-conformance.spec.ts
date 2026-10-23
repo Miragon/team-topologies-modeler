@@ -2,22 +2,37 @@ import { test, type Page } from "@playwright/test";
 import { registerShellConformance, type ShellSkip } from "@miragon/modeler-shell/testing";
 import { THEMES } from "../../apps/webapp/src/themes.js";
 import { SAMPLE_TEXT, diagramLink, documentWithWarnings, sampleDocument } from "./support/app.js";
+import { typeIntoLabelEditor } from "./support/labelEditor.js";
 import { waitForApp } from "./support/modeler.js";
 
 /**
  * The shell's conformance kit against the real web app (the web host of guide §5.2): geometry at
  * three sizes with the primary action, the legal line, the legend, the inspector and the raised
- * zoom row, ARIA and keyboard models, keyboard creation from the palette, the light-only mode
- * under any system setting, the start screen, toasts, the problems list with rows that select
- * their annotation, the drop zone and a clean teardown. The web app has no invalid-file state (it
- * edits no text, and a file it cannot read leaves the diagram as it was), so the harness declares
- * only that absent; any skip fails the suite.
+ * zoom row, the legend's start state on a phone, ARIA and keyboard models, the focus after a click
+ * on a File action, keyboard creation from the palette, a label editor that the shell's zoom, fit
+ * and refit leave open, the light-only mode under any system setting, the start screen, toasts, the
+ * problems list with rows that select their annotation, the drop zone and a clean teardown. The
+ * web app has no invalid-file state (it edits no text, and a file it cannot read leaves the
+ * diagram as it was), so the harness declares only that absent; any skip fails the suite.
  */
 const describeSkips = (skips: readonly ShellSkip[]): string =>
   skips.map((skip) => `${skip.hook}: ${skip.reason}`).join("; ");
 
 /** Pages that start every visit without the browser's copy of a diagram or a legend state. */
 const freshPages = new WeakSet<Page>();
+
+/** The document as the web app would save it when `labelEditor.open` last resolved. */
+const documentAtOpen = new WeakMap<Page, string>();
+
+function currentDocument(page: Page): Promise<string> {
+  return page.evaluate(() =>
+    JSON.stringify(
+      (
+        window as unknown as { __ttModeler: { exportDocument(): unknown } }
+      ).__ttModeler.exportDocument(),
+    ),
+  );
+}
 
 test.describe("web app: shell conformance", () => {
   test.describe.configure({ timeout: 90_000 });
@@ -39,6 +54,9 @@ test.describe("web app: shell conformance", () => {
           });
         }
         await page.setViewportSize(size);
+        // A new document, as on a first visit: from the app, a link that changes only the fragment
+        // keeps the page, and the shell decides the legend's start state once per mount.
+        await page.goto("about:blank");
         await page.goto(diagramLink(sampleDocument()));
         await waitForApp(page);
       },
@@ -99,6 +117,16 @@ test.describe("web app: shell conformance", () => {
             },
             { status, text, actionLabel },
           );
+        },
+      },
+      labelEditor: {
+        async open(page) {
+          const typed = await typeIntoLabelEditor(page);
+          documentAtOpen.set(page, await currentDocument(page));
+          return typed;
+        },
+        async documentChanged(page) {
+          return (await currentDocument(page)) !== documentAtOpen.get(page);
         },
       },
       drop: {

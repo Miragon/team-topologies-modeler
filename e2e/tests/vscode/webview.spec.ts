@@ -150,6 +150,18 @@ test.describe("VS Code webview", () => {
     expect(await state()).toMatchObject({ modelerShell: { legendOpen: true } });
   });
 
+  test("in a phone-wide panel the legend starts closed, and a stored state still wins", async ({
+    page,
+  }) => {
+    const phone = { width: 390, height: 844 };
+    const legend = page.locator('[data-chrome="legend"]');
+    await openWebview(page, { size: phone });
+    await expect(legend).toBeHidden();
+
+    await openWebview(page, { size: phone, state: { modelerShell: { legendOpen: true } } });
+    await expect(legend).toBeVisible();
+  });
+
   test("the menu and the Command Palette run the same exports", async ({ page }) => {
     await openWebview(page);
     await page.locator('[data-chrome="menu"]').click();

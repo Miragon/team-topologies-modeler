@@ -5,18 +5,29 @@ import {
   type ShellSkip,
 } from "@miragon/modeler-shell/testing";
 import { WEBVIEW_THEMES } from "../../../apps/vscode/src/themes.js";
-import "./support/webview.js";
+import { typeIntoLabelEditor } from "../support/labelEditor.js";
+import { postedMessages } from "./support/webview.js";
 
 /**
  * The modeler shell's conformance kit against the real VS Code webview (main.ts inside the VS
- * Code stub): geometry at three sizes, ARIA and keyboard models, chrome keys and select all that
- * never reach VS Code, keyboard creation from the palette, the read-only lock of an invalid file,
- * the appearance VS Code requests (a light-only diagram stays light, high contrast passes) and a
- * clean teardown. Team Topologies has every island of the IDE column (legend and inspector
- * included), so nothing is declared absent and any skip fails the suite.
+ * Code stub): geometry at three sizes, the legend's start state on a phone-sized panel, ARIA and
+ * keyboard models, chrome keys and select all that never reach VS Code, keyboard creation from the
+ * palette, a label editor that the shell's zoom, fit and refit leave open, the read-only lock of an
+ * invalid file, the appearance VS Code requests (a light-only diagram stays light, high contrast
+ * passes) and a clean teardown. Team Topologies has every island of the IDE column (legend and
+ * inspector included). Absent is only a File or Model action without a dialog: the IDE host has no
+ * File group, and the webview's Model group holds only the shell's Legend checkbox. Any other skip
+ * fails the suite.
  */
 const describeSkips = (skips: readonly ShellSkip[]): string =>
   skips.map((skip) => `${skip.hook}: ${skip.reason}`).join("; ");
+
+/** How many edits the webview had sent to the extension host when `labelEditor.open` last resolved. */
+const editsAtOpen = new WeakMap<Page, number>();
+
+async function sentEdits(page: Page): Promise<number> {
+  return (await postedMessages(page)).filter((message) => message.type === "edit").length;
+}
 
 test.describe("VS Code webview: shell conformance", () => {
   test.describe.configure({ timeout: 90_000 });
@@ -37,7 +48,7 @@ test.describe("VS Code webview: shell conformance", () => {
           window.shell?.destroy();
         });
       },
-      absent: [],
+      absent: ["canvasMenuAction"],
       show: {
         async legend(page) {
           await page.evaluate(() => window.shell?.legend?.setOpen(true));
@@ -82,6 +93,16 @@ test.describe("VS Code webview: shell conformance", () => {
               .replace('"type": "platform",', '"type": "plat');
             window.postMessage({ type: "update", text }, "*");
           });
+        },
+      },
+      labelEditor: {
+        async open(page) {
+          const typed = await typeIntoLabelEditor(page);
+          editsAtOpen.set(page, await sentEdits(page));
+          return typed;
+        },
+        async documentChanged(page) {
+          return (await sentEdits(page)) > (editsAtOpen.get(page) ?? 0);
         },
       },
     },

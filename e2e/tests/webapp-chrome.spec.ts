@@ -481,6 +481,22 @@ test.describe("webapp: the shell web chrome and the app behind it", () => {
     await expect(legend).toBeHidden();
   });
 
+  test("on a phone the legend starts closed, and the visitor's choice still wins", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await gotoApp(page);
+    await loadExample(page);
+    const legend = page.locator('[data-chrome="legend"]');
+    await expect(legend).toBeHidden();
+
+    await (await openMenu(page)).getByRole("menuitemcheckbox", { name: "Legend" }).click();
+    await expect(legend).toBeVisible();
+    await page.reload();
+    await expect(legend).toBeVisible();
+    await expect(legend.getByRole("list", { name: "Team types" })).toBeVisible();
+  });
+
   test("a reload brings the diagram back from the browser's copy", async ({ page }) => {
     await gotoApp(page);
     await startBlankCanvas(page);
