@@ -98,6 +98,7 @@ command finds the shell at the root whatever npm hoists; bump all five pins toge
 ```bash
 npm run test:vscode:docker
 npm run test:vscode:docker -- --env VSCODE_VERSION=1.96.0   # the oldest VS Code engines.vscode admits
+npm run test:vscode:docker -- --env VSCODE_SMOKE_KEEP=1      # brings VS Code's logs back
 ```
 
 **Locally, with a window:** `npm run test:vscode` runs it on your machine; on macOS a VS Code window
@@ -114,8 +115,8 @@ npm run test:vscode
 
 A file missing from the package fails the test before VS Code starts, with its path. Any other
 failure names its step (`open`, `edit`, `save`, `undo`, `themes`, …) in the test's output. To read
-VS Code's own logs, pass `keepTemporaryFiles: true` to `runVsCodeSmoke` for that run; it then logs
-where the profile is (in Docker, the logs come back in `test-results/vscode-smoke/vscode-logs/`).
+VS Code's own logs, run it again with `VSCODE_SMOKE_KEEP=1`: the test keeps VS Code's profile and
+logs where it is (in Docker, the logs come back in `test-results/vscode-smoke/vscode-logs/`).
 
 **In CI:** [`vscode-smoke.yml`](.github/workflows/vscode-smoke.yml) runs `npm run test:vscode`
 directly on `ubuntu-latest` under `xvfb-run -a`, once on the newest stable VS Code and once on the
@@ -126,9 +127,11 @@ the job `vscode-smoke`, so [`ci-ok`](#ci-and-the-merge-gate) waits for it, and
 because the newest stable VS Code changes without a commit here; a failed weekly run opens the issue
 "VS Code smoke: the weekly run failed", or comments on it while it is open. Actions → VS Code smoke →
 Run workflow starts it on demand. It caches the VS Code download per version and uploads the
-screenshots as the artifacts `vscode-smoke-stable` and `vscode-smoke-minimum` (kept 7 days). It
-does not use the Docker mode: a runner has no window to keep out of the way, and the container would
-build its image and install the dependencies again on every run.
+screenshots as the artifacts `vscode-smoke-stable` and `vscode-smoke-minimum` and, when a run
+failed, VS Code's logs (it runs with `VSCODE_SMOKE_KEEP=1`) as `vscode-smoke-logs-stable` or
+`vscode-smoke-logs-minimum`, each kept 7 days. It does not use the Docker mode: a runner has no
+window to keep out of the way, and the container would build its image and install the dependencies
+again on every run.
 
 **When it runs:** its first job, `changes`, compares the commit with its base (a pull request's
 base commit, the commit before a push, a merge group's base) and starts VS Code only when one of
@@ -146,7 +149,7 @@ publish the extension (VS Code Marketplace, Open VSX) run the smoke on the VSIX 
 and are about to upload, on the newest stable VS Code, and publish nothing when it fails;
 `VSCODE_SMOKE_VSIX` names the file, so the test unpacks it instead of packing its own. The dry run
 (Actions → Release → Run workflow with `dry_run`) does the same without publishing. When that smoke
-fails, its screenshots are uploaded as the artifact `vscode-smoke-marketplace`,
+fails, its screenshots and VS Code's logs are uploaded as the artifact `vscode-smoke-marketplace`,
 `vscode-smoke-open-vsx` or `vscode-smoke-dry-run`.
 
 ## CI and the merge gate

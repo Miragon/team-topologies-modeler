@@ -27,6 +27,8 @@ const screenshotDir = resolve(repositoryRoot, "test-results/vscode-smoke");
 const requestedVsCodeVersion = process.env.VSCODE_VERSION?.trim() || undefined;
 /** A packed VSIX to test instead of packing one: the release smoke-tests the file it publishes. */
 const prebuiltVsix = process.env.VSCODE_SMOKE_VSIX?.trim() || undefined;
+/** `1` keeps VS Code's profile after the run, so CI can upload the logs of a failed one. */
+const keepVsCodeProfile = process.env.VSCODE_SMOKE_KEEP === "1";
 
 /** The check the Problems view runs: valid JSON, a valid diagram, no dropped connector. */
 function parseTeamTopology(text: string): TtDocument {
@@ -130,6 +132,7 @@ it(
         name: "team-topologies",
         screenshotDir,
         vscodeVersion: requestedVsCodeVersion,
+        keepTemporaryFiles: keepVsCodeProfile,
         log: console.log,
       });
       console.log(formatVsCodeSmoke(result));

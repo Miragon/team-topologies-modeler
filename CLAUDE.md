@@ -92,11 +92,14 @@ takes only types from `@miragon/modeler-api`).
   takes the user's focus; it runs `npm ci` in the container and copies `test-results/vscode-smoke/`
   back. The root `package.json` declares the shell itself so the bin resolves at the root; keep its
   pin equal to the workspaces'. `VSCODE_VERSION` picks the VS Code (`stable`, `1.96.0`; with Docker
-  `npm run test:vscode:docker -- --env VSCODE_VERSION=1.96.0`). CI runs `test:vscode` directly under
-  `xvfb-run -a` in the reusable [`vscode-smoke.yml`](.github/workflows/vscode-smoke.yml), on the
-  newest stable VS Code and the `engines.vscode` minimum: `ci.yml` calls it (it skips with a passing
-  notice when nothing the VSIX depends on changed) and `vscode-smoke-weekly.yml` calls it every
-  Monday. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+  `npm run test:vscode:docker -- --env VSCODE_VERSION=1.96.0`), `VSCODE_SMOKE_KEEP=1` keeps VS
+  Code's logs (with Docker in `test-results/vscode-smoke/vscode-logs/`). CI runs `test:vscode`
+  directly under `xvfb-run -a` in the reusable
+  [`vscode-smoke.yml`](.github/workflows/vscode-smoke.yml), on the newest stable VS Code and the
+  `engines.vscode` minimum: `ci.yml` calls it (it skips with a passing notice when nothing the VSIX
+  depends on changed) and `vscode-smoke-weekly.yml` calls it every Monday; screenshots as the
+  `vscode-smoke-<stable|minimum>` artifacts, logs of a failed run as
+  `vscode-smoke-logs-<stable|minimum>`. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - `npm run typecheck` · `npm run lint` (ESLint + typecheck)
 - `npm run format` — Prettier · `npm run depcruise` — check the module graph
 
