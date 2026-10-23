@@ -191,10 +191,12 @@ test.describe("webapp: the shell web chrome and the app behind it", () => {
     await expect(dropdown.locator('[data-menu-id="export-json"]')).toHaveText(
       /Export as JSON\s*(⌘|Ctrl\+)S/,
     );
-    await expect(dropdown.locator('[data-menu-id="keyboard-shortcuts"]')).toHaveAttribute(
-      "aria-keyshortcuts",
-      "?",
-    );
+    const shortcutsEntry = dropdown.locator('[data-menu-id="keyboard-shortcuts"]');
+    await expect(shortcutsEntry).toHaveText(/Keyboard shortcuts…\s*\?/);
+    await expect(shortcutsEntry).toHaveAttribute("aria-keyshortcuts", "?");
+    await expect(
+      dropdown.getByRole("menuitem", { name: "Keyboard shortcuts…", exact: true }),
+    ).toHaveAttribute("data-menu-id", "keyboard-shortcuts");
     await expect(dropdown.locator('[data-menu-group="appearance"]')).toHaveCount(0);
     await expect(dropdown.getByRole("menuitem", { name: /undo|redo/i })).toHaveCount(0);
   });

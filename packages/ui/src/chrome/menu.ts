@@ -19,10 +19,8 @@ export interface DiagramMenuActions {
   exportJsonShortcut?: string | undefined;
   showKeyboardShortcuts(): void;
   /**
-   * The key that opens the shortcuts dialog, where the host binds one ("?"). It is announced
-   * (`aria-keyshortcuts`) but shows no chip: modeler-shell 0.2 counts a chip into the entry's
-   * name, and a dialog entry's name must end with "…" (its conformance kit checks it). The dialog
-   * itself lists the key.
+   * The key that opens the shortcuts dialog, where the host binds one ("?"): the entry's chip,
+   * announced as its `aria-keyshortcuts`.
    */
   keyboardShortcutsKey?: string | undefined;
 }
@@ -75,7 +73,7 @@ export function diagramMenu(actions: DiagramMenuActions): MenuGroups {
         id: "keyboard-shortcuts",
         label: "Keyboard shortcuts…",
         icon: "keyboard",
-        ariaKeyShortcuts: actions.keyboardShortcutsKey,
+        shortcut: actions.keyboardShortcutsKey,
         onSelect: () => actions.showKeyboardShortcuts(),
       },
     ],

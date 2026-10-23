@@ -41,15 +41,13 @@ describe("diagramMenu", () => {
     expect(editTitle).toHaveBeenCalledOnce();
   });
 
-  it("announces the host's key for the shortcuts dialog without a chip after its …", () => {
-    const menu = diagramMenu({
-      exportPng: vi.fn(),
-      exportSvg: vi.fn(),
-      showKeyboardShortcuts: vi.fn(),
-      keyboardShortcutsKey: "?",
-    });
-    const [help] = menu.help ?? [];
-    expect(help).toMatchObject({ kind: "dialog", ariaKeyShortcuts: "?" });
-    expect(help && "shortcut" in help && help.shortcut).toBeFalsy();
+  it("shows the host's key for the shortcuts dialog as the entry's chip", () => {
+    const actions = { exportPng: vi.fn(), exportSvg: vi.fn(), showKeyboardShortcuts: vi.fn() };
+    const [help] = diagramMenu({ ...actions, keyboardShortcutsKey: "?" }).help ?? [];
+    expect(help).toMatchObject({ kind: "dialog", label: "Keyboard shortcuts…", shortcut: "?" });
+    expect(help && "ariaKeyShortcuts" in help && help.ariaKeyShortcuts).toBeFalsy();
+
+    const [withoutKey] = diagramMenu(actions).help ?? [];
+    expect(withoutKey && "shortcut" in withoutKey && withoutKey.shortcut).toBeFalsy();
   });
 });

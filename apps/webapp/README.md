@@ -25,7 +25,7 @@ and a diagram is shared by encoding it into the URL.
 - **Menu:** File (**New diagram**, **Open…** `Cmd/Ctrl+O` for `.tt`, `.ttm.json` and `.json`,
   **Show example**), Model (**Restore previous diagram** while the browser keeps one, **Diagram
   title…**, the **Legend** checkbox), Export (**PNG** at 2×,
-  **SVG**, **JSON** `Cmd/Ctrl+S`) and Help (**Keyboard shortcuts…**, also on `?`). Undo and redo stay
+  **SVG**, **JSON** `Cmd/Ctrl+S`) and Help (**Keyboard shortcuts…** `?`). Undo and redo stay
   on the keys, also while a chrome control has the focus.
 - **Edit by direct manipulation.** Drag from the palette to create, move, resize (resize a team to
   express cognitive load), edit labels in place; diagram-js keeps the history.
