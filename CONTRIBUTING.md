@@ -93,8 +93,7 @@ VS Code into the Docker volume `modeler-shell-vscode-cache`; both are kept and s
 Miragon modeler on the machine, and a run then takes about 12 to 20 s on an Apple silicon Mac,
 `npm ci` included. Paths in the test's output are the container's (`/work/…`). The root
 `package.json` declares `@miragon/modeler-shell` itself, at the workspaces' exact version, so the
-command (and the CI workflow's import of the driver) finds the shell at the root whatever npm
-hoists; bump all five pins together.
+command finds the shell at the root whatever npm hoists; bump all five pins together.
 
 ```bash
 npm run test:vscode:docker
@@ -146,18 +145,21 @@ depends on outside these paths goes into the list in the `changes` job's step `d
 publish the extension (VS Code Marketplace, Open VSX) run the smoke on the VSIX they have just packed
 and are about to upload, on the newest stable VS Code, and publish nothing when it fails;
 `VSCODE_SMOKE_VSIX` names the file, so the test unpacks it instead of packing its own. The dry run
-(Actions → Release → Run workflow with `dry_run`) does the same without publishing.
+(Actions → Release → Run workflow with `dry_run`) does the same without publishing. When that smoke
+fails, its screenshots are uploaded as the artifact `vscode-smoke-marketplace`,
+`vscode-smoke-open-vsx` or `vscode-smoke-dry-run`.
 
 ## CI and the merge gate
 
 [`ci.yml`](.github/workflows/ci.yml) runs on every pull request, push to `main` and merge group, and
 on demand. Its last job, **`ci-ok`**, is the merge gate: it and the PR title check
 (`validate-pr-title`) are the checks for the `main` ruleset to require, in place of the single jobs,
-so that Dependabot's auto-merge waits for every job, the VS Code smoke included. `ci-ok` needs every other job of the workflow and fails,
-with one error per job, when any of them did not succeed: a failure, a cancellation, or a skip
-because a job before it failed (a failed `lint` skips `test-browser` and `e2e`). Only a job whose own
-`if:` leaves it out on that event by design may be skipped; today that is `dependency-review`
-outside pull requests, listed in `ci-ok`'s `SKIPPED_BY_DESIGN`.
+so that Dependabot's auto-merge waits for every job, the VS Code smoke included. `ci-ok` needs every
+other job of the workflow and fails, with one error per job, when any of them did not succeed: a
+failure, a cancellation, or a skip because a job before it failed (a failed `lint` skips
+`test-browser` and `e2e`). Only a job whose own `if:` leaves it out on that event by design may be
+skipped; today that is `dependency-review` outside pull requests, listed in `ci-ok`'s
+`SKIPPED_BY_DESIGN`.
 
 **A new job in `ci.yml` goes into `ci-ok`'s `needs`**, or nothing waits for it. If it has an `if:` of
 its own that skips it on some events, add it to `SKIPPED_BY_DESIGN` for exactly those events.
