@@ -10,8 +10,11 @@ import {
   Viewer,
   createCollaborativeModeler,
   createCollaborativeViewer,
+  isTtElement,
   type TtBaseViewer,
+  type TtElement,
   type TtElementFactory,
+  type TtModeling,
 } from "@miragon/team-topologies-renderer";
 import {
   SAMPLE_DOCUMENT,
@@ -70,6 +73,47 @@ const ANNOTATED_DOCUMENT: TtDocument = {
     },
   ],
 };
+
+const OVERFLOWING_DOCUMENT: TtDocument = {
+  ...emptyDocument(),
+  nodes: [
+    {
+      id: "team_long_name",
+      type: "stream-aligned",
+      label: "customeraccountsettlementandreconciliationservicesforallregionalmarketplaces",
+      position: { x: 0, y: 0 },
+      size: { width: 160, height: 64 },
+    },
+  ],
+  annotations: [
+    {
+      id: "ann_long_note",
+      text: Array.from({ length: 12 }, (_, index) => `Line ${index + 1}`).join("\n"),
+      position: { x: 240, y: 0 },
+      size: { width: 120, height: 40 },
+    },
+  ],
+};
+
+/**
+ * The top and bottom of the em boxes of every line of label text the canvas drew, in diagram
+ * coordinates: the lines sit on a central baseline, and the em box, unlike `getBBox()`, does not
+ * depend on the ascent of whichever fallback font the browser picked.
+ */
+function drawnTextRows(diagram: TtBaseViewer): { top: number; bottom: number } {
+  const registry = diagram.get<ElementRegistry>("elementRegistry");
+  let top = Infinity;
+  let bottom = -Infinity;
+  for (const element of registry.getAll().filter(isTtElement)) {
+    for (const text of registry.getGraphics(element).querySelectorAll<SVGTextElement>("text")) {
+      const centre = element.y + Number(text.getAttribute("y"));
+      const halfEm = Number(text.getAttribute("font-size")) / 2;
+      top = Math.min(top, centre - halfEm);
+      bottom = Math.max(bottom, centre + halfEm);
+    }
+  }
+  return { top, bottom };
+}
 
 describe("contentBounds", () => {
   test("is undefined before the first import and for a document without elements", () => {
@@ -138,6 +182,46 @@ describe("contentBounds", () => {
 
     canvas.zoom(2.5, { x: 100, y: 100 });
     canvas.scroll({ dx: 320, dy: -180 });
+
+    expect(modeler.contentBounds()).toEqual(before);
+  });
+
+  test("covers label text that reaches past its shape, at every zoom", () => {
+    const modeler = mounted((container) => new Modeler({ container }));
+    modeler.importDocument(OVERFLOWING_DOCUMENT);
+    const shapes = documentBounds(OVERFLOWING_DOCUMENT);
+    const drawn = drawnTextRows(modeler);
+
+    const bounds = modeler.contentBounds();
+
+    expect(bounds).toBeDefined();
+    if (!bounds) return;
+    expect(drawn.bottom).toBeGreaterThan(shapes.y + shapes.height);
+    expect(bounds.y).toBeLessThanOrEqual(Math.min(shapes.y, drawn.top));
+    expect(bounds.y + bounds.height).toBeGreaterThanOrEqual(drawn.bottom);
+    expect(bounds.x).toBeLessThan(shapes.x);
+    expect(bounds.x + bounds.width).toBeGreaterThanOrEqual(shapes.x + shapes.width);
+
+    modeler.get<Canvas>("canvas").zoom(0.4, { x: 0, y: 0 });
+
+    expect(modeler.contentBounds()).toEqual(bounds);
+  });
+
+  test("grows and shrinks with a label edited on the canvas", () => {
+    const modeler = mounted((container) => new Modeler({ container }));
+    modeler.importDocument(SAMPLE_DOCUMENT);
+    const before = documentBounds(SAMPLE_DOCUMENT);
+    const annotation = modeler
+      .get<ElementRegistry>("elementRegistry")
+      .get("ann_fraud_handover") as TtElement;
+    const modeling = modeler.get<TtModeling>("ttModeling");
+
+    modeling.updateLabel(annotation, Array.from({ length: 30 }, () => "Rollout step").join("\n"));
+
+    const grown = modeler.contentBounds();
+    expect(grown && grown.y + grown.height).toBeGreaterThan(before.y + before.height);
+
+    modeling.updateLabel(annotation, "Stable");
 
     expect(modeler.contentBounds()).toEqual(before);
   });

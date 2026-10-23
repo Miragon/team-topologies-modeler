@@ -153,11 +153,13 @@ Options: the contract's `CollaborativeModelerOptions` (1.2) and `additionalModul
 The viewer takes the same options and ignores `freeArea` and `undoRedoKeys`. `modeler.diagram` is
 the wrapped `Modeler`. `elements.bounds(id)` (contract 1.2) returns a team's, interaction's, flow's
 or annotation's box in diagram coordinates from the live canvas, `undefined` for any other id.
-`contentBounds()` (contract 1.3, modeler and viewer) returns the tight box around every element, in
-diagram coordinates from the live canvas and the same at every zoom and scroll, or `undefined` while
-the diagram has no element. A host that fits the view itself (`fitOnImport: false`) fits to it and
-adds its own margins; the modeler shell's `connectDiagramJs(shell, diagram, { modeler })` does so by
-default.
+`contentBounds()` (contract 1.3, modeler and viewer) returns the tight box around every element and
+its label text, in diagram coordinates from the live canvas and the same at every zoom and scroll, or
+`undefined` while the diagram has no element. Label text counts where it reaches past its shape (a
+word longer than a line, more lines than the shape holds); like the label wrapping, its width is
+estimated from the characters rather than measured. A host that fits the view itself
+(`fitOnImport: false`) fits to it and adds its own margins; the modeler shell's
+`connectDiagramJs(shell, diagram, { modeler })` does so by default.
 
 ### Shared methods (`Viewer` / `NavigatedViewer` / `Modeler`)
 
@@ -165,7 +167,7 @@ default.
 | ---------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `importDocument(doc, { fit? })`    | `{ warnings: ImportWarning[] }` | Replace canvas content, reset undo history; fit unless `fit: false`. Throws, before anything changes, for ids that would collide.      |
 | `fitToView()`                      | `void`                          | Deprecated: fit every element, keeping the strip under the palette free.                                                               |
-| `contentBounds()`                  | `ElementBounds \| undefined`    | The tight box around every element in diagram coordinates (contract 1.3), `undefined` without elements.                                |
+| `contentBounds()`                  | `ElementBounds \| undefined`    | The tight box around every element and its label text in diagram coordinates (contract 1.3), `undefined` without elements.             |
 | `exportDocument()`                 | `TtDocument`                    | Rebuild the canonical model from the live canvas.                                                                                      |
 | `saveSVG()`                        | `{ svg: string }`               | Self-contained SVG snapshot (fitted viewBox).                                                                                          |
 | `setMeta(partial)` / `getMeta()`   | — / `RootBusinessObject`        | Read/write diagram-level metadata (`title`); `setMeta` is deprecated, rename with `get("ttModeling").setTitle(title)` (one undo step). |

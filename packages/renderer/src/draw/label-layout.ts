@@ -20,6 +20,8 @@ import { FONT, INK, INK_MUTED } from "./styles.js";
 const LABEL_INSET = 10;
 const ANNOTATION_PADDING = { left: 10, right: 6, top: 6, bottom: 6 };
 export const LINE_HEIGHT = 1.2;
+/** The average glyph advance as a share of the font size, which the wrapping estimates with. */
+const CHARACTER_WIDTH = 0.58;
 
 export interface LabelBox {
   x: number;
@@ -150,7 +152,7 @@ export function labelLayout(element: TtElement): LabelLayout {
  * result is identical on every platform and exported SVGs stay stable.
  */
 export function wrapLabel(text: string, maxWidth: number, fontSize: number): string[] {
-  const maxChars = Math.max(4, Math.floor(maxWidth / (fontSize * 0.58)));
+  const maxChars = Math.max(4, Math.floor(maxWidth / (fontSize * CHARACTER_WIDTH)));
   const paragraphs = text.split(/\r?\n/);
   const lines: string[] = [];
   for (const paragraph of paragraphs) {
@@ -170,4 +172,26 @@ export function wrapLabel(text: string, maxWidth: number, fontSize: number): str
   while (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
   while (lines.length > 0 && lines[0] === "") lines.shift();
   return lines;
+}
+
+/**
+ * Where the element's wrapped label is drawn, relative to the element's top-left corner, or
+ * `undefined` without text. A word longer than a line, or more lines than the shape holds, reach
+ * past the shape, and the editor does not grow it. Estimated from the characters like the wrapping
+ * rather than measured, so it is the same at every zoom.
+ */
+export function labelTextBox(element: TtElement): LabelBox | undefined {
+  const layout = labelLayout(element);
+  const { box, fontSize } = layout;
+  const lines = wrapLabel(element.ttLabel ?? "", box.width, fontSize);
+  if (lines.length === 0) return undefined;
+  const width = Math.max(...lines.map((line) => line.length)) * fontSize * CHARACTER_WIDTH;
+  const height = lines.length * fontSize * LINE_HEIGHT;
+  if (layout.align === "left-top") return { x: box.x, y: box.y, width, height };
+  return {
+    x: box.x + (box.width - width) / 2,
+    y: box.y + (box.height - height) / 2,
+    width,
+    height,
+  };
 }
