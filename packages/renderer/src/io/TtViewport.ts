@@ -1,13 +1,13 @@
 /**
- * Fits the diagram into the visible canvas. Unlike diagram-js `fit-viewport`, it keeps the
- * strip under the floating palette free, so no element starts hidden behind it.
- *
- * @deprecated Host chrome fits the diagram (the modeler shell's viewport, with the insets of the
- * chrome that is open and never above 100 %); kept for hosts without it.
+ * The box around the diagram's content, which a host fits its view to, and the renderer's own fit
+ * for hosts without chrome that fits (unlike diagram-js `fit-viewport`, it keeps the strip under the
+ * floating palette free, so no element starts hidden behind it).
  */
 
 import type Canvas from "diagram-js/lib/core/Canvas";
 import type ElementRegistry from "diagram-js/lib/core/ElementRegistry";
+import { labelTextBox } from "../draw/label-layout.js";
+import { isTtElement } from "../model/di-types.js";
 
 /** Up to this container width the palette sits on its own row below the host's top chrome. */
 const NARROW_LAYOUT_MAX_WIDTH = 760;
@@ -19,7 +19,7 @@ const SIDE_PADDING_NARROW = 24;
 /** Guide §5.9: a fit never zooms past 100 %, as the shell's fit does. */
 const MAX_FIT_ZOOM = 1;
 
-interface Bounds {
+export interface ContentBounds {
   minX: number;
   minY: number;
   maxX: number;
@@ -34,7 +34,12 @@ export default class TtViewport {
     private readonly elementRegistry: ElementRegistry,
   ) {}
 
-  /** Fit every element into view, zooming in no further than 100 %. */
+  /**
+   * Fit every element into view, zooming in no further than 100 %.
+   *
+   * @deprecated Host chrome fits the diagram (the modeler shell's viewport, with the insets of the
+   * chrome that is open and never above 100 %); kept for hosts without it.
+   */
   fit(): void {
     const bounds = this.contentBounds();
     if (!bounds) return;
@@ -76,7 +81,7 @@ export default class TtViewport {
    * corner tends to hold an overlay of their own, such as a legend.
    */
   private viewboxTop(
-    bounds: Bounds,
+    bounds: ContentBounds,
     contentHeight: number,
     scale: number,
     viewportHeight: number,
@@ -89,11 +94,23 @@ export default class TtViewport {
     return bounds.minY - (topInset + slack / 2) / scale;
   }
 
-  private contentBounds(): Bounds | undefined {
+  /**
+   * The tight box around every element and its label text in diagram coordinates, `undefined`
+   * while the canvas holds none. Read from the elements' geometry and the label layout rather than
+   * measured on the SVG, so zoom and scroll, at which a browser lays text out differently, never
+   * change it.
+   */
+  contentBounds(): ContentBounds | undefined {
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
+    const include = (x: number, y: number, width: number, height: number) => {
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x + width);
+      maxY = Math.max(maxY, y + height);
+    };
     for (const element of this.elementRegistry.getAll()) {
       const shape = element as { x?: unknown; y?: unknown; width?: unknown; height?: unknown };
       if (
@@ -104,10 +121,9 @@ export default class TtViewport {
       ) {
         continue;
       }
-      minX = Math.min(minX, shape.x);
-      minY = Math.min(minY, shape.y);
-      maxX = Math.max(maxX, shape.x + shape.width);
-      maxY = Math.max(maxY, shape.y + shape.height);
+      include(shape.x, shape.y, shape.width, shape.height);
+      const text = isTtElement(element) ? labelTextBox(element) : undefined;
+      if (text) include(shape.x + text.x, shape.y + text.y, text.width, text.height);
     }
     return Number.isFinite(minX) ? { minX, minY, maxX, maxY } : undefined;
   }

@@ -78,13 +78,6 @@ interface SelectionLike {
 interface CanvasLike {
   scrollToElement(element: unknown): void;
 }
-interface Bounds {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 /** Matches the static <title> in index.html. */
 const APP_NAME = "Miragon Modeler for Team Topologies";
 /** One line on the start card, as the other modelers' cards read. */
@@ -209,31 +202,12 @@ function menuGroups(): MenuGroups {
   };
 }
 
-// 3. Viewport, palette skin, keys. Cheap tests only: the chrome asks on every content change.
-const diagramElements = (): TtElement[] => registry.getAll().filter(isTtElement);
+// 3. Viewport, palette skin, keys. A cheap test only: the chrome asks on every content change. The
+//    shell fits to the content bounds the renderer reports (contract 1.3), tight, so its fit
+//    insets are the only margin (§5.9).
 const isEmpty = (): boolean => !registry.getAll().some(isTtElement);
 
-/** The tight bounds of every element; the shell's fit insets are the only margin (§5.9). */
-function contentBounds(): Bounds | undefined {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const { x, y, width, height } of diagramElements()) {
-    minX = Math.min(minX, x);
-    minY = Math.min(minY, y);
-    maxX = Math.max(maxX, x + width);
-    maxY = Math.max(maxY, y + height);
-  }
-  return Number.isFinite(minX)
-    ? { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
-    : undefined;
-}
-
-const connection: DiagramJsConnection = connectDiagramJs(shell, modeler, {
-  isEmpty,
-  contentBounds,
-});
+const connection: DiagramJsConnection = connectDiagramJs(shell, modeler, { modeler, isEmpty });
 const { viewport } = connection;
 
 // ---------------------------------------------------------------------------

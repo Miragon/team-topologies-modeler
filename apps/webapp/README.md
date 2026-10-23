@@ -25,7 +25,7 @@ and a diagram is shared by encoding it into the URL.
 - **Menu:** File (**New diagram**, **Open…** `Cmd/Ctrl+O` for `.tt`, `.ttm.json` and `.json`,
   **Show example**), Model (**Restore previous diagram** while the browser keeps one, **Diagram
   title…**, the **Legend** checkbox), Export (**PNG** at 2×,
-  **SVG**, **JSON** `Cmd/Ctrl+S`) and Help (**Keyboard shortcuts…**, also on `?`). Undo and redo stay
+  **SVG**, **JSON** `Cmd/Ctrl+S`) and Help (**Keyboard shortcuts…** `?`). Undo and redo stay
   on the keys, also while a chrome control has the focus.
 - **Edit by direct manipulation.** Drag from the palette to create, move, resize (resize a team to
   express cognitive load), edit labels in place; diagram-js keeps the history.
@@ -47,9 +47,10 @@ and a diagram is shared by encoding it into the URL.
   LZ-compressed into the URL hash (`#d=…`). Opening that link restores the diagram, also when it is
   pasted into an open tab; a damaged link says so.
 - **Autosave.** Every change goes to `localStorage` and into the address bar, so a reload brings the
-  diagram back; the legend remembers whether it is open. A shared link that replaces your own
-  diagram leaves that one in the browser's copy until you edit the shared one; then it becomes the
-  previous diagram. The autosave never writes over a diagram it has no room to keep.
+  diagram back; the legend remembers whether it is open (on a first visit it starts closed on a
+  phone, up to 440 px wide, and in a window 820 px high or lower). A shared link that replaces your
+  own diagram leaves that one in the browser's copy until you edit the shared one; then it becomes
+  the previous diagram. The autosave never writes over a diagram it has no room to keep.
 - **Offline-friendly.** No CDN calls; Geist and Geist Mono are bundled.
 
 ## Run it

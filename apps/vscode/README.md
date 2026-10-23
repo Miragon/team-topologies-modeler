@@ -65,7 +65,8 @@ the bottom left, the same in every Miragon modeler.
 - **Legend** (bottom-left): which shape stands for which team type, interaction mode and element,
   each with a short explanation, and that teams are solid and long-lived while interactions are
   dashed and short-lived. Switch it on and off with **Legend** in the menu or its close button. It
-  starts hidden in panes shorter than 820 px, and each editor remembers your choice.
+  starts hidden in panes up to 440 px wide or up to 820 px high, and each editor remembers your
+  choice.
 - **Menu** (top-left, the icon button): the legend, **Export as PNG** and **Export as SVG**, and
   **Keyboard shortcuts…**. The exports and **Fit to View** are also commands in the Command Palette
   and in the editor title's **…** menu.
