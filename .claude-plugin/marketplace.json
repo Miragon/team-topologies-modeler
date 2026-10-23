@@ -11,7 +11,7 @@
       "name": "team-topologies-modeler",
       "source": "./plugins/team-topologies-modeler",
       "description": "Team Topologies for Claude: team types, interaction modes and topology reviews, plus the complete `.tt` / `.ttm.json` format with a layout grid and a dependency-free checker. Lets Claude design, draw, review and edit Team Topologies diagrams as plain JSON.",
-      "version": "0.12.0",
+      "version": "0.13.0",
       "author": {
         "name": "Miragon",
         "url": "https://miragon.io"

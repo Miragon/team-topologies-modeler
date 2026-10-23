@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.12.0...v0.13.0) (2026-10-23)
+
+
+### Features
+
+* **renderer:** report the content bounds a host fits to and adopt modeler-shell 0.4.0 ([#151](https://github.com/Miragon/team-topologies-modeler/issues/151)) ([3603dfb](https://github.com/Miragon/team-topologies-modeler/commit/3603dfb467da0a2e6ee9ae65598bd5d52e5a0d83))
+
 ## [0.12.0](https://github.com/Miragon/team-topologies-modeler/compare/v0.11.2...v0.12.0) (2026-10-21)
 
 
