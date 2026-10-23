@@ -24,8 +24,8 @@ Team Topologies models an organisation as **teams** and the **interactions** bet
 - The inspector on the right edits the selected element: a team's type, name, description and
   colours, or an interaction's mode and label.
 - Not sure which shape is which? The **Legend** names and explains every shape; switch it on or
-  off in the menu (top-left). In low panes it starts hidden. **Keyboard shortcuts…** in the same
-  menu lists every shortcut.
+  off in the menu (top-left). It starts hidden. **Keyboard shortcuts…** in the same menu lists
+  every shortcut.
 - Shift+drag on the canvas (or press `Ctrl/Cmd+A`) to select several elements and move them together.
 
 Your changes are saved straight back into the `.tt` file, so diagrams version nicely in Git, and
