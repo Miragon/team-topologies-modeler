@@ -1,179 +1,24 @@
-# Team Topologies Modeler
+# Team Topologies Modeler has moved
 
-[![License: MIT](https://img.shields.io/github/license/Miragon/team-topologies-modeler)](LICENSE)
-[![CI](https://github.com/Miragon/team-topologies-modeler/actions/workflows/ci.yml/badge.svg)](https://github.com/Miragon/team-topologies-modeler/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/@miragon/team-topologies-renderer)](https://www.npmjs.com/package/@miragon/team-topologies-renderer)
-[![VS Marketplace](https://vsmarketplacebadges.dev/version-short/miragon-gmbh.team-topologies-modeler.svg?label=VS%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=miragon-gmbh.team-topologies-modeler)
+> [!IMPORTANT]
+> This repository is archived and read-only. The Team Topologies Modeler now lives in the
+> [Miragon modeler suite](https://github.com/Miragon/modeler-suite), in
+> [`modelers/team-topologies`](https://github.com/Miragon/modeler-suite/tree/main/modelers/team-topologies), with its full git history.
 
-A fast, offline-friendly modeler for **Team Topologies** diagrams — the four team types and three
-team-interaction modes from the book by Matthew Skelton & Manuel Pais. Ships as a **web app** and a
-**VS Code extension** sharing one diagram-js core.
+Nothing changes for users:
 
-It is built around an npm-workspaces monorepo with CI/CD, release automation and a "full-bleed canvas +
-floating chrome" editing feel, a clean DOM-free domain model and lossless, version-controllable files.
+- **npm packages** keep their names and version lines; new releases come from the suite: [`@miragon/team-topologies-schema-model`](https://www.npmjs.com/package/@miragon/team-topologies-schema-model), [`@miragon/team-topologies-renderer`](https://www.npmjs.com/package/@miragon/team-topologies-renderer).
+- **VS Code extension** `miragon-gmbh.team-topologies-modeler` stays the same ([Marketplace](https://marketplace.visualstudio.com/items?itemName=miragon-gmbh.team-topologies-modeler), [Open VSX](https://open-vsx.org/extension/miragon-gmbh/team-topologies-modeler)).
+- **Web app** stays at [team-topologies.modeler.miragon.io](https://team-topologies.modeler.miragon.io).
+- **Claude Code plugin** `team-topologies-modeler` keeps its name and skills; it now comes from the suite's
+  marketplace, which replaces the `team-topologies` marketplace of this repository:
 
-**[Try the web app →](https://team-topologies.modeler.miragon.io)**
+  ```text
+  /plugin marketplace add Miragon/modeler-suite
+  /plugin install team-topologies-modeler@modeler-suite
+  ```
 
-![The Team Topologies editor](docs/screenshots/editor.png)
-
-## Notation
-
-Shapes, colours and stroke styles follow the official
-[Team-Shape-Templates](https://github.com/TeamTopologies/Team-Shape-Templates). Team shapes are
-**solid** (long-lived); interaction shapes are **dashed and translucent** (short-lived). Every element
-is distinguished by shape as well as colour, so diagrams stay readable with colour-vision deficiency.
-
-### Team types
-
-| Type                  | Shape                        | Fill / Outline        |
-| --------------------- | ---------------------------- | --------------------- |
-| Stream-aligned        | horizontal rounded rectangle | `#FFEDB8` / `#FFD966` |
-| Enabling              | vertical rounded rectangle   | `#DFBDCF` / `#D09CB7` |
-| Complicated Subsystem | octagon                      | `#FFC08B` / `#E88814` |
-| Platform              | square-cornered rectangle    | `#B7CDF1` / `#6D9EEB` |
-
-### Interaction modes
-
-| Mode           | Badge                                 | Fill / Outline        |
-| -------------- | ------------------------------------- | --------------------- |
-| Collaboration  | parallelogram                         | `#C6BEDF` / `#967EE2` |
-| X-as-a-Service | triangle (points provider → consumer) | `#B4B4B4` / `#999696` |
-| Facilitating   | circle                                | `#C9DFBE` / `#78996B` |
-
-## Targets
-
-- **Web app** ([`apps/webapp`](apps/webapp/README.md)) — a Vite editor with a full-bleed canvas,
-  palette, inspector, legend, PNG/SVG/JSON export and a shareable, self-contained URL (LZ-compressed,
-  no backend), inside the shared chrome of the Miragon modelers
-  ([`@miragon/modeler-shell`](https://www.npmjs.com/package/@miragon/modeler-shell), web host).
-  Deployed on Netlify.
-- **VS Code extension** ([`apps/vscode`](apps/vscode/README.md)) — a custom editor for `.tt` /
-  `.ttm.json` files with the same chrome, inspector and legend as the web app (the shell's IDE host):
-  the JSON file stays the source of truth (save, Git, diff and undo keep working), its problems show
-  in the Problems view, and editable embedded-PNG diagrams (`*.tt.png`) let you drop a diagram into a
-  wiki or README and still edit it graphically.
-
-Both targets share two published packages:
-
-| Package                                                                    | Purpose                                                                                                               | DOM |
-| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --- |
-| [`@miragon/team-topologies-schema-model`](packages/schema-model/README.md) | Types, the notation spec, Zod validation, migrations, deterministic JSON                                              | no  |
-| [`@miragon/team-topologies-renderer`](packages/renderer/README.md)         | diagram-js viewer/modeler, custom rendering, palette, context pad, import/export, the `@miragon/modeler-api` contract | yes |
-
-## Getting started
-
-Requires Node ≥ 22.22.2 and npm. From the repo root:
-
-```bash
-npm install
-npm run dev:webapp          # start the webapp dev server (http://localhost:5181)
-npm run dev:vscode          # watch-build the VS Code extension (then F5 in VS Code)
-npm test                    # unit tests (Vitest)
-npm run test:vscode:docker  # the extension in a real VS Code, in Docker without a window
-npm run test:vscode         # the same with a VS Code window here (see CONTRIBUTING.md)
-npm run lint                # eslint + type-check
-npm run build               # build the publishable packages (schema-model, renderer)
-```
-
-## Architecture
-
-An **npm-workspaces monorepo** with a strict boundary between the pure model and the view:
-
-```
-packages/
-  schema-model/  @miragon/team-topologies-schema-model — DOM-free core: types, notation spec, Zod schema,
-                                            deterministic JSON, migrations, factory, the example.
-  renderer/      @miragon/team-topologies-renderer     — diagram-js bootstrap: viewer/modeler, renderer, palette,
-                                            context-pad, label editing, import/export, CSS.
-  ui/            @miragon/team-topologies-ui           — private: what the modeler puts into the chrome (the
-                                            React inspector, legend rows, shortcuts and title
-                                            dialogs, menu entries), shared by the webapp and the
-                                            VS Code webview.
-apps/
-  webapp/        @miragon/team-topologies-webapp       — Vite editor on the modeler shell's web host.
-  vscode/        team-topologies-modeler  — VS Code custom editor for .tt / .ttm.json.
-e2e/                                       — Playwright end-to-end tests: the webapp, and the VS Code
-                                            webview inside the modeler shell's VS Code stub, each
-                                            held to the shell's conformance kit.
-```
-
-The `schema-model` package compiles **without the DOM lib**, so a stray browser import fails
-type-checking. The DOM boundary is enforced twice — by ESLint and by dependency-cruiser. The apps and
-tests consume the packages straight from their TS source via Vite/esbuild/tsconfig aliases, so there
-is no separate library build step for development (`npm run build` is only needed to publish the libs).
-
-Design choices:
-
-- **Deterministic serialisation** (sorted, rounded, fixed key order) makes `.tt` / `.ttm.json` files
-  diff-friendly and gives stable share URLs.
-- **Runtime validation** (Zod) on everything imported from files / URLs / localStorage, with a
-  forward-migration hook keyed by document `version`.
-- **diagram-js** (MIT) as the editor engine — palette, move, resize, context pad,
-  inline label editing and undo/redo for free.
-
-## Document format
-
-`.tt` / `.ttm.json` is a small, stable JSON document. Interactions are **placed shapes** overlaying the
-boundary between the teams they relate to (spatial overlap), so there is no source/target reference:
-
-```jsonc
-{
-  "version": 3,
-  "title": "Online shop team topology",
-  "nodes": [
-    {
-      "id": "team_checkout",
-      "type": "stream-aligned",
-      "label": "Checkout & Payments",
-      "position": { "x": 560, "y": 202 },
-      "size": { "width": 240, "height": 96 },
-    },
-  ],
-  "interactions": [
-    {
-      "id": "int_platform_checkout",
-      "mode": "x-as-a-service",
-      "position": { "x": 636, "y": 286 },
-      "size": { "width": 88, "height": 78 },
-    },
-  ],
-  "flows": [],
-  "annotations": [
-    {
-      "id": "ann_checkout_split",
-      "text": "Splits into two stream-aligned teams in Q3",
-      "position": { "x": 560, "y": 110 },
-      "size": { "width": 200, "height": 64 },
-      "attachedTo": "team_checkout",
-    },
-  ],
-}
-```
-
-Text annotations are optional notes beside the diagram; `attachedTo` ties one to a team, interaction
-or flow (drawn as a dashed connector). An empty `annotations` list is left out of the file.
-
-## Claude Code plugin
-
-The repository ships two Claude skills as a [Claude Code](https://claude.com/claude-code) plugin, so
-an agent can design, draw, review and edit Team Topologies diagrams in any project:
-
-```
-/plugin marketplace add Miragon/team-topologies-modeler
-/plugin install team-topologies-modeler@team-topologies
-```
-
-`team-topologies` covers the method (team types, interaction modes, cognitive load, reviews);
-`tt-format` covers the `.tt` / `.ttm.json` format, a layout grid and a dependency-free checker that
-validates a file and reads back which teams each interaction connects. Details in
-[`plugins/team-topologies-modeler/`](plugins/team-topologies-modeler/README.md); the marketplace
-manifest is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) and the agent notes in [CLAUDE.md](CLAUDE.md).
-
-## Licence
-
-MIT. "Team Topologies" is a trademark of Team Topologies Ltd; this is an independent, unaffiliated
-tool that implements their openly published notation.
+**Issues and pull requests** go to [Miragon/modeler-suite](https://github.com/Miragon/modeler-suite/issues); the open issues of
+this repository were moved there. Development, CI and releases are described in the suite's
+[README](https://github.com/Miragon/modeler-suite#readme) and [CONTRIBUTING.md](https://github.com/Miragon/modeler-suite/blob/main/CONTRIBUTING.md), the
+modeler itself in [`modelers/team-topologies/README.md`](https://github.com/Miragon/modeler-suite/blob/main/modelers/team-topologies/README.md).
