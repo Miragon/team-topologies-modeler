@@ -112,7 +112,7 @@ export function autosave(doc: TtDocument, continuesStored: boolean): AutosaveRes
   return { outcome: saveToStorage(doc), keptPrevious };
 }
 
-/** The legend's state the visitor chose last; undefined lets the chrome decide by the height. */
+/** The legend's state the visitor chose last; undefined keeps the chrome's default, closed. */
 export function readLegendOpen(): boolean | undefined {
   try {
     const stored = storage()?.getItem(LEGEND_KEY);
