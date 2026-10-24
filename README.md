@@ -62,7 +62,7 @@ Both targets share two published packages:
 
 ## Getting started
 
-Requires Node ≥ 22.13 and npm. From the repo root:
+Requires Node ≥ 22.22.2 and npm. From the repo root:
 
 ```bash
 npm install
