@@ -103,7 +103,7 @@ takes only types from `@miragon/modeler-api`).
 - `npm run typecheck` · `npm run lint` (ESLint + typecheck)
 - `npm run format` — Prettier · `npm run depcruise` — check the module graph
 
-Requirements: Node ≥ 22.13, npm. The packages are consumed from **source** (Vite/esbuild/tsconfig
+Requirements: Node ≥ 22.22.2, npm. The packages are consumed from **source** (Vite/esbuild/tsconfig
 aliases), so neither the apps nor the tests need a prior package build; `npm run build` is for
 publishing the libraries. The Husky pre-commit hook runs **only** lint-staged + `npm run lint`
 (ESLint + type-check) — **not** tests/build/depcruise; run `npm test` yourself before pushing.

@@ -1,7 +1,7 @@
 # Contributing
 
 Thanks for helping improve the Team Topologies Modeler. This is an npm-workspaces monorepo
-(Node ≥ 22.13, npm, TypeScript ESM). Agent-oriented notes live in [`CLAUDE.md`](CLAUDE.md).
+(Node ≥ 22.22.2, npm, TypeScript ESM). Agent-oriented notes live in [`CLAUDE.md`](CLAUDE.md).
 
 ## External contributions
 
@@ -88,7 +88,7 @@ work. It needs only Docker (Docker Desktop on macOS). It copies your working cop
 changes included, into the container without `node_modules` and `.git`, runs `npm ci` there (your
 `node_modules` stay as they are) and copies `test-results/vscode-smoke/` back. The first run builds
 a local image (`modeler-shell-vscode-smoke:node<version>-…`, about 0.9 GB, on the Node version that
-runs the command; `npm run test:vscode:docker -- --node 22.13.0` picks another) and downloads
+runs the command; `npm run test:vscode:docker -- --node 22.22.2` picks another) and downloads
 VS Code into the Docker volume `modeler-shell-vscode-cache`; both are kept and shared by every
 Miragon modeler on the machine, and a run then takes about 12 to 20 s on an Apple silicon Mac,
 `npm ci` included. Paths in the test's output are the container's (`/work/…`). The root

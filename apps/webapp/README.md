@@ -55,7 +55,7 @@ and a diagram is shared by encoding it into the URL.
 
 ## Run it
 
-From the repo root (Node ≥ 22.13):
+From the repo root (Node ≥ 22.22.2):
 
 ```bash
 npm install
