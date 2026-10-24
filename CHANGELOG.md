@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.2](https://github.com/Miragon/team-topologies-modeler/compare/v0.13.1...v0.13.2) (2026-10-24)
+
+
+### Bug Fixes
+
+* **deps:** adopt modeler-shell 0.5.0, whose legend starts closed ([#156](https://github.com/Miragon/team-topologies-modeler/issues/156)) ([737ae5a](https://github.com/Miragon/team-topologies-modeler/commit/737ae5a0524732de976514d6fec2ae012cd84d12))
+
 ## [0.13.1](https://github.com/Miragon/team-topologies-modeler/compare/v0.13.0...v0.13.1) (2026-10-23)
 
 
