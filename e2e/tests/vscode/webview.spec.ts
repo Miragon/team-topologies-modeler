@@ -177,9 +177,14 @@ test.describe("VS Code webview", () => {
       ),
     );
 
+    const zoom = async () => parseInt((await zoomReadout(page)) ?? "", 10);
+    const fitted = await zoom();
     await page.locator('[data-zoom="in"]').click();
+    await expect.poll(zoom).toBeGreaterThan(fitted);
+    const zoomedIn = await zoom();
     await postFromHost(page, { type: "command", name: "fitView" });
-    await expect.poll(async () => parseInt((await zoomReadout(page)) ?? "", 10)).toBeLessThan(100);
+    // with the legend closed by default the fit can land on 100 %, so compare with the zoomed-in view
+    await expect.poll(zoom).toBeLessThan(zoomedIn);
   });
 
   test("a PNG save gets the rendered PNG with the document inside", async ({ page }) => {
